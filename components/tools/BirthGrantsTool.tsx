@@ -200,6 +200,19 @@ export function BirthGrantsTool({ tool, fallbackToday }: { tool: Tool; fallbackT
                 <GrantCard key={`${g.scope}-${g.id}`} grant={g} />
               ))}
             </ul>
+            {outcome.result.value.extraNotes.length > 0 && (
+              <div className="border-t border-line py-3">
+                <h3 className="text-[12.5px] font-semibold text-ink">합계에는 없지만 알아두실 것</h3>
+                <ul className="mt-1.5 flex flex-col gap-1.5">
+                  {outcome.result.value.extraNotes.map((n, i) => (
+                    <li key={i} className="flex gap-2 text-[12.5px] leading-relaxed text-ink-soft">
+                      <span className="shrink-0 font-medium text-ink-faint">{n.scope}</span>
+                      <span>{n.text}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {outcome.result.value.districtStatus === 'unverified' && (
               <p className="border-t border-line py-3 text-[12.5px] leading-relaxed text-ink-soft">
                 {outcome.result.value.districtName}의 자체 지원은 공식 출처로 확인하지 못해 합계에

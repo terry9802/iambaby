@@ -3,6 +3,8 @@ import parentalLeaveCouple2026 from '@/rules/2026/parental-leave-couple.json';
 import maternityLeave2026 from '@/rules/2026/maternity-leave.json';
 import birthGrantsNational2026 from '@/rules/2026/birth-grants-national.json';
 import birthGrantsSeoul2026 from '@/rules/2026/birth-grants-seoul.json';
+import socialDues2026 from '@/rules/2026/social-dues.json';
+import marriageTaxCredit2026 from '@/rules/2026/marriage-tax-credit.json';
 import type { RuleFile, RuleMeta } from './types';
 import { parseDate, toISODate } from '@/lib/format';
 
@@ -16,6 +18,8 @@ const REGISTRY = {
   'maternity-leave': [maternityLeave2026],
   'birth-grants-national': [birthGrantsNational2026],
   'birth-grants-seoul': [birthGrantsSeoul2026],
+  'social-dues': [socialDues2026],
+  'marriage-tax-credit': [marriageTaxCredit2026],
 } as const satisfies Record<string, readonly { meta: RuleMeta; values: unknown }[]>;
 
 export type RuleId = keyof typeof REGISTRY;

@@ -17,6 +17,8 @@ export type LifeEvent = {
   lead: string;
   status: 'live' | 'soon';
   icon: IconName;
+  /** 이벤트 허브 아래에 붙는 "알아두면 덜 억울한 것" */
+  tips?: { title: string; body: string }[];
 };
 
 export const EVENTS: LifeEvent[] = [
@@ -26,13 +28,45 @@ export const EVENTS: LifeEvent[] = [
     lead: '아이가 생겼는데 뭘 언제 신청해야 하는지 하나도 모르겠어요',
     status: 'live',
     icon: 'childcare',
+    tips: [
+      {
+        title: '사후지급금은 폐지됐어요.',
+        body: '예전에는 급여의 25%를 복직 6개월 뒤에 줬지만, 지금은 휴직 중에 전액을 받습니다. 오래된 블로그 글에 속지 마세요.',
+      },
+      {
+        title: '부모급여·아동수당은 60일이 전부예요.',
+        body: '출생일 포함 60일 안에 신청해야 태어난 달까지 소급됩니다. 하루만 늦어도 그 전 달치는 사라져요.',
+      },
+      {
+        title: '육아휴직은 30일 전에 신청해야 해요.',
+        body: '시작 예정일 30일 전까지 회사에 알려야 합니다. 급여 신청과는 별개예요.',
+      },
+      {
+        title: '부부가 나눠 쓰면 상한액이 올라갑니다.',
+        body: '생후 18개월 안에 둘 다 육아휴직을 쓰면 첫 6개월 상한이 매달 올라가요. 한 사람만 쓰면 해당되지 않습니다.',
+      },
+    ],
   },
   {
     key: 'marriage',
-    title: '결혼',
-    lead: '결혼하면 세금이랑 청약이 어떻게 달라지나요',
-    status: 'soon',
+    title: '내 결혼',
+    lead: '결혼하면 세금이랑 지원이 어떻게 달라지나요',
+    status: 'live',
     icon: 'marriage',
+    tips: [
+      {
+        title: '기준은 결혼식이 아니라 혼인신고일이에요.',
+        body: '식을 올렸어도 혼인신고를 하지 않으면 세제 혜택은 하나도 적용되지 않습니다.',
+      },
+      {
+        title: '결혼세액공제는 2026년 12월 31일에 끝납니다.',
+        body: '2024년 1월 1일부터 2026년 12월 31일 사이에 혼인신고를 한 경우에만 받을 수 있는 한시 제도예요.',
+      },
+      {
+        title: '생애 한 번뿐입니다.',
+        body: '재혼도 받을 수 있지만, 예전 결혼에서 이미 받았다면 다시 받을 수 없습니다.',
+      },
+    ],
   },
   {
     key: 'housing',
@@ -66,8 +100,22 @@ export const EVENTS: LifeEvent[] = [
     key: 'socialdues',
     title: '남의 경조사',
     lead: '이 사람 결혼식에 얼마 내야 실례가 아닌가요',
-    status: 'soon',
+    status: 'live',
     icon: 'socialdues',
+    tips: [
+      {
+        title: '정답은 없습니다.',
+        body: '경조사비는 법이 아니라 관습이에요. 집안·지역·업계마다 다르고, 결국 두 사람 사이의 문제입니다.',
+      },
+      {
+        title: '가장 강한 기준은 상호성입니다.',
+        body: '설문에서도 친밀도 다음으로 강한 기준이 "그 사람이 내 경조사 때 낸 금액"이었어요. 기억나신다면 그게 답에 가깝습니다.',
+      },
+      {
+        title: '식사를 하면 식대는 넘기는 게 좋아요.',
+        body: '일반 예식장은 1인 5만원, 호텔은 1인 10만원쯤 듭니다. 동행하는 사람 수까지 세어야 해요.',
+      },
+    ],
   },
 ];
 
@@ -89,6 +137,28 @@ export type Tool = {
 };
 
 export const TOOLS: Tool[] = [
+  {
+    slug: 'marriage-tax-credit',
+    event: 'marriage',
+    type: 'calculator',
+    title: '결혼세액공제 계산기',
+    question: '혼인신고만 해도 돌려받는 돈이 있나요?',
+    lead: '2026년 12월 31일까지 혼인신고를 하면 부부 합쳐 최대 100만원을 세금에서 돌려받습니다.',
+    profileFields: ['maritalStatus', 'spouse'],
+    ruleFile: 'marriage-tax-credit',
+    timing: '혼인신고 전후',
+  },
+  {
+    slug: 'social-dues',
+    event: 'socialdues',
+    type: 'calculator',
+    title: '경조사비 계산기',
+    question: '이 사람한테 얼마 내는 게 맞을까요?',
+    lead: '관계, 자주 보는 정도, 식사 여부를 넣으면 무난한 금액과 그 이유를 알려드립니다.',
+    profileFields: [],
+    ruleFile: 'social-dues',
+    timing: '봉투 쓰기 직전',
+  },
   {
     slug: 'leave-timeline',
     event: 'childcare',

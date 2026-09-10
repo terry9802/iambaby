@@ -33,12 +33,14 @@ export type RawGrant = {
 
 export type NationalRule = { items: RawGrant[] };
 export type SeoulRule = {
-  sido: { code: string; name: string; items: RawGrant[] };
+  sido: { code: string; name: string; items: RawGrant[]; extraNotes: string[] };
   districts: {
     code: string;
     name: string;
     status: 'verified' | 'unverified';
     items: RawGrant[];
+    /** 합계에 넣지는 않지만 알려주면 좋은 것 (현물 지원, 넷째 이상 금액, 거주 요건 등) */
+    extraNotes: string[];
     source?: string;
     sourceUrl?: string;
     verifiedAt?: string;
@@ -88,6 +90,8 @@ export type BirthGrantsValue = {
   districtStatus: 'verified' | 'unverified' | 'unsupported';
   districtName: string | null;
   districtLookupUrl?: string;
+  /** 합계에 안 들어가지만 알려드릴 것 */
+  extraNotes: { scope: string; text: string }[];
 };
 
 function amountFor(grant: RawGrant, order: BirthOrder): number {
@@ -200,6 +204,7 @@ export function checkBirthGrants(input: BirthGrantsInput): CalcOutcome<BirthGran
     resolveGrant(g, 'national', '정부', order, birthDate, today),
   );
   const basis: RuleMeta[] = [nationalLookup.rule.meta];
+  const extraNotes: { scope: string; text: string }[] = [];
 
   let districtStatus: BirthGrantsValue['districtStatus'] = 'unsupported';
   let districtName: string | null = null;
@@ -213,6 +218,9 @@ export function checkBirthGrants(input: BirthGrantsInput): CalcOutcome<BirthGran
     for (const item of seoul.sido.items) {
       grants.push(resolveGrant(item, 'sido', seoul.sido.name, order, birthDate, today));
     }
+    for (const text of seoul.sido.extraNotes ?? []) {
+      extraNotes.push({ scope: seoul.sido.name, text });
+    }
 
     const district = seoul.districts.find((d) => d.code === input.sigungu);
     if (district) {
@@ -220,7 +228,18 @@ export function checkBirthGrants(input: BirthGrantsInput): CalcOutcome<BirthGran
       districtStatus = district.status;
       districtLookupUrl = district.lookupUrl;
       for (const item of district.items) {
+        // 첫째는 안 주고 셋째부터 주는 구가 많다. 해당 순위에 0원이면 항목 자체를 띄우지 않는다.
+        if (amountFor(item, order) <= 0 && item.payout === 'once') continue;
         grants.push(resolveGrant(item, 'district', district.name, order, birthDate, today));
+      }
+      for (const text of district.extraNotes ?? []) {
+        extraNotes.push({ scope: district.name, text });
+      }
+      if (district.status === 'verified' && district.items.length > 0 && !district.items.some((i) => amountFor(i, order) > 0)) {
+        extraNotes.push({
+          scope: district.name,
+          text: `${district.name}의 자체 지원은 이 출산 순위에는 해당되지 않아요. 셋째부터 지원하는 구가 많습니다.`,
+        });
       }
     }
   }
@@ -304,6 +323,7 @@ export function checkBirthGrants(input: BirthGrantsInput): CalcOutcome<BirthGran
       districtStatus,
       districtName,
       districtLookupUrl,
+      extraNotes,
     },
     steps,
     assumptions,

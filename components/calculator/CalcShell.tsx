@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import type { CalcOutcome } from '@/lib/rules/types';
-import { TOOL_TYPE_LABEL, type Tool } from '@/lib/tools';
+import { TOOL_TYPE_LABEL, findEvent, type Tool } from '@/lib/tools';
 import { BasisFooter, StaleBadge, hasStaleBasis } from './BasisFooter';
 import { Callout } from './Callout';
 import { ShareButton } from './ShareButton';
@@ -48,7 +48,7 @@ export function CalcShell<T>({
         </Link>
         <span className="px-1.5">·</span>
         <Link href={`/${tool.event}`} className="hover:text-ink-soft">
-          출산 · 육아
+          {findEvent(tool.event)?.title ?? tool.event}
         </Link>
       </nav>
 

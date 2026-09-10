@@ -47,9 +47,7 @@ export default async function EventHubPage({ params }: { params: Promise<{ event
           <Icon name={found.icon} size={26} className="shrink-0 text-brand" />
           {found.title}
         </h1>
-        <p className="text-[14px] leading-relaxed text-ink-soft">
-          {found.lead} 순서대로 하나씩 짚어드릴게요. 지금 해당하는 시점부터 보시면 됩니다.
-        </p>
+        <p className="text-[14px] leading-relaxed text-ink-soft">{found.lead}</p>
       </header>
 
       <ProfileBanner />
@@ -82,6 +80,7 @@ export default async function EventHubPage({ params }: { params: Promise<{ event
         </ol>
       </section>
 
+      {articles.length > 0 && (
       <section className="flex flex-col gap-3">
         <div className="flex items-baseline justify-between gap-3">
           <h2 className="text-[15px] font-bold text-ink">읽을거리</h2>
@@ -105,33 +104,20 @@ export default async function EventHubPage({ params }: { params: Promise<{ event
           ))}
         </ul>
       </section>
+      )}
 
-      <section className="rounded-[12px] border border-line bg-surface px-4 py-4">
-        <h2 className="text-[14px] font-semibold text-ink">알아두면 덜 억울한 것</h2>
-        <ul className="mt-2.5 flex flex-col gap-2.5 text-[13px] leading-relaxed text-ink-soft">
-          <li>
-            <strong className="font-semibold text-ink">사후지급금은 폐지됐어요.</strong> 예전에는
-            급여의 25%를 복직 6개월 뒤에 줬지만, 지금은 휴직 중에 전액을 받습니다. 오래된 블로그 글에
-            속지 마세요.
-          </li>
-          <li>
-            <strong className="font-semibold text-ink">부모급여·아동수당은 60일이 전부예요.</strong>{' '}
-            출생일 포함 60일 안에 신청해야 태어난 달까지 소급됩니다. 하루만 늦어도 그 전 달치는
-            사라져요.
-          </li>
-          <li>
-            <strong className="font-semibold text-ink">육아휴직은 30일 전에 신청해야 해요.</strong>{' '}
-            시작 예정일 30일 전까지 회사에 알려야 합니다. 급여 신청과는 별개예요.
-          </li>
-          <li>
-            <strong className="font-semibold text-ink">
-              부부가 나눠 쓰면 상한액이 올라갑니다.
-            </strong>{' '}
-            생후 18개월 안에 둘 다 육아휴직을 쓰면 첫 6개월 상한이 매달 올라가요. 한 사람만 쓰면
-            해당되지 않습니다.
-          </li>
-        </ul>
-      </section>
+      {found.tips && found.tips.length > 0 && (
+        <section className="rounded-[12px] border border-line bg-surface px-4 py-4">
+          <h2 className="text-[14px] font-semibold text-ink">알아두면 덜 억울한 것</h2>
+          <ul className="mt-2.5 flex flex-col gap-2.5 text-[13px] leading-relaxed text-ink-soft">
+            {found.tips.map((tip) => (
+              <li key={tip.title}>
+                <strong className="font-semibold text-ink">{tip.title}</strong> {tip.body}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_HUB} />
     </div>

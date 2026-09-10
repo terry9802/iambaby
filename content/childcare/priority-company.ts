@@ -64,9 +64,18 @@ export const article: Article = {
         '**관할 고용센터에 전화하기.** 국번 없이 1350으로 문의하셔도 됩니다.',
       ],
     },
+    { type: 'h2', text: '기준표 원문 내려받기' },
     {
       type: 'p',
-      text: '업종별 기준 인원 원문은 [국가법령정보센터의 고용보험법 시행령 별표 1](https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=131942&lsId=002249&chrClsCd=010202&urlMode=lsInfoP)에서 확인하실 수 있습니다.',
+      text: '업종별 기준 인원은 고용보험법 시행령 별표 1에 표로 정리돼 있습니다. 국가법령정보센터에서 받은 원문(2025년 10월 1일 개정)을 그대로 올려두었습니다.',
+    },
+    {
+      type: 'p',
+      text: '**[우선지원 대상기업 기준표 원문 (PDF) 내려받기](/docs/우선지원-대상기업-기준-고용보험법-시행령-별표1.pdf)**',
+    },
+    {
+      type: 'p',
+      text: '가장 최신본은 [국가법령정보센터의 고용보험법 시행령](https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=131942&lsId=002249&chrClsCd=010202&urlMode=lsInfoP)에서 확인하실 수 있습니다. 이 표는 개정이 잦아서, 내려받으신 파일의 개정일을 꼭 확인해 주세요.',
     },
     {
       type: 'callout',

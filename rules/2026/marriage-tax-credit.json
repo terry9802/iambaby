@@ -1,0 +1,23 @@
+{
+  "meta": {
+    "ruleId": "marriage-tax-credit",
+    "title": "결혼세액공제",
+    "effectiveFrom": "2024-01-01",
+    "effectiveTo": "2026-12-31",
+    "source": "조세특례제한법 제92조(결혼에 대한 세액공제)",
+    "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A1%B0%EC%84%B8%ED%8A%B9%EB%A1%80%EC%A0%9C%ED%95%9C%EB%B2%95",
+    "verifiedAt": "2026-09-10",
+    "verifiedBy": "기획재정부 정책 안내 및 조세 전문지 보도",
+    "note": "2024년 1월 1일부터 2026년 12월 31일 사이의 혼인신고에만 적용되는 한시 제도다. 적용 기한이 지나면 이 계산기는 안내만 남기고 금액을 0으로 돌려준다."
+  },
+  "values": {
+    "creditPerPerson": 500000,
+    "applicableFrom": "2024-01-01",
+    "applicableTo": "2026-12-31",
+    "oncePerLifetime": true,
+    "requiresIncome": true,
+    "incomeNote": "혼인신고를 한 해에 근로소득이나 사업소득이 있어야 공제를 받을 수 있다. 산출세액이 공제액보다 적으면 그 세액만큼만 공제된다.",
+    "claimAt": "연말정산(근로소득자) 또는 종합소득세 신고(사업소득자)",
+    "proofDocument": "혼인관계증명서"
+  }
+}

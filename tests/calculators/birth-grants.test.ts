@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkBirthGrants } from '@/lib/calculators/birth-grants';
+import { checkBirthGrants, listSeoulDistricts } from '@/lib/calculators/birth-grants';
 
 const MAN = 10000;
 const BIRTH = '2026-03-01';
@@ -74,6 +74,46 @@ describe('출산·육아 지원금 통합 조회', () => {
     expect(firstBirthday?.deadline?.dueAt).toBe('2027-08-28');
   });
 
+  it('셋째부터 주는 구는 첫째에게 항목을 띄우지 않고 그 사실을 알려준다', () => {
+    const first = checkBirthGrants({
+      childBirthDate: BIRTH,
+      birthOrder: 'first',
+      sido: 'seoul',
+      sigungu: 'seongdong',
+      today: '2026-03-05',
+    });
+    if (!first.ok) throw new Error('계산 실패');
+    expect(first.result.value.grants.some((g) => g.scope === 'district')).toBe(false);
+    expect(
+      first.result.value.extraNotes.some((n) => n.text.includes('해당되지 않아요')),
+    ).toBe(true);
+
+    const third = checkBirthGrants({
+      childBirthDate: BIRTH,
+      birthOrder: 'thirdOrMore',
+      sido: 'seoul',
+      sigungu: 'seongdong',
+      today: '2026-03-05',
+    });
+    if (!third.ok) throw new Error('계산 실패');
+    const seongdong = third.result.value.grants.find((g) => g.scope === 'district');
+    expect(seongdong?.totalAmount).toBe(300 * MAN);
+  });
+
+  it('합계에 넣지 않는 안내(넷째 이상 금액, 현물 지원)를 따로 모아준다', () => {
+    const out = checkBirthGrants({
+      childBirthDate: BIRTH,
+      birthOrder: 'thirdOrMore',
+      sido: 'seoul',
+      sigungu: 'yangcheon',
+      today: '2026-03-05',
+    });
+    if (!out.ok) throw new Error('계산 실패');
+    expect(out.result.value.extraNotes.some((n) => n.text.includes('넷째'))).toBe(true);
+    // 서울시 무주택 주거비 지원도 조건부라 합계에 넣지 않는다
+    expect(out.result.value.extraNotes.some((n) => n.text.includes('무주택'))).toBe(true);
+  });
+
   it('확인되지 않은 자치구는 금액을 지어내지 않고 그렇다고 말한다', () => {
     const out = checkBirthGrants({
       childBirthDate: BIRTH,
@@ -86,6 +126,14 @@ describe('출산·육아 지원금 통합 조회', () => {
     expect(out.result.value.districtStatus).toBe('unverified');
     expect(out.result.value.grants.some((g) => g.scope === 'district')).toBe(false);
     expect(out.result.warnings.some((w) => w.includes('노원구'))).toBe(true);
+    // 확인 못 한 구라도 조사 중 알게 된 현물 지원은 알려준다
+    expect(out.result.value.extraNotes.some((n) => n.scope === '노원구')).toBe(true);
+  });
+
+  it('금액을 확인한 자치구는 여덟 곳이고 전부 출처가 붙어 있다', () => {
+    const seoul = listSeoulDistricts(BIRTH);
+    expect(seoul.length).toBe(25);
+    expect(seoul.filter((d) => d.status === 'verified').length).toBe(8);
   });
 
   it('서울 밖 지역은 중앙정부 지원만 보여주고 그 사실을 알린다', () => {

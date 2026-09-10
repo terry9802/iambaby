@@ -8,7 +8,7 @@
     "sourceUrl": "https://seoul-agi.seoul.go.kr/",
     "verifiedAt": "2026-09-10",
     "verifiedBy": "서울시 임신·출산 정보센터 지원사업 페이지 및 각 자치구청 공식 페이지",
-    "note": "자치구 자체 지원은 구마다 있고 없고가 갈리며 폐지·신설이 잦다. 공식 페이지로 금액을 확인한 구만 금액을 넣고, 나머지는 확인되지 않았음을 그대로 표시한다."
+    "note": "자치구 자체 지원은 구마다 있고 없고가 갈리고, 첫째는 빼고 셋째부터만 주는 곳이 많다. 공식 페이지로 금액을 확인한 구만 금액을 넣고 나머지는 확인되지 않았음을 그대로 표시한다."
   },
   "values": {
     "sido": {
@@ -48,6 +48,9 @@
           "applyUrl": "https://umppa.seoul.go.kr/",
           "eligibility": "신청일 기준 서울시에 3개월 이상 계속 거주 중인 임산부."
         }
+      ],
+      "extraNotes": [
+        "무주택 가구가 자녀를 출산하면 주거비를 월 최대 30만원씩 2년간(최대 720만원) 지원합니다. 소득과 무주택 요건이 있어 합계에는 넣지 않았습니다."
       ]
     },
     "districts": [
@@ -56,7 +59,8 @@
         "name": "종로구",
         "status": "unverified",
         "items": [],
-        "note": "종로구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "extraNotes": [],
+        "note": "종로구 자체 현금 지원은 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
         "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
       },
       {
@@ -64,7 +68,10 @@
         "name": "중구",
         "status": "unverified",
         "items": [],
-        "note": "중구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "extraNotes": [
+          "출생신고 시 신생아 위생용품 세트를 지급합니다. 현금 지원은 확인되지 않았습니다."
+        ],
+        "note": "중구 자체 현금 지원은 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
         "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
       },
       {
@@ -72,24 +79,50 @@
         "name": "용산구",
         "status": "unverified",
         "items": [],
-        "note": "용산구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "extraNotes": [
+          "24개월 이하 영아 가정에 연 10만원 전용 택시 포인트를 지급합니다.",
+          "임산부에게 연 24만원 상당 친환경농산물을 지원합니다."
+        ],
+        "note": "용산구 자체 현금 지원은 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
         "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
       },
       {
         "code": "seongdong",
         "name": "성동구",
-        "status": "unverified",
-        "items": [],
-        "note": "성동구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
-        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+        "status": "verified",
+        "verifiedAt": "2026-09-10",
+        "source": "성동구청 출생축하금 안내",
+        "sourceUrl": "https://www.sd.go.kr/main/contents.do?key=1591",
+        "verifiedBy": "성동구청 공식 페이지(출생·보육지원 > 출생축하금)",
+        "items": [
+          {
+            "id": "seongdong-birth",
+            "name": "성동구 출생축하금",
+            "kind": "cash",
+            "description": "셋째 자녀부터 지원합니다. 첫째와 둘째는 대상이 아닙니다.",
+            "amountByBirthOrder": {
+              "first": 0,
+              "second": 0,
+              "thirdOrMore": 3000000
+            },
+            "payout": "once",
+            "applyDeadlineNote": "1년 이상 계속 성동구에 주민등록을 두고 실제 거주해야 합니다.",
+            "applyAt": "주소지 동주민센터",
+            "applyUrl": "https://www.sd.go.kr/main/contents.do?key=1591"
+          }
+        ],
+        "extraNotes": [
+          "넷째는 500만원(먼저 300만원, 1년 뒤 200만원), 다섯째 이상은 1,000만원을 여러 해에 나눠 지급합니다.",
+          "산후조리비용은 소득과 관계없이 최대 150만원까지 지원합니다."
+        ]
       },
       {
         "code": "gwangjin",
         "name": "광진구",
         "status": "verified",
+        "verifiedAt": "2026-09-10",
         "source": "광진구청 첫돌(출산)축하금 지원 안내",
         "sourceUrl": "https://www.gwangjin.go.kr/portal/main/contents.do?menuNo=200309",
-        "verifiedAt": "2026-09-10",
         "verifiedBy": "광진구청 공식 페이지(첫돌(출산)축하금 지원)",
         "items": [
           {
@@ -109,6 +142,9 @@
             "applyAt": "주소지 동주민센터",
             "applyUrl": "https://www.gwangjin.go.kr/portal/main/contents.do?menuNo=200309"
           }
+        ],
+        "extraNotes": [
+          "넷째는 200만원, 다섯째 이상은 300만원입니다."
         ]
       },
       {
@@ -116,23 +152,45 @@
         "name": "동대문구",
         "status": "unverified",
         "items": [],
-        "note": "동대문구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "extraNotes": [],
+        "note": "동대문구 자체 현금 지원은 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
         "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
       },
       {
         "code": "jungnang",
         "name": "중랑구",
-        "status": "unverified",
-        "items": [],
-        "note": "중랑구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
-        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+        "status": "verified",
+        "verifiedAt": "2026-09-10",
+        "source": "중랑구청 출산 및 양육지원 안내",
+        "sourceUrl": "https://www.jungnang.go.kr/portal/main/contents.do?menuNo=200733",
+        "verifiedBy": "중랑구청 복지서비스 안내",
+        "items": [
+          {
+            "id": "jungnang-birth",
+            "name": "중랑구 출산축하금",
+            "kind": "cash",
+            "description": "둘째 자녀부터 지원합니다. 첫째는 대상이 아닙니다.",
+            "amountByBirthOrder": {
+              "first": 0,
+              "second": 500000,
+              "thirdOrMore": 1000000
+            },
+            "payout": "once",
+            "applyAt": "주소지 동주민센터",
+            "applyUrl": "https://www.jungnang.go.kr/"
+          }
+        ],
+        "extraNotes": [
+          "넷째 이상은 200만원입니다."
+        ]
       },
       {
         "code": "seongbuk",
         "name": "성북구",
         "status": "unverified",
         "items": [],
-        "note": "성북구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "extraNotes": [],
+        "note": "성북구 자체 현금 지원은 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
         "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
       },
       {
@@ -140,7 +198,8 @@
         "name": "강북구",
         "status": "unverified",
         "items": [],
-        "note": "강북구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "extraNotes": [],
+        "note": "강북구 자체 현금 지원은 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
         "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
       },
       {
@@ -148,7 +207,10 @@
         "name": "도봉구",
         "status": "unverified",
         "items": [],
-        "note": "도봉구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "extraNotes": [
+          "2024년 1월 1일 이후 출생아 가정에 출생축하용품(양말, 기저귀, 물티슈 등)을 지급합니다."
+        ],
+        "note": "도봉구 자체 현금 지원은 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
         "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
       },
       {
@@ -156,7 +218,10 @@
         "name": "노원구",
         "status": "unverified",
         "items": [],
-        "note": "노원구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "extraNotes": [
+          "세 자녀 이상 가정 문화상품권, 출산 축하용품, 무료 작명, 돌 기념사진 등 현물·서비스 위주로 지원합니다."
+        ],
+        "note": "노원구 자체 현금 지원은 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
         "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
       },
       {
@@ -164,7 +229,8 @@
         "name": "은평구",
         "status": "unverified",
         "items": [],
-        "note": "은평구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "extraNotes": [],
+        "note": "은평구 자체 현금 지원은 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
         "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
       },
       {
@@ -172,7 +238,10 @@
         "name": "서대문구",
         "status": "unverified",
         "items": [],
-        "note": "서대문구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "extraNotes": [
+          "셋째 이상 아동이 입학할 때 서대문사랑상품권 20만원을 지급합니다. 출생 시점 현금 지원은 확인되지 않았습니다."
+        ],
+        "note": "서대문구 자체 현금 지원은 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
         "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
       },
       {
@@ -180,55 +249,147 @@
         "name": "마포구",
         "status": "unverified",
         "items": [],
-        "note": "마포구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "extraNotes": [],
+        "note": "마포구 자체 현금 지원은 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
         "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
       },
       {
         "code": "yangcheon",
         "name": "양천구",
-        "status": "unverified",
-        "items": [],
-        "note": "양천구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
-        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+        "status": "verified",
+        "verifiedAt": "2026-09-10",
+        "source": "양천구청 출산장려 지원 안내",
+        "sourceUrl": "https://www.yangcheon.go.kr/site/yangcheon/05/10501020100002016081013.jsp",
+        "verifiedBy": "양천구청 공식 페이지(출산장려사업)",
+        "items": [
+          {
+            "id": "yangcheon-birth",
+            "name": "양천구 출산지원금",
+            "kind": "cash",
+            "description": "첫째부터 자녀 순위에 따라 지급됩니다.",
+            "amountByBirthOrder": {
+              "first": 200000,
+              "second": 400000,
+              "thirdOrMore": 700000
+            },
+            "payout": "once",
+            "applyAt": "주소지 동주민센터",
+            "applyUrl": "https://www.yangcheon.go.kr/"
+          }
+        ],
+        "extraNotes": [
+          "넷째는 100만원, 다섯째 이상은 200만원입니다."
+        ]
       },
       {
         "code": "gangseo",
         "name": "강서구",
         "status": "unverified",
         "items": [],
-        "note": "강서구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "extraNotes": [
+          "셋째 자녀 지원금이 있으나 확정 금액을 확인하지 못했습니다."
+        ],
+        "note": "강서구 자체 현금 지원은 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
         "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
       },
       {
         "code": "guro",
         "name": "구로구",
-        "status": "unverified",
-        "items": [],
-        "note": "구로구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
-        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+        "status": "verified",
+        "verifiedAt": "2026-09-10",
+        "source": "구로구청 다자녀 출생축하금 안내",
+        "sourceUrl": "https://www.guro.go.kr/www/contents.do?key=4187",
+        "verifiedBy": "구로구청 공식 페이지(다자녀 출생축하금)",
+        "items": [
+          {
+            "id": "guro-birth",
+            "name": "구로구 다자녀 출생축하금",
+            "kind": "cash",
+            "description": "셋째 자녀부터 한 번 지급됩니다. 첫째와 둘째는 대상이 아닙니다.",
+            "amountByBirthOrder": {
+              "first": 0,
+              "second": 0,
+              "thirdOrMore": 600000
+            },
+            "payout": "once",
+            "applyWithinDays": 180,
+            "applyDeadlineNote": "출생일로부터 6개월 이내에 신청해야 합니다.",
+            "applyAt": "주소지 동주민센터",
+            "applyUrl": "https://www.guro.go.kr/www/contents.do?key=4187"
+          }
+        ],
+        "extraNotes": []
       },
       {
         "code": "geumcheon",
         "name": "금천구",
-        "status": "unverified",
-        "items": [],
-        "note": "금천구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
-        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+        "status": "verified",
+        "verifiedAt": "2026-09-10",
+        "source": "금천구청 출산장려지원 안내",
+        "sourceUrl": "https://www.geumcheon.go.kr/portal/contents.do?key=525",
+        "verifiedBy": "금천구청 공식 페이지(출산장려지원)",
+        "items": [
+          {
+            "id": "geumcheon-birth",
+            "name": "금천구 출산축하금",
+            "kind": "cash",
+            "description": "셋째 자녀부터 지원하는 금액만 확인했습니다.",
+            "amountByBirthOrder": {
+              "first": 0,
+              "second": 0,
+              "thirdOrMore": 700000
+            },
+            "payout": "once",
+            "applyWithinDays": 365,
+            "applyDeadlineNote": "출생일로부터 1년 이내에 신청합니다.",
+            "applyAt": "주소지 동주민센터 또는 정부24",
+            "applyUrl": "https://www.geumcheon.go.kr/portal/contents.do?key=525"
+          }
+        ],
+        "extraNotes": [
+          "넷째 이상은 100만원입니다.",
+          "첫째와 둘째 지원 여부는 최신 자료로 확인하지 못했습니다. 주민센터에 한 번 물어봐 주세요."
+        ]
       },
       {
         "code": "yeongdeungpo",
         "name": "영등포구",
-        "status": "unverified",
-        "items": [],
-        "note": "영등포구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
-        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+        "status": "verified",
+        "verifiedAt": "2026-09-10",
+        "source": "영등포구청 출산양육지원사업 안내",
+        "sourceUrl": "https://www.ydp.go.kr/www/contents.do?key=3307",
+        "verifiedBy": "영등포구청 공식 페이지(출산양육지원사업 안내)",
+        "items": [
+          {
+            "id": "ydp-birth",
+            "name": "영등포구 출생축하금",
+            "kind": "cash",
+            "description": "셋째부터 금액이 크게 올라갑니다.",
+            "amountByBirthOrder": {
+              "first": 100000,
+              "second": 500000,
+              "thirdOrMore": 3000000
+            },
+            "payout": "once",
+            "applyWithinDays": 180,
+            "applyDeadlineNote": "출생일로부터 6개월 이내에 신청해야 합니다.",
+            "applyAt": "주소지 동주민센터 또는 복지로",
+            "applyUrl": "https://www.ydp.go.kr/www/contents.do?key=3307"
+          }
+        ],
+        "extraNotes": [
+          "넷째 이상은 500만원입니다."
+        ]
       },
       {
         "code": "dongjak",
         "name": "동작구",
         "status": "unverified",
         "items": [],
-        "note": "동작구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "extraNotes": [
+          "출산지원금 제도를 동작천사축하금으로 운영하고 있으나 금액은 확인하지 못했습니다."
+        ],
+        "note": "동작구 자체 현금 지원은 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
         "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
       },
       {
@@ -236,7 +397,10 @@
         "name": "관악구",
         "status": "unverified",
         "items": [],
-        "note": "관악구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "extraNotes": [
+          "2~4세 영유아 보호자에게 연 1회 관악사랑상품권 30만원을 지원합니다."
+        ],
+        "note": "관악구 자체 현금 지원은 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
         "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
       },
       {
@@ -244,23 +408,24 @@
         "name": "서초구",
         "status": "unverified",
         "items": [],
-        "note": "서초구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "extraNotes": [],
+        "note": "서초구 자체 현금 지원은 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
         "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
       },
       {
         "code": "gangnam",
         "name": "강남구",
         "status": "verified",
-        "source": "강남구청 출산양육지원금 안내(FAQ) 및 정부24 행복출산 지역별 출산지원 서비스",
-        "sourceUrl": "https://www.gangnam.go.kr/board/B_000063/4931/view.do?mid=FM0211",
         "verifiedAt": "2026-09-10",
-        "verifiedBy": "강남구청 공식 안내 및 정부24 지역별 출산지원금 조회",
+        "source": "강남구청 출산양육지원금 안내",
+        "sourceUrl": "https://www.gangnam.go.kr/board/B_000063/4931/view.do?mid=FM0211",
+        "verifiedBy": "강남구청 공식 안내(FAQ) 및 정부24 지역별 출산지원 서비스",
         "items": [
           {
             "id": "gangnam-birth-support",
             "name": "강남구 출산양육지원금",
             "kind": "cash",
-            "description": "자녀 순위에 따라 한 번 지급됩니다. 출생신고일 기준 1년 전부터 신청일까지 강남구에 계속 주민등록이 있어야 합니다.",
+            "description": "자녀 순위에 따라 한 번 지급됩니다.",
             "amountByBirthOrder": {
               "first": 2000000,
               "second": 2000000,
@@ -268,10 +433,14 @@
             },
             "payout": "once",
             "applyWithinDays": 365,
-            "applyDeadlineNote": "출생신고일로부터 1년 이내에 신청합니다. 거주 기간이 1년에 못 미치면 1년을 채운 뒤 지급됩니다.",
+            "applyDeadlineNote": "출생신고일로부터 1년 이내에 신청합니다.",
             "applyAt": "주소지 동주민센터",
             "applyUrl": "https://www.gangnam.go.kr/"
           }
+        ],
+        "extraNotes": [
+          "넷째 이상은 500만원입니다.",
+          "출생신고일 기준 1년 전부터 신청일까지 계속 강남구에 주민등록이 있어야 합니다. 1년이 안 되면 1년을 채운 뒤 지급됩니다."
         ]
       },
       {
@@ -279,7 +448,8 @@
         "name": "송파구",
         "status": "unverified",
         "items": [],
-        "note": "송파구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "extraNotes": [],
+        "note": "송파구 자체 현금 지원은 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
         "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
       },
       {
@@ -287,7 +457,10 @@
         "name": "강동구",
         "status": "unverified",
         "items": [],
-        "note": "강동구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "extraNotes": [
+          "세 자녀 가정은 세대당 월 10만원, 네 자녀 이상은 월 20만원을 지원합니다. 다자녀 가구만 해당돼 합계에는 넣지 않았습니다."
+        ],
+        "note": "강동구 자체 현금 지원은 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
         "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
       }
     ]

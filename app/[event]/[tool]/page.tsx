@@ -6,6 +6,8 @@ import { ParentalLeaveTool } from '@/components/tools/ParentalLeaveTool';
 import { CoupleLeaveTool } from '@/components/tools/CoupleLeaveTool';
 import { BirthGrantsTool } from '@/components/tools/BirthGrantsTool';
 import { LeaveTimelineTool } from '@/components/tools/LeaveTimelineTool';
+import { SocialDuesTool } from '@/components/tools/SocialDuesTool';
+import { MarriageTaxCreditTool } from '@/components/tools/MarriageTaxCreditTool';
 
 export function generateStaticParams() {
   return TOOLS.map((t) => ({ event: t.event, tool: t.slug }));
@@ -49,6 +51,10 @@ export default async function ToolPage({
       return <BirthGrantsTool tool={found} fallbackToday={fallbackToday} />;
     case 'leave-timeline':
       return <LeaveTimelineTool tool={found} fallbackToday={fallbackToday} />;
+    case 'social-dues':
+      return <SocialDuesTool tool={found} />;
+    case 'marriage-tax-credit':
+      return <MarriageTaxCreditTool tool={found} fallbackToday={fallbackToday} />;
     default:
       notFound();
   }
