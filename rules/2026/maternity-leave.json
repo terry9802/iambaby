@@ -1,0 +1,47 @@
+{
+  "meta": {
+    "ruleId": "maternity-leave",
+    "title": "출산전후휴가 · 배우자 출산휴가",
+    "effectiveFrom": "2026-01-01",
+    "effectiveTo": null,
+    "source": "근로기준법 제74조(임산부의 보호), 고용보험법 제75조·제76조, 고용노동부고시 제2025-124호(출산전후휴가 급여등 상한액)",
+    "sourceUrl": "https://www.moel.go.kr/info/lawinfo/instruction/view.do?bbs_seq=20251201736",
+    "verifiedAt": "2026-09-10",
+    "verifiedBy": "고용노동부 고시 목록(출산전후휴가 급여등 상한액 고시) 및 고용24 제도안내",
+    "note": "상한액은 매년 고용노동부 고시로 바뀐다. 2026년 상한액은 월 220만원(2025년 210만원에서 인상)."
+  },
+  "values": {
+    "leaveDays": {
+      "single": 90,
+      "multiple": 120
+    },
+    "minDaysAfterBirth": {
+      "single": 45,
+      "multiple": 60
+    },
+    "rate": 1.0,
+    "monthlyCap": 2200000,
+    "floorPolicy": "minimumWage",
+    "minimumWage": {
+      "hourly": 10320,
+      "monthlyEquivalent": 2156880,
+      "monthlyHours": 209,
+      "source": "2026년 적용 최저임금 고시 (시간급 10,320원)",
+      "sourceUrl": "https://www.minimumwage.go.kr/customer/notice/view.do?bultnId=4657"
+    },
+    "employerPaidDays": {
+      "priorityCompany": 0,
+      "largeCompany": 60,
+      "largeCompanyMultiple": 75,
+      "note": "우선지원 대상기업은 90일(다태아 120일) 전부를 고용보험에서 지급한다. 대규모기업은 최초 60일(다태아 75일)을 사업주가 통상임금 전액으로 지급하고, 나머지 30일(다태아 45일)만 고용보험에서 지급한다."
+    },
+    "applyFromDaysAfterStart": 30,
+    "applyDeadlineMonthsAfterEnd": 12,
+    "spouseLeave": {
+      "days": 20,
+      "splitCount": 4,
+      "requestWithinDays": 120,
+      "note": "배우자 출산휴가는 20일이며 출산일로부터 120일 이내에 사용해야 하고 4번까지 나눠 쓸 수 있다."
+    }
+  }
+}

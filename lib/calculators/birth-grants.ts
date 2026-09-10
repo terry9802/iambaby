@@ -1,0 +1,318 @@
+import { loadRule } from '@/lib/rules/loader';
+import { missing, ok, type CalcOutcome, type CalcStep, type RuleMeta } from '@/lib/rules/types';
+import { addDays, diffDays, formatKRW, formatManwon, parseDate, toISODate } from '@/lib/format';
+
+/**
+ * 7-3 출산·육아 지원금 통합 조회.
+ * 금액을 더하는 것보다 "언제까지 신청해야 하는지"를 알려주는 쪽이 실제로 돈을 지켜준다.
+ */
+
+export type BirthOrder = 'first' | 'second' | 'thirdOrMore';
+
+export type AmountByBirthOrder = Record<BirthOrder, number>;
+
+export type RawGrant = {
+  id: string;
+  name: string;
+  kind: 'cash' | 'voucher';
+  description: string;
+  amountByBirthOrder?: AmountByBirthOrder;
+  monthlyByAge?: { fromMonth: number; toMonth: number; amount: number }[];
+  payout: 'once' | 'monthly';
+  /** 출생일로부터 며칠 안에 신청해야 하는가 */
+  applyWithinDays?: number;
+  /** 출생일로부터 며칠 뒤에 신청 창구가 열리는가 (첫돌축하금처럼 나중에 신청하는 것) */
+  applyOffsetDays?: number;
+  /** 창구가 열린 뒤 며칠 동안 신청할 수 있는가 */
+  applyWindowDays?: number;
+  applyDeadlineNote?: string;
+  applyAt: string;
+  applyUrl?: string;
+  eligibility?: string;
+};
+
+export type NationalRule = { items: RawGrant[] };
+export type SeoulRule = {
+  sido: { code: string; name: string; items: RawGrant[] };
+  districts: {
+    code: string;
+    name: string;
+    status: 'verified' | 'unverified';
+    items: RawGrant[];
+    source?: string;
+    sourceUrl?: string;
+    verifiedAt?: string;
+    verifiedBy?: string;
+    note?: string;
+    lookupUrl?: string;
+  }[];
+};
+
+export type GrantDeadline = {
+  /** 신청 창구가 열리는 날 */
+  opensAt: string | null;
+  /** 신청 마감일 */
+  dueAt: string;
+  dDay: number;
+  status: 'open' | 'not-yet' | 'passed';
+  note: string;
+};
+
+export type ResolvedGrant = {
+  id: string;
+  name: string;
+  scope: 'national' | 'sido' | 'district';
+  scopeLabel: string;
+  kind: 'cash' | 'voucher';
+  description: string;
+  /** 한 번 받는 돈이면 그 금액, 매달 받는 돈이면 전체 기간 합계 */
+  totalAmount: number;
+  /** 첫 1년 동안 실제로 통장에 들어오는 금액 */
+  firstYearAmount: number;
+  monthlyBreakdown?: { fromMonth: number; toMonth: number; amount: number }[];
+  payout: 'once' | 'monthly';
+  deadline: GrantDeadline | null;
+  applyAt: string;
+  applyUrl?: string;
+  eligibility?: string;
+};
+
+export type BirthGrantsValue = {
+  grants: ResolvedGrant[];
+  totalAmount: number;
+  firstYearAmount: number;
+  /** 30일 안에 마감되는 항목 */
+  urgent: ResolvedGrant[];
+  districtStatus: 'verified' | 'unverified' | 'unsupported';
+  districtName: string | null;
+  districtLookupUrl?: string;
+};
+
+function amountFor(grant: RawGrant, order: BirthOrder): number {
+  if (grant.amountByBirthOrder) return grant.amountByBirthOrder[order];
+  return 0;
+}
+
+function monthlyTotals(
+  grant: RawGrant,
+): { total: number; firstYear: number; breakdown: { fromMonth: number; toMonth: number; amount: number }[] } {
+  const breakdown = grant.monthlyByAge ?? [];
+  let total = 0;
+  let firstYear = 0;
+  for (const band of breakdown) {
+    const months = band.toMonth - band.fromMonth + 1;
+    total += band.amount * months;
+    const firstYearMonths = Math.max(0, Math.min(band.toMonth, 11) - band.fromMonth + 1);
+    firstYear += band.amount * firstYearMonths;
+  }
+  return { total, firstYear, breakdown };
+}
+
+function resolveDeadline(grant: RawGrant, birthDate: Date, today: Date): GrantDeadline | null {
+  const offset = grant.applyOffsetDays ?? 0;
+  const window = grant.applyWindowDays;
+  const within = grant.applyWithinDays;
+
+  if (within === undefined && window === undefined) return null;
+
+  const opens = offset > 0 ? addDays(birthDate, offset) : null;
+  const due =
+    window !== undefined ? addDays(birthDate, offset + window) : addDays(birthDate, within as number);
+
+  const dDay = diffDays(today, due);
+  const notOpenYet = opens !== null && diffDays(today, opens) > 0;
+
+  return {
+    opensAt: opens ? toISODate(opens) : null,
+    dueAt: toISODate(due),
+    dDay,
+    status: dDay < 0 ? 'passed' : notOpenYet ? 'not-yet' : 'open',
+    note: grant.applyDeadlineNote ?? '',
+  };
+}
+
+function resolveGrant(
+  grant: RawGrant,
+  scope: ResolvedGrant['scope'],
+  scopeLabel: string,
+  order: BirthOrder,
+  birthDate: Date,
+  today: Date,
+): ResolvedGrant {
+  const once = amountFor(grant, order);
+  const monthly = grant.payout === 'monthly' ? monthlyTotals(grant) : null;
+
+  return {
+    id: grant.id,
+    name: grant.name,
+    scope,
+    scopeLabel,
+    kind: grant.kind,
+    description: grant.description,
+    totalAmount: monthly ? monthly.total : once,
+    firstYearAmount: monthly ? monthly.firstYear : once,
+    monthlyBreakdown: monthly?.breakdown,
+    payout: grant.payout,
+    deadline: resolveDeadline(grant, birthDate, today),
+    applyAt: grant.applyAt,
+    applyUrl: grant.applyUrl,
+    eligibility: grant.eligibility,
+  };
+}
+
+export type BirthGrantsInput = {
+  childBirthDate?: string;
+  birthOrder?: BirthOrder;
+  sido?: string;
+  sigungu?: string;
+  /** 테스트에서 오늘 날짜를 고정하기 위한 값 */
+  today?: string;
+};
+
+export function checkBirthGrants(input: BirthGrantsInput): CalcOutcome<BirthGrantsValue> {
+  const gaps = [];
+  if (!input.childBirthDate) {
+    gaps.push({
+      field: 'childBirthDate',
+      label: '자녀 출생일 (또는 출산 예정일)',
+      hint: '신청 기한이 전부 출생일 기준이라, 이 날짜가 있어야 D-day를 세어드릴 수 있어요.',
+    });
+  }
+  if (!input.birthOrder) {
+    gaps.push({
+      field: 'birthOrder',
+      label: '출산 순위',
+      hint: '첫째인지 둘째인지에 따라 첫만남이용권과 지자체 지원금이 달라져요.',
+    });
+  }
+  if (gaps.length > 0) return missing<BirthGrantsValue>(...gaps);
+
+  const birthDateIso = input.childBirthDate as string;
+  const order = input.birthOrder as BirthOrder;
+  const birthDate = parseDate(birthDateIso);
+  const today = input.today ? parseDate(input.today) : new Date();
+
+  const nationalLookup = loadRule<NationalRule>('birth-grants-national', birthDateIso);
+  const grants: ResolvedGrant[] = nationalLookup.rule.values.items.map((g) =>
+    resolveGrant(g, 'national', '정부', order, birthDate, today),
+  );
+  const basis: RuleMeta[] = [nationalLookup.rule.meta];
+
+  let districtStatus: BirthGrantsValue['districtStatus'] = 'unsupported';
+  let districtName: string | null = null;
+  let districtLookupUrl: string | undefined;
+
+  if (input.sido === 'seoul') {
+    const seoulLookup = loadRule<SeoulRule>('birth-grants-seoul', birthDateIso);
+    const seoul = seoulLookup.rule.values;
+    basis.push(seoulLookup.rule.meta);
+
+    for (const item of seoul.sido.items) {
+      grants.push(resolveGrant(item, 'sido', seoul.sido.name, order, birthDate, today));
+    }
+
+    const district = seoul.districts.find((d) => d.code === input.sigungu);
+    if (district) {
+      districtName = district.name;
+      districtStatus = district.status;
+      districtLookupUrl = district.lookupUrl;
+      for (const item of district.items) {
+        grants.push(resolveGrant(item, 'district', district.name, order, birthDate, today));
+      }
+    }
+  }
+
+  const totalAmount = grants.reduce((acc, g) => acc + g.totalAmount, 0);
+  const firstYearAmount = grants.reduce((acc, g) => acc + g.firstYearAmount, 0);
+  const urgent = grants.filter(
+    (g) => g.deadline && g.deadline.status === 'open' && g.deadline.dDay <= 30,
+  );
+
+  const steps: CalcStep[] = [
+    ...grants.map((g) => ({
+      label: `${g.scopeLabel} · ${g.name}`,
+      formula:
+        g.payout === 'monthly' && g.monthlyBreakdown
+          ? g.monthlyBreakdown
+              .map(
+                (b) =>
+                  `${formatManwon(b.amount)} × ${b.toMonth - b.fromMonth + 1}개월(생후 ${b.fromMonth}~${b.toMonth}개월)`,
+              )
+              .join(' + ')
+          : '한 번 지급',
+      result: g.totalAmount,
+      unit: 'KRW' as const,
+      note: g.deadline
+        ? g.deadline.status === 'passed'
+          ? `신청 기한(${g.deadline.dueAt})이 지났어요.`
+          : `신청 마감 ${g.deadline.dueAt} (D${g.deadline.dDay >= 0 ? '-' : '+'}${Math.abs(g.deadline.dDay)})`
+        : undefined,
+    })),
+    {
+      label: '전 기간 합계',
+      formula: grants.map((g) => formatManwon(g.totalAmount)).join(' + '),
+      result: totalAmount,
+      unit: 'KRW',
+      note: '아동수당처럼 몇 해에 걸쳐 나오는 돈까지 모두 더한 금액이에요.',
+    },
+    {
+      label: '첫 1년 동안 들어오는 돈',
+      formula: grants.map((g) => formatManwon(g.firstYearAmount)).join(' + '),
+      result: firstYearAmount,
+      unit: 'KRW',
+      note: '아이가 태어난 뒤 12개월 안에 실제로 통장에 들어오는 금액이에요.',
+    },
+  ];
+
+  const assumptions = [
+    '소득이나 재산과 무관하게 모두에게 나오는 지원만 담았어요. 저소득·다자녀·장애 가정 대상 지원은 빠져 있습니다.',
+    '아동수당은 수도권 기준 월 10만원으로 계산했어요. 비수도권과 인구감소지역은 더 많이 받습니다.',
+    '어린이집이나 유치원을 이용하면 부모급여에서 보육료를 뺀 차액만 현금으로 들어와요.',
+  ];
+
+  const warnings = [
+    '부모급여와 아동수당은 출생일 포함 60일 안에 신청해야 출생한 달까지 소급됩니다. 하루만 늦어도 그 전 달치는 사라져요.',
+    '금액과 요건은 지자체 예산에 따라 해가 바뀌면 달라질 수 있어요. 신청 전에 주민센터나 링크로 한 번 더 확인해 주세요.',
+  ];
+
+  if (input.sido === 'seoul' && districtStatus === 'unverified') {
+    warnings.push(
+      `${districtName ?? '선택하신 자치구'}의 자체 지원은 공식 출처로 확인하지 못해 합계에 넣지 않았어요. 실제로는 더 받으실 수 있으니 정부24 지역별 조회로 확인해 주세요.`,
+    );
+  }
+  if (input.sido !== 'seoul') {
+    warnings.push(
+      '지금은 서울 지역 지원만 정리돼 있어요. 다른 지역은 정부24 행복출산 지역별 조회에서 확인해 주세요.',
+    );
+  }
+  const passed = grants.filter((g) => g.deadline?.status === 'passed');
+  if (passed.length > 0) {
+    warnings.push(
+      `이미 기한이 지난 항목이 ${passed.length}개 있어요: ${passed.map((g) => g.name).join(', ')}. 소급이 되는 경우도 있으니 주민센터에 한 번 물어보세요.`,
+    );
+  }
+
+  return ok({
+    value: {
+      grants,
+      totalAmount,
+      firstYearAmount,
+      urgent,
+      districtStatus,
+      districtName,
+      districtLookupUrl,
+    },
+    steps,
+    assumptions,
+    warnings,
+    basis,
+  });
+}
+
+export function formatDDay(deadline: GrantDeadline): string {
+  if (deadline.dDay === 0) return '오늘 마감';
+  if (deadline.dDay < 0) return `${Math.abs(deadline.dDay)}일 지남`;
+  return `D-${deadline.dDay}`;
+}
+
+export { formatKRW };

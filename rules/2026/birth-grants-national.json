@@ -1,0 +1,56 @@
+{
+  "meta": {
+    "ruleId": "birth-grants-national",
+    "title": "출산·양육 중앙정부 현금성 지원",
+    "effectiveFrom": "2026-01-01",
+    "effectiveTo": null,
+    "source": "저출산·고령사회기본법에 따른 첫만남이용권, 아동수당법(부모급여·아동수당)",
+    "sourceUrl": "https://www.bokjiro.go.kr/ssis-tbu/twataa/wlfareInfo/moveTWAT52011M.do?wlfareInfoId=WLF00001171",
+    "verifiedAt": "2026-09-10",
+    "verifiedBy": "보건복지부 보도자료(아동수당 대상·금액 확대) 및 정책브리핑 2026년 보건·복지 정책 안내",
+    "note": "아동수당은 2026년부터 9세 미만으로 확대되고 거주지역에 따라 금액이 다르다. 이 룰에는 수도권 기준(월 10만원)만 담았다."
+  },
+  "values": {
+    "items": [
+      {
+        "id": "first-meeting-voucher",
+        "name": "첫만남이용권",
+        "kind": "voucher",
+        "description": "출생아 1명당 국민행복카드 포인트로 한 번 지급됩니다.",
+        "amountByBirthOrder": { "first": 2000000, "second": 3000000, "thirdOrMore": 3000000 },
+        "payout": "once",
+        "applyWithinDays": 730,
+        "applyDeadlineNote": "출생일로부터 2년 이내 신청, 사용 기한도 출생일로부터 2년입니다.",
+        "applyAt": "주민센터 · 복지로 · 정부24",
+        "applyUrl": "https://www.bokjiro.go.kr/"
+      },
+      {
+        "id": "parental-benefit",
+        "name": "부모급여",
+        "kind": "cash",
+        "description": "만 0세는 월 100만원, 만 1세는 월 50만원을 현금으로 받습니다. 어린이집을 이용하면 보육료를 뺀 차액만 현금으로 들어옵니다.",
+        "monthlyByAge": [
+          { "fromMonth": 0, "toMonth": 11, "amount": 1000000 },
+          { "fromMonth": 12, "toMonth": 23, "amount": 500000 }
+        ],
+        "payout": "monthly",
+        "applyWithinDays": 60,
+        "applyDeadlineNote": "출생일을 포함해 60일 이내에 신청하면 출생일이 속한 달부터 소급해 받습니다. 60일을 넘기면 신청한 달부터만 받습니다.",
+        "applyAt": "주민센터 · 복지로 · 정부24 (행복출산 원스톱)",
+        "applyUrl": "https://www.gov.kr/portal/onestopSvc/happyBirth"
+      },
+      {
+        "id": "child-allowance",
+        "name": "아동수당",
+        "kind": "cash",
+        "description": "2026년부터 9세 미만 아동에게 매월 지급됩니다. 수도권은 월 10만원이고 비수도권·인구감소지역은 더 많습니다.",
+        "monthlyByAge": [{ "fromMonth": 0, "toMonth": 107, "amount": 100000 }],
+        "payout": "monthly",
+        "applyWithinDays": 60,
+        "applyDeadlineNote": "출생일을 포함해 60일 이내에 신청하면 소급 적용됩니다. 부모급여와 함께 신청하면 됩니다.",
+        "applyAt": "주민센터 · 복지로 · 정부24 (행복출산 원스톱)",
+        "applyUrl": "https://www.gov.kr/portal/onestopSvc/happyBirth"
+      }
+    ]
+  }
+}
