@@ -23,7 +23,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${SITE_URL}/${t.event}/${t.slug}`,
       lastModified: now,
       changeFrequency: 'monthly' as const,
-      priority: t.featured ? 0.9 : 0.8,
+      priority: 0.8,
     })),
   ];
 }

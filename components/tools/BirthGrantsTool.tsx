@@ -12,6 +12,7 @@ import {
 import { formatKRW, formatManwon } from '@/lib/format';
 import { useProfile } from '@/lib/profile/context';
 import { Seeder, pendingExamples, resolveToday } from '@/lib/profile/seed';
+import { buildShareQuery, pickDefined, qStr, readShareQuery } from '@/lib/share';
 import type { Tool } from '@/lib/tools';
 import { CalcShell } from '@/components/calculator/CalcShell';
 import { ResultAside, ResultHeadline } from '@/components/calculator/ResultHeadline';
@@ -116,12 +117,38 @@ export function BirthGrantsTool({ tool, fallbackToday }: { tool: Tool; fallbackT
     };
   }, [profile, hydrated, fallbackToday]);
 
-  const input = useMemo(() => ({ ...seeded.input, ...edits }), [seeded, edits]);
+  const fromLink = useMemo(() => {
+    const sp = readShareQuery(hydrated);
+    const order = qStr(sp, 'order');
+    return pickDefined({
+      childBirthDate: qStr(sp, 'birth'),
+      birthOrder:
+        order === 'first' || order === 'second' || order === 'thirdOrMore'
+          ? (order as BirthOrder)
+          : undefined,
+      sido: qStr(sp, 'sido'),
+      sigungu: qStr(sp, 'gu'),
+    });
+  }, [hydrated]);
+
+  const input = useMemo(
+    () => ({ ...seeded.input, ...fromLink, ...edits }),
+    [seeded, fromLink, edits],
+  );
   const set = useCallback(
     (patch: Partial<BirthGrantsInput>) => setEdits((prev) => ({ ...prev, ...patch })),
     [],
   );
-  const examples = pendingExamples(seeded.examples, edits);
+  const examples = pendingExamples(seeded.examples, { ...fromLink, ...edits });
+  const autofilled = new Set(
+    [...seeded.autofilled].filter((field) => !(field in fromLink) && !(field in edits)),
+  );
+  const shareQuery = buildShareQuery({
+    birth: input.childBirthDate,
+    order: input.birthOrder,
+    sido: input.sido,
+    gu: input.sigungu,
+  });
 
   const districts = useMemo(
     () => listSeoulDistricts(input.childBirthDate ?? fallbackToday),
@@ -162,6 +189,8 @@ export function BirthGrantsTool({ tool, fallbackToday }: { tool: Tool; fallbackT
       outcome={outcome}
       headline={headline}
       exampleFields={examples}
+      shareQuery={shareQuery}
+      fromSharedLink={Object.keys(fromLink).length > 0}
       detail={
         outcome.ok ? (
           <section className="rounded-[12px] border border-line bg-surface px-4 py-2">
@@ -196,7 +225,7 @@ export function BirthGrantsTool({ tool, fallbackToday }: { tool: Tool; fallbackT
             label="자녀 출생일 (출산 예정일도 괜찮아요)"
             hint="신청 기한이 전부 출생일 기준이라 이 날짜로 D-day를 세어드려요."
             value={input.childBirthDate}
-            autofilled={seeded.autofilled.has('childBirthDate')}
+            autofilled={autofilled.has('childBirthDate')}
             onChange={(childBirthDate) => set({ childBirthDate })}
           />
           <SegmentedField<BirthOrder>
@@ -213,7 +242,7 @@ export function BirthGrantsTool({ tool, fallbackToday }: { tool: Tool; fallbackT
             label="사는 지역"
             hint="지금은 서울만 정리돼 있어요. 다른 지역은 정부24 링크로 안내해 드립니다."
             value={input.sido}
-            autofilled={seeded.autofilled.has('sido')}
+            autofilled={autofilled.has('sido')}
             onChange={(sido) => set({ sido, sigungu: undefined })}
             options={[
               { value: 'seoul', label: '서울' },
@@ -225,7 +254,7 @@ export function BirthGrantsTool({ tool, fallbackToday }: { tool: Tool; fallbackT
               label="자치구"
               placeholder="구를 골라 주세요"
               value={input.sigungu}
-              autofilled={seeded.autofilled.has('sigungu')}
+              autofilled={autofilled.has('sigungu')}
               onChange={(sigungu) => set({ sigungu })}
               options={districts.map((d) => ({
                 value: d.code,

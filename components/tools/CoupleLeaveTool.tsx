@@ -9,6 +9,7 @@ import {
 import { formatKRW, formatManwon } from '@/lib/format';
 import { useProfile } from '@/lib/profile/context';
 import { Seeder, pendingExamples, resolveToday } from '@/lib/profile/seed';
+import { buildShareQuery, pickDefined, qBool, qNum, qStr, readShareQuery } from '@/lib/share';
 import type { Tool } from '@/lib/tools';
 import { CalcShell } from '@/components/calculator/CalcShell';
 import { ResultAside, ResultHeadline } from '@/components/calculator/ResultHeadline';
@@ -90,7 +91,23 @@ export function CoupleLeaveTool({ tool, fallbackToday }: { tool: Tool; fallbackT
     };
   }, [profile, hydrated, fallbackToday]);
 
-  const input = useMemo(() => ({ ...seeded.input, ...edits }), [seeded, edits]);
+  const fromLink = useMemo(() => {
+    const sp = readShareQuery(hydrated);
+    return pickDefined({
+      myWage: qNum(sp, 'my'),
+      spouseWage: qNum(sp, 'spouse'),
+      childBirthDate: qStr(sp, 'birth'),
+      myMaxMonths: qNum(sp, 'myMax'),
+      spouseMaxMonths: qNum(sp, 'spouseMax'),
+      totalMonthsBudget: qNum(sp, 'budget'),
+      allowOverlap: qBool(sp, 'overlap'),
+    });
+  }, [hydrated]);
+
+  const input = useMemo(
+    () => ({ ...seeded.input, ...fromLink, ...edits }),
+    [seeded, fromLink, edits],
+  );
   const set = useCallback(
     (patch: Partial<CoupleLeaveInput>) => setEdits((prev) => ({ ...prev, ...patch })),
     [],
@@ -107,7 +124,19 @@ export function CoupleLeaveTool({ tool, fallbackToday }: { tool: Tool; fallbackT
 
   const combos = outcome.ok ? [outcome.result.value.best, ...outcome.result.value.alternatives] : [];
   const shown = combos[Math.min(selected, combos.length - 1)];
-  const examples = pendingExamples(seeded.examples, edits);
+  const examples = pendingExamples(seeded.examples, { ...fromLink, ...edits });
+  const autofilled = new Set(
+    [...seeded.autofilled].filter((field) => !(field in fromLink) && !(field in edits)),
+  );
+  const shareQuery = buildShareQuery({
+    my: input.myWage,
+    spouse: input.spouseWage,
+    birth: input.childBirthDate,
+    myMax: input.myMaxMonths,
+    spouseMax: input.spouseMaxMonths,
+    budget: useBudget ? (input.totalMonthsBudget ?? 12) : undefined,
+    overlap: input.allowOverlap,
+  });
 
   const headline = outcome.ok ? (
     <ResultHeadline
@@ -147,6 +176,8 @@ export function CoupleLeaveTool({ tool, fallbackToday }: { tool: Tool; fallbackT
       outcome={outcome}
       headline={headline}
       exampleFields={examples}
+      shareQuery={shareQuery}
+      fromSharedLink={Object.keys(fromLink).length > 0}
       detail={
         outcome.ok && shown ? (
           <>
@@ -177,14 +208,14 @@ export function CoupleLeaveTool({ tool, fallbackToday }: { tool: Tool; fallbackT
           <MoneyField
             label="본인 월 통상임금"
             value={input.myWage}
-            autofilled={seeded.autofilled.has('myWage')}
+            autofilled={autofilled.has('myWage')}
             placeholder="3,500,000"
             onChange={(myWage) => set({ myWage })}
           />
           <MoneyField
             label="배우자 월 통상임금"
             value={input.spouseWage}
-            autofilled={seeded.autofilled.has('spouseWage')}
+            autofilled={autofilled.has('spouseWage')}
             placeholder="3,000,000"
             onChange={(spouseWage) => set({ spouseWage })}
           />
@@ -192,7 +223,7 @@ export function CoupleLeaveTool({ tool, fallbackToday }: { tool: Tool; fallbackT
             label="자녀 생년월일 (출산 예정일도 괜찮아요)"
             hint="특례는 생후 18개월 안에 쓴 기간에만 붙어서 이 날짜가 기준이 돼요."
             value={input.childBirthDate}
-            autofilled={seeded.autofilled.has('childBirthDate')}
+            autofilled={autofilled.has('childBirthDate')}
             onChange={(childBirthDate) => set({ childBirthDate })}
           />
           <NumberField

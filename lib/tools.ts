@@ -86,7 +86,6 @@ export type Tool = {
   ruleFile: string;
   /** 타임라인에서 이 도구가 필요한 시점 */
   timing: string;
-  featured?: boolean;
 };
 
 export const TOOLS: Tool[] = [
@@ -122,7 +121,6 @@ export const TOOLS: Tool[] = [
     profileFields: ['income', 'spouse', 'children'],
     ruleFile: 'parental-leave-couple',
     timing: '자녀 생후 18개월 이내',
-    featured: true,
   },
   {
     slug: 'birth-grants',
@@ -140,7 +138,7 @@ export const TOOLS: Tool[] = [
 export const TOOL_TYPE_LABEL: Record<ToolType, string> = {
   calculator: '계산기',
   checker: '판정기',
-  optimizer: '최적화기',
+  optimizer: '최적화계산기',
 };
 
 export function toolsOf(event: EventKey): Tool[] {

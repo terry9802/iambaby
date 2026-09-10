@@ -12,7 +12,9 @@ export type IconName =
   | 'jobchange'
   | 'retirement'
   | 'inheritance'
-  | 'socialdues';
+  | 'socialdues'
+  | 'share'
+  | 'check';
 
 const PATHS: Record<IconName, React.ReactNode> = {
   // 젖병
@@ -69,6 +71,14 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <path d="m3.6 6.6 8.4 6 8.4-6" />
     </>
   ),
+  // 링크
+  share: (
+    <>
+      <path d="M10 13.5a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1.2 1.2" />
+      <path d="M14 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1.2-1.2" />
+    </>
+  ),
+  check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
 };
 
 export function Icon({

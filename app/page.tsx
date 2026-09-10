@@ -47,29 +47,12 @@ export default function HomePage() {
               <li key={tool.slug}>
                 <Link
                   href={`/${tool.event}/${tool.slug}`}
-                  className={
-                    'flex flex-col gap-1.5 rounded-[12px] border px-4 py-3.5 transition-colors ' +
-                    (tool.featured
-                      ? 'border-brand bg-brand-soft hover:border-brand-strong'
-                      : 'border-line bg-surface hover:border-line-strong')
-                  }
+                  className="flex flex-col gap-1.5 rounded-[12px] border border-line bg-surface px-4 py-3.5 transition-colors hover:border-line-strong"
                 >
                   <div className="flex flex-wrap items-center gap-2">
-                    <span
-                      className={
-                        'rounded-full px-2 py-0.5 text-[11px] font-medium ' +
-                        (tool.featured
-                          ? 'bg-brand-strong text-white'
-                          : 'border border-line bg-surface text-ink-faint')
-                      }
-                    >
+                    <span className="rounded-full border border-line bg-surface px-2 py-0.5 text-[11px] font-medium text-ink-faint">
                       {TOOL_TYPE_LABEL[tool.type]}
                     </span>
-                    {tool.featured && (
-                      <span className="text-[11px] font-semibold text-brand-strong">
-                        여기에만 있는 기능
-                      </span>
-                    )}
                   </div>
                   <p className="text-[15px] font-semibold leading-snug text-ink">{tool.question}</p>
                   <p className="text-[12.5px] leading-relaxed text-ink-soft">{tool.lead}</p>

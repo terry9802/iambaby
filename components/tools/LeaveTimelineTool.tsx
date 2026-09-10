@@ -9,6 +9,7 @@ import {
 import { addDays, formatDate, formatKRW, parseDate, toISODate } from '@/lib/format';
 import { useProfile } from '@/lib/profile/context';
 import { Seeder, pendingExamples, resolveToday } from '@/lib/profile/seed';
+import { buildShareQuery, pickDefined, qBool, qNum, qStr, readShareQuery } from '@/lib/share';
 import type { Tool } from '@/lib/tools';
 import { CalcShell } from '@/components/calculator/CalcShell';
 import { ResultAside, ResultHeadline } from '@/components/calculator/ResultHeadline';
@@ -44,12 +45,37 @@ export function LeaveTimelineTool({ tool, fallbackToday }: { tool: Tool; fallbac
     };
   }, [profile, hydrated, fallbackToday]);
 
-  const input = useMemo(() => ({ ...seeded.input, ...edits }), [seeded, edits]);
+  const fromLink = useMemo(() => {
+    const sp = readShareQuery(hydrated);
+    const size = qStr(sp, 'size');
+    return pickDefined({
+      dueDate: qStr(sp, 'due'),
+      monthlyWage: qNum(sp, 'wage'),
+      companySize: size === 'priority' || size === 'large' ? (size as CompanySize) : undefined,
+      parentalLeaveMonths: qNum(sp, 'months'),
+      isMultiple: qBool(sp, 'multi'),
+    });
+  }, [hydrated]);
+
+  const input = useMemo(
+    () => ({ ...seeded.input, ...fromLink, ...edits }),
+    [seeded, fromLink, edits],
+  );
   const set = useCallback(
     (patch: Partial<LeaveTimelineInput>) => setEdits((prev) => ({ ...prev, ...patch })),
     [],
   );
-  const examples = pendingExamples(seeded.examples, edits);
+  const examples = pendingExamples(seeded.examples, { ...fromLink, ...edits });
+  const autofilled = new Set(
+    [...seeded.autofilled].filter((field) => !(field in fromLink) && !(field in edits)),
+  );
+  const shareQuery = buildShareQuery({
+    due: input.dueDate,
+    wage: input.monthlyWage,
+    size: input.companySize,
+    months: input.parentalLeaveMonths,
+    multi: input.isMultiple,
+  });
 
   const outcome = useMemo(() => calcLeaveTimeline(input), [input]);
 
@@ -91,6 +117,8 @@ export function LeaveTimelineTool({ tool, fallbackToday }: { tool: Tool; fallbac
       outcome={outcome}
       headline={headline}
       exampleFields={examples}
+      shareQuery={shareQuery}
+      fromSharedLink={Object.keys(fromLink).length > 0}
       detail={
         outcome.ok ? (
           <>
@@ -140,13 +168,13 @@ export function LeaveTimelineTool({ tool, fallbackToday }: { tool: Tool; fallbac
           <DateField
             label="출산 예정일"
             value={input.dueDate}
-            autofilled={seeded.autofilled.has('dueDate')}
+            autofilled={autofilled.has('dueDate')}
             onChange={(dueDate) => set({ dueDate })}
           />
           <MoneyField
             label="월 통상임금"
             value={input.monthlyWage}
-            autofilled={seeded.autofilled.has('monthlyWage')}
+            autofilled={autofilled.has('monthlyWage')}
             placeholder="3,000,000"
             onChange={(monthlyWage) => set({ monthlyWage })}
           />

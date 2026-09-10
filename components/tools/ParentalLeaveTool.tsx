@@ -5,6 +5,7 @@ import { calcParentalLeave, type ParentalLeaveInput } from '@/lib/calculators/pa
 import { formatKRW, formatManwon } from '@/lib/format';
 import { useProfile } from '@/lib/profile/context';
 import { Seeder, pendingExamples, resolveToday } from '@/lib/profile/seed';
+import { buildShareQuery, pickDefined, qBool, qNum, readShareQuery } from '@/lib/share';
 import type { Tool } from '@/lib/tools';
 import { CalcShell } from '@/components/calculator/CalcShell';
 import { ResultAside, ResultHeadline } from '@/components/calculator/ResultHeadline';
@@ -29,14 +30,35 @@ export function ParentalLeaveTool({ tool, fallbackToday }: { tool: Tool; fallbac
     };
   }, [profile, hydrated, fallbackToday]);
 
-  const input = useMemo(() => ({ ...seeded.input, ...edits }), [seeded, edits]);
+  // 공유받은 링크의 값 > 프로필 > 예시값 순으로 이기고, 사용자가 직접 고친 값이 가장 세다.
+  const fromLink = useMemo(() => {
+    const sp = readShareQuery(hydrated);
+    return pickDefined({
+      monthlyWage: qNum(sp, 'wage'),
+      months: qNum(sp, 'months'),
+      singleParent: qBool(sp, 'single'),
+    });
+  }, [hydrated]);
+
+  const input = useMemo(
+    () => ({ ...seeded.input, ...fromLink, ...edits }),
+    [seeded, fromLink, edits],
+  );
   const set = useCallback(
     (patch: Partial<ParentalLeaveInput>) => setEdits((prev) => ({ ...prev, ...patch })),
     [],
   );
 
   const outcome = useMemo(() => calcParentalLeave(input), [input]);
-  const examples = pendingExamples(seeded.examples, edits);
+  const examples = pendingExamples(seeded.examples, { ...fromLink, ...edits });
+  const autofilled = new Set(
+    [...seeded.autofilled].filter((field) => !(field in fromLink) && !(field in edits)),
+  );
+  const shareQuery = buildShareQuery({
+    wage: input.monthlyWage,
+    months: input.months,
+    single: input.singleParent,
+  });
 
   const headline = outcome.ok ? (
     <ResultHeadline
@@ -68,6 +90,8 @@ export function ParentalLeaveTool({ tool, fallbackToday }: { tool: Tool; fallbac
       outcome={outcome}
       headline={headline}
       exampleFields={examples}
+      shareQuery={shareQuery}
+      fromSharedLink={Object.keys(fromLink).length > 0}
       detail={
         outcome.ok ? (
           <MonthlyBars
@@ -91,7 +115,7 @@ export function ParentalLeaveTool({ tool, fallbackToday }: { tool: Tool; fallbac
             label="월 통상임금"
             hint="기본급에 매달 고정으로 나오는 수당을 더한 금액이에요. 성과급처럼 들쭉날쭉한 항목은 뺍니다."
             value={input.monthlyWage}
-            autofilled={seeded.autofilled.has('monthlyWage')}
+            autofilled={autofilled.has('monthlyWage')}
             placeholder="3,000,000"
             onChange={(monthlyWage) => set({ monthlyWage })}
           />

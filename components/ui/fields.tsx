@@ -9,18 +9,25 @@ function FieldFrame({
   label,
   hint,
   autofilled,
+  required,
   children,
 }: {
   id: string;
   label: string;
   hint?: string;
   autofilled?: boolean;
+  required?: boolean;
   children: ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="flex items-center gap-2 text-[13.5px] font-semibold text-ink">
+      <label htmlFor={id} className="flex flex-wrap items-center gap-2 text-[13.5px] font-semibold text-ink">
         {label}
+        {required && (
+          <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-medium text-brand-strong">
+            필수
+          </span>
+        )}
         {autofilled && (
           <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-medium text-brand-strong">
             프로필에서 가져옴
@@ -44,6 +51,7 @@ export function MoneyField({
   onChange,
   placeholder,
   autofilled,
+  required,
 }: {
   label: string;
   hint?: string;
@@ -51,10 +59,11 @@ export function MoneyField({
   onChange: (next: number | undefined) => void;
   placeholder?: string;
   autofilled?: boolean;
+  required?: boolean;
 }) {
   const id = useId();
   return (
-    <FieldFrame id={id} label={label} hint={hint} autofilled={autofilled}>
+    <FieldFrame id={id} label={label} hint={hint} autofilled={autofilled} required={required}>
       <div className="relative">
         <input
           id={id}
@@ -149,16 +158,18 @@ export function DateField({
   value,
   onChange,
   autofilled,
+  required,
 }: {
   label: string;
   hint?: string;
   value: string | undefined;
   onChange: (next: string | undefined) => void;
   autofilled?: boolean;
+  required?: boolean;
 }) {
   const id = useId();
   return (
-    <FieldFrame id={id} label={label} hint={hint} autofilled={autofilled}>
+    <FieldFrame id={id} label={label} hint={hint} autofilled={autofilled} required={required}>
       <input
         id={id}
         type="date"
@@ -177,6 +188,7 @@ export function SegmentedField<T extends string>({
   onChange,
   options,
   autofilled,
+  required,
 }: {
   label: string;
   hint?: string;
@@ -184,10 +196,11 @@ export function SegmentedField<T extends string>({
   onChange: (next: T) => void;
   options: { value: T; label: string }[];
   autofilled?: boolean;
+  required?: boolean;
 }) {
   const id = useId();
   return (
-    <FieldFrame id={id} label={label} hint={hint} autofilled={autofilled}>
+    <FieldFrame id={id} label={label} hint={hint} autofilled={autofilled} required={required}>
       <div role="radiogroup" aria-label={label} className="flex flex-wrap gap-1.5">
         {options.map((opt) => {
           const active = value === opt.value;
@@ -222,6 +235,7 @@ export function SelectField<T extends string>({
   options,
   placeholder,
   autofilled,
+  required,
 }: {
   label: string;
   hint?: string;
@@ -230,10 +244,11 @@ export function SelectField<T extends string>({
   options: { value: T; label: string }[];
   placeholder?: string;
   autofilled?: boolean;
+  required?: boolean;
 }) {
   const id = useId();
   return (
-    <FieldFrame id={id} label={label} hint={hint} autofilled={autofilled}>
+    <FieldFrame id={id} label={label} hint={hint} autofilled={autofilled} required={required}>
       <select
         id={id}
         className={inputClass}

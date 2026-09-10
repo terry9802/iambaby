@@ -6,6 +6,7 @@ import type { CalcOutcome } from '@/lib/rules/types';
 import { TOOL_TYPE_LABEL, type Tool } from '@/lib/tools';
 import { BasisFooter, StaleBadge, hasStaleBasis } from './BasisFooter';
 import { Callout } from './Callout';
+import { ShareButton } from './ShareButton';
 import { StepBreakdown } from './StepBreakdown';
 
 /**
@@ -19,6 +20,8 @@ export function CalcShell<T>({
   headline,
   detail,
   exampleFields,
+  shareQuery,
+  fromSharedLink,
 }: {
   tool: Tool;
   outcome: CalcOutcome<T>;
@@ -30,6 +33,10 @@ export function CalcShell<T>({
   detail?: ReactNode;
   /** 프로필이 비어 예시값으로 채운 항목들. 있으면 결과가 내 값이 아님을 밝힌다. */
   exampleFields?: string[];
+  /** 지금 입력값을 담은 공유용 주소 조각 */
+  shareQuery?: string;
+  /** 공유받은 링크의 값으로 계산 중인가 */
+  fromSharedLink?: boolean;
 }) {
   const stale = outcome.ok && hasStaleBasis(outcome.result.basis);
 
@@ -65,6 +72,12 @@ export function CalcShell<T>({
         {outcome.ok ? (
           <>
             {headline}
+            {fromSharedLink && (
+              <p className="mt-3.5 rounded-[8px] bg-brand-soft px-3 py-2.5 text-[12.5px] leading-relaxed text-ink-soft">
+                공유받은 링크에 담긴 값으로 계산했어요. 아래에서 내 값으로 바꾸면 바로 다시
+                계산됩니다.
+              </p>
+            )}
             {exampleFields && exampleFields.length > 0 && (
               <p className="mt-3.5 rounded-[8px] bg-sunk px-3 py-2.5 text-[12.5px] leading-relaxed text-ink-soft">
                 아직 프로필이 비어 있어서 {exampleFields.join(', ')}를 예시값으로 채워 계산했어요.
@@ -89,6 +102,8 @@ export function CalcShell<T>({
           </div>
         )}
       </section>
+
+      {outcome.ok && shareQuery && <ShareButton query={shareQuery} title={tool.question} />}
 
       <section className="rounded-[12px] border border-line bg-surface px-4 py-4">
         <h2 className="mb-3.5 text-[14px] font-semibold text-ink">입력한 값</h2>
