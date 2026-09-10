@@ -1,0 +1,57 @@
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { ARTICLES } from '@/content/index';
+import { readingMinutes } from '@/lib/content/types';
+import { AdSlot } from '@/components/analytics/AdSense';
+
+export const metadata: Metadata = {
+  title: '읽을거리 — 출산·육아 제도, 용어부터 차근차근',
+  description:
+    '육아휴직 급여, 6+6 부모육아휴직제, 출산전후휴가, 지원금 신청 기한까지. 용어를 모르는 상태에서 읽어도 되도록 쓴 설명 글 모음입니다.',
+  alternates: { canonical: '/guide' },
+};
+
+export default function GuideIndexPage() {
+  return (
+    <div className="mx-auto flex w-full max-w-[680px] flex-col gap-5 px-4 pb-16 pt-6">
+      <nav className="text-[12.5px] text-ink-faint">
+        <Link href="/" className="hover:text-ink-soft">
+          홈
+        </Link>
+      </nav>
+
+      <header className="flex flex-col gap-2">
+        <h1 className="text-[24px] font-bold leading-snug tracking-[-0.015em] text-ink">
+          읽을거리
+        </h1>
+        <p className="text-[14px] leading-relaxed text-ink-soft">
+          계산기가 &lsquo;얼마&rsquo;를 답한다면, 이 글들은 &lsquo;왜&rsquo;와 &lsquo;언제&rsquo;를
+          답합니다. 용어를 하나도 모르는 상태에서 읽어도 되도록 썼어요.
+        </p>
+      </header>
+
+      <ul className="flex flex-col gap-2">
+        {ARTICLES.map((article) => (
+          <li key={article.slug}>
+            <Link
+              href={`/guide/${article.slug}`}
+              className="flex flex-col gap-1.5 rounded-[12px] border border-line bg-surface px-4 py-3.5 transition-colors hover:border-line-strong"
+            >
+              <span className="text-[15px] font-semibold leading-snug text-ink">
+                {article.question}
+              </span>
+              <span className="text-[12.5px] leading-relaxed text-ink-soft">
+                {article.description}
+              </span>
+              <span className="tnum text-[11.5px] text-ink-faint">
+                {readingMinutes(article)}분 읽기 · {article.updatedAt} 확인
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+
+      <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_GUIDE} />
+    </div>
+  );
+}

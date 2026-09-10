@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { ARTICLES } from '@/content/index';
 import { EVENTS, TOOLS } from '@/lib/tools';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://nanaegi.kr';
@@ -12,6 +13,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency: 'weekly' as const,
       priority: 0.9,
+    })),
+    {
+      url: `${SITE_URL}/guide`,
+      lastModified: now,
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    },
+    ...ARTICLES.map((a) => ({
+      url: `${SITE_URL}/guide/${a.slug}`,
+      lastModified: new Date(a.updatedAt),
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
     })),
     {
       url: `${SITE_URL}/privacy`,

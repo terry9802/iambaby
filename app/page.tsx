@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ARTICLES } from '@/content/index';
 import { EVENTS, TOOLS, TOOL_TYPE_LABEL } from '@/lib/tools';
 import { Icon } from '@/components/ui/Icon';
 import { ProfileBanner } from '@/components/profile/ProfileBanner';
@@ -62,6 +63,34 @@ export default function HomePage() {
           </ul>
         </section>
       ))}
+
+      <section className="flex flex-col gap-3">
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="text-[15px] font-bold text-ink">읽을거리</h2>
+          <Link href="/guide" className="shrink-0 text-[12.5px] font-medium text-brand-strong hover:underline">
+            전체 보기
+          </Link>
+        </div>
+        <p className="text-[13.5px] leading-relaxed text-ink-soft">
+          계산기가 &lsquo;얼마&rsquo;를 답한다면, 이 글들은 &lsquo;왜&rsquo;와 &lsquo;언제&rsquo;를
+          답합니다.
+        </p>
+        <ul className="flex flex-col gap-2">
+          {ARTICLES.slice(0, 4).map((article) => (
+            <li key={article.slug}>
+              <Link
+                href={`/guide/${article.slug}`}
+                className="flex flex-col gap-1 rounded-[12px] border border-line bg-surface px-4 py-3 transition-colors hover:border-line-strong"
+              >
+                <span className="text-[14px] font-semibold leading-snug text-ink">
+                  {article.question}
+                </span>
+                <span className="text-[12px] leading-relaxed text-ink-faint">{article.title}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <section className="flex flex-col gap-3">
         <h2 className="text-[15px] font-bold text-ink">준비 중인 이벤트</h2>

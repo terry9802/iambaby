@@ -84,6 +84,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <Link href="/childcare" className="text-ink-soft hover:text-ink">
                     출산 · 육아
                   </Link>
+                  <Link href="/guide" className="text-ink-soft hover:text-ink">
+                    읽을거리
+                  </Link>
                   <Link href="/me" className="text-ink-soft hover:text-ink">
                     내 프로필
                   </Link>

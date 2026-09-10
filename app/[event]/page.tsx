@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { articlesOf } from '@/content/index';
 import { EVENTS, TOOL_TYPE_LABEL, findEvent, toolsOf } from '@/lib/tools';
 import { Icon } from '@/components/ui/Icon';
 import { ProfileBanner } from '@/components/profile/ProfileBanner';
@@ -31,6 +32,7 @@ export default async function EventHubPage({ params }: { params: Promise<{ event
   if (!found || found.status !== 'live') notFound();
 
   const tools = toolsOf(found.key);
+  const articles = articlesOf(found.key);
 
   return (
     <div className="mx-auto flex w-full max-w-[680px] flex-col gap-5 px-4 pb-16 pt-6">
@@ -78,6 +80,30 @@ export default async function EventHubPage({ params }: { params: Promise<{ event
             </li>
           ))}
         </ol>
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="text-[15px] font-bold text-ink">읽을거리</h2>
+          <Link href="/guide" className="shrink-0 text-[12.5px] font-medium text-brand-strong hover:underline">
+            전체 보기
+          </Link>
+        </div>
+        <ul className="flex flex-col gap-2">
+          {articles.slice(0, 5).map((article) => (
+            <li key={article.slug}>
+              <Link
+                href={`/guide/${article.slug}`}
+                className="flex flex-col gap-1 rounded-[12px] border border-line bg-surface px-4 py-3 transition-colors hover:border-line-strong"
+              >
+                <span className="text-[14px] font-semibold leading-snug text-ink">
+                  {article.question}
+                </span>
+                <span className="text-[12px] leading-relaxed text-ink-faint">{article.title}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section className="rounded-[12px] border border-line bg-surface px-4 py-4">
