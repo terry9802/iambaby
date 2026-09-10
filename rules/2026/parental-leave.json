@@ -1,0 +1,70 @@
+{
+  "meta": {
+    "ruleId": "parental-leave",
+    "title": "육아휴직 급여",
+    "effectiveFrom": "2025-01-01",
+    "effectiveTo": null,
+    "source": "고용보험법 시행령 제95조(육아휴직 급여) [시행 2026. 7. 1.] [대통령령 제36472호, 2026. 6. 30., 일부개정]",
+    "sourceUrl": "https://www.law.go.kr/LSW/lsLawLinkInfo.do?lsJoLnkSeq=1000954744&chrClsCd=010202",
+    "verifiedAt": "2026-09-10",
+    "verifiedBy": "국가법령정보센터 고용보험법 시행령 제95조 조문 + 고용24 제도안내(육아휴직급여)",
+    "note": "2025년 1월 1일 개정으로 상한액이 인상되고 사후지급금 제도가 폐지되었다. 법 시행 전에 육아휴직을 시작했더라도 시행 이후 사용 기간에는 인상된 기준이 적용된다."
+  },
+  "values": {
+    "brackets": [
+      {
+        "fromMonth": 1,
+        "toMonth": 3,
+        "rate": 1.0,
+        "cap": 2500000,
+        "floor": 700000
+      },
+      {
+        "fromMonth": 4,
+        "toMonth": 6,
+        "rate": 1.0,
+        "cap": 2000000,
+        "floor": 700000
+      },
+      {
+        "fromMonth": 7,
+        "toMonth": null,
+        "rate": 0.8,
+        "cap": 1600000,
+        "floor": 700000
+      }
+    ],
+    "singleParentBrackets": [
+      {
+        "fromMonth": 1,
+        "toMonth": 3,
+        "rate": 1.0,
+        "cap": 3000000,
+        "floor": 700000
+      },
+      {
+        "fromMonth": 4,
+        "toMonth": 6,
+        "rate": 1.0,
+        "cap": 2000000,
+        "floor": 700000
+      },
+      {
+        "fromMonth": 7,
+        "toMonth": null,
+        "rate": 0.8,
+        "cap": 1600000,
+        "floor": 700000
+      }
+    ],
+    "maxMonthsBase": 12,
+    "maxMonthsExtended": 18,
+    "extendedConditionNote": "부모가 각각 3개월 이상 육아휴직을 사용했거나, 한부모 또는 중증 장애아동의 부모인 경우 최대 1년 6개월까지 사용할 수 있다.",
+    "postPaymentAbolished": true,
+    "childAgeLimitYears": 12,
+    "applyDeadlineMonthsAfterEnd": 12,
+    "applyStartNote": "육아휴직을 시작한 날 이후 1개월이 지난 시점부터 신청할 수 있다.",
+    "noticeDaysBeforeStart": 30,
+    "noticeNote": "육아휴직은 시작 예정일 30일 전까지 회사에 신청해야 한다(남녀고용평등과 일·가정 양립 지원에 관한 법률 시행령 제11조)."
+  }
+}

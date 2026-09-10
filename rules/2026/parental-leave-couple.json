@@ -1,0 +1,30 @@
+{
+  "meta": {
+    "ruleId": "parental-leave-couple",
+    "title": "6+6 부모육아휴직제 (출생 후 18개월 이내 자녀에 대한 특례)",
+    "effectiveFrom": "2025-01-01",
+    "effectiveTo": null,
+    "source": "고용보험법 시행령 제95조의3(출생 후 18개월 이내의 자녀에 대한 육아휴직 급여 등의 특례)",
+    "sourceUrl": "https://www.law.go.kr/LSW//lsLinkCommonInfo.do?lspttninfSeq=106251&chrClsCd=010202",
+    "verifiedAt": "2026-09-10",
+    "verifiedBy": "국가법령정보센터 고용보험법 시행령 제95조의3 조문 + 고용24 제도안내(부모 함께 육아휴직제)",
+    "note": "상한액은 '부모가 각각 육아휴직을 사용한 개월 수' 중 짧은 쪽까지만 적용된다. 한쪽이 6개월, 다른 쪽이 2개월을 쓰면 두 사람 모두 특례는 첫 2개월분까지만 적용되고 나머지는 일반 기준으로 돌아간다."
+  },
+  "values": {
+    "requiresBothParents": true,
+    "childAgeLimitMonths": 18,
+    "maxSpecialMonths": 6,
+    "rate": 1.0,
+    "floor": 700000,
+    "capByMonth": [
+      { "month": 1, "cap": 2500000 },
+      { "month": 2, "cap": 2500000 },
+      { "month": 3, "cap": 3000000 },
+      { "month": 4, "cap": 3500000 },
+      { "month": 5, "cap": 4000000 },
+      { "month": 6, "cap": 4500000 }
+    ],
+    "simultaneousNotRequired": true,
+    "retroactiveNote": "두 번째로 육아휴직을 시작한 사람의 휴직 개시일을 기준으로, 먼저 사용한 사람의 지난 기간분도 소급해 정산된다."
+  }
+}

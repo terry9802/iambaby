@@ -1,0 +1,295 @@
+{
+  "meta": {
+    "ruleId": "birth-grants-seoul",
+    "title": "서울시 · 서울 자치구 출산 지원",
+    "effectiveFrom": "2026-01-01",
+    "effectiveTo": null,
+    "source": "서울시 임신·출산 정보센터(서울형 산후조리경비, 임산부 교통비) 및 각 자치구 공식 안내",
+    "sourceUrl": "https://seoul-agi.seoul.go.kr/",
+    "verifiedAt": "2026-09-10",
+    "verifiedBy": "서울시 임신·출산 정보센터 지원사업 페이지 및 각 자치구청 공식 페이지",
+    "note": "자치구 자체 지원은 구마다 있고 없고가 갈리며 폐지·신설이 잦다. 공식 페이지로 금액을 확인한 구만 금액을 넣고, 나머지는 확인되지 않았음을 그대로 표시한다."
+  },
+  "values": {
+    "sido": {
+      "code": "seoul",
+      "name": "서울특별시",
+      "items": [
+        {
+          "id": "seoul-postpartum-care",
+          "name": "서울형 산후조리경비",
+          "kind": "voucher",
+          "description": "산후조리원, 산모·신생아 건강관리, 산후 운동, 한약 조제 등에 쓸 수 있는 바우처입니다.",
+          "amountByBirthOrder": {
+            "first": 1000000,
+            "second": 1200000,
+            "thirdOrMore": 1500000
+          },
+          "payout": "once",
+          "applyWithinDays": 180,
+          "applyDeadlineNote": "출산일로부터 180일 이내에 신청해야 합니다. 사용 기한은 출산일로부터 1년이 되는 달의 말일까지입니다.",
+          "applyAt": "탄생응원 서울 프로젝트 몽땅정보만능키 (온라인 신청만 가능, 대리신청 불가)",
+          "applyUrl": "https://umppa.seoul.go.kr/",
+          "eligibility": "산모와 출생 자녀가 서울에 거주하고 서울시에 출생신고를 해야 합니다."
+        },
+        {
+          "id": "seoul-pregnant-transport",
+          "name": "서울시 임산부 교통비",
+          "kind": "voucher",
+          "description": "본인 명의 카드에 교통 포인트로 지급되며 버스·지하철·택시·철도·유류비에 쓸 수 있습니다.",
+          "amountByBirthOrder": {
+            "first": 700000,
+            "second": 800000,
+            "thirdOrMore": 1000000
+          },
+          "payout": "once",
+          "applyDeadlineNote": "임신이 확인된 뒤부터 출산 후 6개월까지 신청할 수 있습니다. 사용 기한은 지원일부터 분만예정일(또는 출생일) 기준 12개월입니다.",
+          "applyAt": "몽땅정보만능키 또는 관할 동주민센터",
+          "applyUrl": "https://umppa.seoul.go.kr/",
+          "eligibility": "신청일 기준 서울시에 3개월 이상 계속 거주 중인 임산부."
+        }
+      ]
+    },
+    "districts": [
+      {
+        "code": "jongno",
+        "name": "종로구",
+        "status": "unverified",
+        "items": [],
+        "note": "종로구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+      },
+      {
+        "code": "jung",
+        "name": "중구",
+        "status": "unverified",
+        "items": [],
+        "note": "중구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+      },
+      {
+        "code": "yongsan",
+        "name": "용산구",
+        "status": "unverified",
+        "items": [],
+        "note": "용산구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+      },
+      {
+        "code": "seongdong",
+        "name": "성동구",
+        "status": "unverified",
+        "items": [],
+        "note": "성동구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+      },
+      {
+        "code": "gwangjin",
+        "name": "광진구",
+        "status": "verified",
+        "source": "광진구청 첫돌(출산)축하금 지원 안내",
+        "sourceUrl": "https://www.gwangjin.go.kr/portal/main/contents.do?menuNo=200309",
+        "verifiedAt": "2026-09-10",
+        "verifiedBy": "광진구청 공식 페이지(첫돌(출산)축하금 지원)",
+        "items": [
+          {
+            "id": "gwangjin-first-birthday",
+            "name": "광진구 첫돌(출산)축하금",
+            "kind": "voucher",
+            "description": "첫돌을 맞은 아이에게 광진사랑상품권으로 지급됩니다. 출산 직후가 아니라 돌이 지난 뒤에 신청하는 점을 놓치기 쉽습니다.",
+            "amountByBirthOrder": {
+              "first": 1000000,
+              "second": 1000000,
+              "thirdOrMore": 1000000
+            },
+            "payout": "once",
+            "applyOffsetDays": 365,
+            "applyWindowDays": 180,
+            "applyDeadlineNote": "출생일로부터 1년이 지난 날부터 6개월 이내에 신청합니다.",
+            "applyAt": "주소지 동주민센터",
+            "applyUrl": "https://www.gwangjin.go.kr/portal/main/contents.do?menuNo=200309"
+          }
+        ]
+      },
+      {
+        "code": "dongdaemun",
+        "name": "동대문구",
+        "status": "unverified",
+        "items": [],
+        "note": "동대문구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+      },
+      {
+        "code": "jungnang",
+        "name": "중랑구",
+        "status": "unverified",
+        "items": [],
+        "note": "중랑구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+      },
+      {
+        "code": "seongbuk",
+        "name": "성북구",
+        "status": "unverified",
+        "items": [],
+        "note": "성북구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+      },
+      {
+        "code": "gangbuk",
+        "name": "강북구",
+        "status": "unverified",
+        "items": [],
+        "note": "강북구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+      },
+      {
+        "code": "dobong",
+        "name": "도봉구",
+        "status": "unverified",
+        "items": [],
+        "note": "도봉구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+      },
+      {
+        "code": "nowon",
+        "name": "노원구",
+        "status": "unverified",
+        "items": [],
+        "note": "노원구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+      },
+      {
+        "code": "eunpyeong",
+        "name": "은평구",
+        "status": "unverified",
+        "items": [],
+        "note": "은평구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+      },
+      {
+        "code": "seodaemun",
+        "name": "서대문구",
+        "status": "unverified",
+        "items": [],
+        "note": "서대문구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+      },
+      {
+        "code": "mapo",
+        "name": "마포구",
+        "status": "unverified",
+        "items": [],
+        "note": "마포구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+      },
+      {
+        "code": "yangcheon",
+        "name": "양천구",
+        "status": "unverified",
+        "items": [],
+        "note": "양천구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+      },
+      {
+        "code": "gangseo",
+        "name": "강서구",
+        "status": "unverified",
+        "items": [],
+        "note": "강서구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+      },
+      {
+        "code": "guro",
+        "name": "구로구",
+        "status": "unverified",
+        "items": [],
+        "note": "구로구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+      },
+      {
+        "code": "geumcheon",
+        "name": "금천구",
+        "status": "unverified",
+        "items": [],
+        "note": "금천구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+      },
+      {
+        "code": "yeongdeungpo",
+        "name": "영등포구",
+        "status": "unverified",
+        "items": [],
+        "note": "영등포구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+      },
+      {
+        "code": "dongjak",
+        "name": "동작구",
+        "status": "unverified",
+        "items": [],
+        "note": "동작구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+      },
+      {
+        "code": "gwanak",
+        "name": "관악구",
+        "status": "unverified",
+        "items": [],
+        "note": "관악구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+      },
+      {
+        "code": "seocho",
+        "name": "서초구",
+        "status": "unverified",
+        "items": [],
+        "note": "서초구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+      },
+      {
+        "code": "gangnam",
+        "name": "강남구",
+        "status": "verified",
+        "source": "강남구청 출산양육지원금 안내(FAQ) 및 정부24 행복출산 지역별 출산지원 서비스",
+        "sourceUrl": "https://www.gangnam.go.kr/board/B_000063/4931/view.do?mid=FM0211",
+        "verifiedAt": "2026-09-10",
+        "verifiedBy": "강남구청 공식 안내 및 정부24 지역별 출산지원금 조회",
+        "items": [
+          {
+            "id": "gangnam-birth-support",
+            "name": "강남구 출산양육지원금",
+            "kind": "cash",
+            "description": "자녀 순위에 따라 한 번 지급됩니다. 출생신고일 기준 1년 전부터 신청일까지 강남구에 계속 주민등록이 있어야 합니다.",
+            "amountByBirthOrder": {
+              "first": 2000000,
+              "second": 2000000,
+              "thirdOrMore": 3000000
+            },
+            "payout": "once",
+            "applyWithinDays": 365,
+            "applyDeadlineNote": "출생신고일로부터 1년 이내에 신청합니다. 거주 기간이 1년에 못 미치면 1년을 채운 뒤 지급됩니다.",
+            "applyAt": "주소지 동주민센터",
+            "applyUrl": "https://www.gangnam.go.kr/"
+          }
+        ]
+      },
+      {
+        "code": "songpa",
+        "name": "송파구",
+        "status": "unverified",
+        "items": [],
+        "note": "송파구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+      },
+      {
+        "code": "gangdong",
+        "name": "강동구",
+        "status": "unverified",
+        "items": [],
+        "note": "강동구 자체 지원은 아직 공식 출처로 확인하지 못했습니다. 정부24 행복출산 지역별 조회에서 최신 내용을 확인해 주세요.",
+        "lookupUrl": "https://www.gov.kr/portal/onestopSvc/happyBirthLocalBirth"
+      }
+    ]
+  }
+}
