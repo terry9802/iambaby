@@ -60,7 +60,7 @@ pnpm typecheck
 
 | 환경변수 | 쓰임 |
 |---|---|
-| `NEXT_PUBLIC_SITE_URL` | sitemap.xml, robots.txt, canonical, OG 태그의 기준 도메인 |
+| `NEXT_PUBLIC_SITE_URL` | sitemap.xml, robots.txt, canonical, OG 태그의 기준 도메인. 비우면 Vercel 배포 주소를 자동으로 씁니다 |
 | `NEXT_PUBLIC_GA_ID` | GA4 측정 ID. 없으면 GA 스크립트를 넣지 않음 |
 | `NEXT_PUBLIC_GSC_VERIFICATION` | Search Console HTML 태그 인증값 |
 | `NEXT_PUBLIC_ADSENSE_CLIENT` | AdSense 퍼블리셔 ID. 넣으면 `/ads.txt`가 자동 생성됨 |

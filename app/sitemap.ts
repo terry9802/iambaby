@@ -1,8 +1,9 @@
 import type { MetadataRoute } from 'next';
 import { ARTICLES } from '@/content/index';
 import { EVENTS, TOOLS } from '@/lib/tools';
+import { SITE_URL } from '@/lib/site';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://nanaegi.kr';
+
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();

@@ -8,8 +8,9 @@ import { toISODate } from '@/lib/format';
 import { ArticleBody } from '@/components/content/ArticleBody';
 import { BasisFooter } from '@/components/calculator/BasisFooter';
 import { AdSlot } from '@/components/analytics/AdSense';
+import { SITE_NAME, SITE_URL } from '@/lib/site';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://nanaegi.kr';
+
 
 export function generateStaticParams() {
   return ARTICLES.map((a) => ({ slug: a.slug }));
@@ -56,7 +57,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
     dateModified: article.updatedAt,
     inLanguage: 'ko-KR',
     mainEntityOfPage: `${SITE_URL}/guide/${article.slug}`,
-    publisher: { '@type': 'Organization', name: '난아직애긴데세상이너무어려워요' },
+    publisher: { '@type': 'Organization', name: SITE_NAME },
   };
 
   return (

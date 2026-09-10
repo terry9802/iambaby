@@ -4,9 +4,7 @@ import './globals.css';
 import { ProfileProvider } from '@/lib/profile/context';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 import { AdSenseScript } from '@/components/analytics/AdSense';
-
-const SITE_NAME = '난아직애긴데세상이너무어려워요';
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://nanaegi.kr';
+import { SITE_NAME, SITE_URL } from '@/lib/site';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
