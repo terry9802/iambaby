@@ -22,7 +22,7 @@ function FieldFrame({
       <label htmlFor={id} className="flex items-center gap-2 text-[13.5px] font-semibold text-ink">
         {label}
         {autofilled && (
-          <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-medium text-brand">
+          <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-medium text-brand-strong">
             프로필에서 가져옴
           </span>
         )}
@@ -201,7 +201,7 @@ export function SegmentedField<T extends string>({
               className={
                 'rounded-[8px] border px-3 py-2 text-[14px] transition-colors ' +
                 (active
-                  ? 'border-brand bg-brand font-semibold text-white'
+                  ? 'border-brand-strong bg-brand-strong font-semibold text-white'
                   : 'border-line bg-surface text-ink-soft hover:border-line-strong')
               }
             >
@@ -270,7 +270,7 @@ export function ToggleField({
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="mt-0.5 h-4 w-4 shrink-0 accent-[#1b3a8f]"
+        className="mt-0.5 h-4 w-4 shrink-0 accent-[#00785a]"
       />
       <label htmlFor={id} className="cursor-pointer">
         <span className="block text-[14px] font-semibold text-ink">{label}</span>

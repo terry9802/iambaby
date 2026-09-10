@@ -24,7 +24,7 @@ export function MonthlyBars({ rows, caption }: { rows: BarRow[]; caption?: strin
               <span
                 className={
                   'tnum text-[13px] ' +
-                  (row.emphasis ? 'font-bold text-brand' : 'font-semibold text-ink')
+                  (row.emphasis ? 'font-bold text-brand-strong' : 'font-semibold text-ink')
                 }
               >
                 {formatKRW(row.amount)}

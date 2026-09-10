@@ -5,7 +5,7 @@ import { ProfileProvider } from '@/lib/profile/context';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 import { AdSenseScript } from '@/components/analytics/AdSense';
 
-const SITE_NAME = '난 아직 애긴데 세상이 너무 어려워요';
+const SITE_NAME = '난아직애긴데세상이너무어려워요';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://nanaegi.kr';
 
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     template: `%s · ${SITE_NAME}`,
   },
   description:
-    '육아휴직 급여, 6+6 부모육아휴직 조합, 출산 지원금, 휴가 일정까지. 계산 과정과 근거 조문을 함께 보여주는 출산·육아 계산기.',
+    '몰라도 괜찮아요. 뭘 모르는지 몰라도 괜찮아요. 복잡한 세상에서 우린 아직 애기인거죠. 육아휴직 급여, 6+6 부모육아휴직 조합, 출산 지원금, 휴가 일정을 계산 과정과 근거 조문까지 함께 보여드립니다.',
   keywords: [
     '육아휴직 급여 계산기',
     '6+6 부모육아휴직제',
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     url: SITE_URL,
     title: `${SITE_NAME} · 출산·육아 계산기`,
     description:
-      '용어도 모르고 뭘 모르는지도 모르는 상태에서 시작해도 괜찮습니다. 계산 과정과 근거를 전부 펼쳐서 보여드려요.',
+      '몰라도 괜찮아요. 뭘 모르는지 몰라도 괜찮아요. 복잡한 세상에서 우린 아직 애기인거죠.',
   },
   robots: { index: true, follow: true },
   verification: process.env.NEXT_PUBLIC_GSC_VERIFICATION
@@ -54,8 +54,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <header className="sticky top-0 z-10 border-b border-line bg-ground/90 backdrop-blur">
               <div className="mx-auto flex w-full max-w-[680px] items-center justify-between gap-3 px-4 py-3">
                 <Link href="/" className="text-[14px] font-bold tracking-[-0.01em] text-ink">
-                  난 아직 애긴데
-                  <span className="ml-1 font-medium text-ink-faint">세상이 너무 어려워요</span>
+                  난아직애긴데
+                  <span className="font-medium text-ink-faint">세상이너무어려워요</span>
                 </Link>
                 <Link
                   href="/me"

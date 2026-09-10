@@ -110,7 +110,7 @@ export function LeaveTimelineTool({ tool, fallbackToday }: { tool: Tool; fallbac
                       ? 'bg-danger-soft text-danger'
                       : d.dDay <= 30
                         ? 'bg-alert-soft text-alert'
-                        : 'bg-brand-soft text-brand';
+                        : 'bg-brand-soft text-brand-strong';
                   return (
                     <li
                       key={d.id}

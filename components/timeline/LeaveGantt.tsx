@@ -63,7 +63,13 @@ export function LeaveGantt({
   const end = parseDate(returnDate);
   const totalDays = Math.max(1, diffDays(start, end));
 
-  const tones = ['bg-brand', 'bg-brand/70', 'bg-good'];
+  // 색을 순서가 아니라 구간에 묶어둬야 회사 규모를 바꿔도 같은 구간이 같은 색으로 남는다.
+  const toneOf = (id: string) =>
+    id === 'maternity-employer'
+      ? 'bg-ink-soft'
+      : id === 'maternity-insurance'
+        ? 'bg-brand-strong'
+        : 'bg-partner';
 
   return (
     <section className="rounded-[12px] border border-line bg-surface px-4 py-4">
@@ -73,10 +79,10 @@ export function LeaveGantt({
       </p>
 
       <div className="mt-3 flex h-8 w-full overflow-hidden rounded-[6px] bg-sunk">
-        {phases.map((phase, i) => (
+        {phases.map((phase) => (
           <div
             key={phase.id}
-            className={`flex items-center justify-center ${tones[i % tones.length]}`}
+            className={`flex items-center justify-center ${toneOf(phase.id)}`}
             style={{ width: `${(phase.days / totalDays) * 100}%` }}
             title={`${phase.name} ${phase.days}일`}
           >
@@ -88,13 +94,13 @@ export function LeaveGantt({
       </div>
 
       <ul className="mt-3 flex flex-col">
-        {phases.map((phase, i) => (
+        {phases.map((phase) => (
           <li key={phase.id} className="flex flex-col gap-1 border-b border-line py-3 last:border-b-0">
             <div className="flex items-baseline justify-between gap-3">
               <span className="flex items-center gap-2 text-[13.5px] font-semibold text-ink">
                 <span
                   aria-hidden
-                  className={`h-2.5 w-2.5 shrink-0 rounded-[3px] ${tones[i % tones.length]}`}
+                  className={`h-2.5 w-2.5 shrink-0 rounded-[3px] ${toneOf(phase.id)}`}
                 />
                 {phase.name}
               </span>

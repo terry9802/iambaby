@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { EVENTS, TOOLS, TOOL_TYPE_LABEL } from '@/lib/tools';
+import { Icon } from '@/components/ui/Icon';
 import { ProfileBanner } from '@/components/profile/ProfileBanner';
 import { AdSlot } from '@/components/analytics/AdSense';
 
@@ -14,6 +15,8 @@ export default function HomePage() {
           몰라도 괜찮아요.
           <br />
           뭘 모르는지 몰라도 괜찮아요.
+          <br />
+          <span className="text-ink-soft">복잡한 세상에서 우린 아직 애기인거죠</span>
         </h1>
         <p className="text-[14.5px] leading-relaxed text-ink-soft">
           결혼, 출산, 내 집 마련처럼 처음 겪는 일 앞에서 필요한 계산과 정보를 한곳에 모읍니다.
@@ -26,15 +29,13 @@ export default function HomePage() {
       {live.map((event) => (
         <section key={event.key} className="flex flex-col gap-3">
           <div className="flex items-baseline justify-between gap-3">
-            <h2 className="text-[17px] font-bold text-ink">
-              <span aria-hidden className="mr-1.5">
-                {event.emoji}
-              </span>
+            <h2 className="flex items-center gap-2 text-[17px] font-bold text-ink">
+              <Icon name={event.icon} size={20} className="text-brand" />
               {event.title}
             </h2>
             <Link
               href={`/${event.key}`}
-              className="shrink-0 text-[12.5px] font-medium text-brand hover:underline"
+              className="shrink-0 text-[12.5px] font-medium text-brand-strong hover:underline"
             >
               전체 일정 보기
             </Link>
@@ -58,14 +59,14 @@ export default function HomePage() {
                       className={
                         'rounded-full px-2 py-0.5 text-[11px] font-medium ' +
                         (tool.featured
-                          ? 'bg-brand text-white'
+                          ? 'bg-brand-strong text-white'
                           : 'border border-line bg-surface text-ink-faint')
                       }
                     >
                       {TOOL_TYPE_LABEL[tool.type]}
                     </span>
                     {tool.featured && (
-                      <span className="text-[11px] font-semibold text-brand">
+                      <span className="text-[11px] font-semibold text-brand-strong">
                         여기에만 있는 기능
                       </span>
                     )}
@@ -87,10 +88,8 @@ export default function HomePage() {
               key={event.key}
               className="flex flex-col gap-1 rounded-[12px] border border-dashed border-line bg-surface px-3.5 py-3"
             >
-              <span className="text-[13.5px] font-semibold text-ink-soft">
-                <span aria-hidden className="mr-1.5">
-                  {event.emoji}
-                </span>
+              <span className="flex items-center gap-1.5 text-[13.5px] font-semibold text-ink-soft">
+                <Icon name={event.icon} size={17} className="shrink-0 text-ink-faint" />
                 {event.title}
               </span>
               <span className="text-[11.5px] leading-relaxed text-ink-faint">{event.lead}</span>
@@ -98,7 +97,7 @@ export default function HomePage() {
           ))}
         </ul>
         <p className="text-[12.5px] leading-relaxed text-ink-faint">
-          하나를 제대로 만드는 편이 여섯 개를 어중간하게 만드는 것보다 낫다고 생각해서, 출산·육아부터
+          하나를 제대로 만드는 편이 여러 개를 어중간하게 만드는 것보다 낫다고 생각해서, 출산·육아부터
           끝까지 파고 있습니다.
         </p>
       </section>

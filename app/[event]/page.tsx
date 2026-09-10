@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { EVENTS, TOOL_TYPE_LABEL, findEvent, toolsOf } from '@/lib/tools';
+import { Icon } from '@/components/ui/Icon';
 import { ProfileBanner } from '@/components/profile/ProfileBanner';
 import { AdSlot } from '@/components/analytics/AdSense';
 
@@ -40,10 +41,8 @@ export default async function EventHubPage({ params }: { params: Promise<{ event
       </nav>
 
       <header className="flex flex-col gap-2">
-        <h1 className="text-[24px] font-bold leading-snug tracking-[-0.015em] text-ink">
-          <span aria-hidden className="mr-1.5">
-            {found.emoji}
-          </span>
+        <h1 className="flex items-center gap-2 text-[24px] font-bold leading-snug tracking-[-0.015em] text-ink">
+          <Icon name={found.icon} size={26} className="shrink-0 text-brand" />
           {found.title}
         </h1>
         <p className="text-[14px] leading-relaxed text-ink-soft">
@@ -80,7 +79,7 @@ export default async function EventHubPage({ params }: { params: Promise<{ event
                     className={
                       'rounded-full px-2 py-0.5 text-[11px] font-medium ' +
                       (tool.featured
-                        ? 'bg-brand text-white'
+                        ? 'bg-brand-strong text-white'
                         : 'border border-line bg-surface text-ink-faint')
                     }
                   >

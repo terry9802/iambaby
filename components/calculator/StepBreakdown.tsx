@@ -54,7 +54,7 @@ function StepRow({ step, depth = 0 }: { step: CalcStep; depth?: number }) {
 
       {step.children && step.children.length > 0 && (
         <details className="mb-3 rounded-[8px] border border-line bg-sunk px-3">
-          <summary className="py-2 text-[12.5px] font-medium text-brand">
+          <summary className="py-2 text-[12.5px] font-medium text-brand-strong">
             달마다 얼마인지 보기 ({step.children.length}개월)
           </summary>
           <ul className="border-t border-line pb-2 pt-1">
@@ -78,7 +78,7 @@ export function StepBreakdown({ steps }: { steps: CalcStep[] }) {
     <details className="rounded-[12px] border border-line bg-surface">
       <summary className="flex items-center justify-between px-4 py-3.5 text-[14px] font-semibold text-ink">
         이 숫자가 나온 과정
-        <span className="text-[12.5px] font-normal text-brand">펼쳐 보기</span>
+        <span className="text-[12.5px] font-normal text-brand-strong">펼쳐 보기</span>
       </summary>
       <ul className="border-t border-line px-4">
         {steps.map((step, i) => (
