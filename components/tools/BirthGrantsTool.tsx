@@ -32,7 +32,7 @@ function DeadlineChip({ grant }: { grant: ResolvedGrant }) {
         ? 'bg-sunk text-ink-soft'
         : grant.deadline.dDay <= 30
           ? 'bg-alert-soft text-alert'
-          : 'bg-brand-soft text-brand';
+          : 'bg-brand-soft text-brand-strong';
   const text =
     status === 'not-yet'
       ? `${grant.deadline.opensAt}부터 신청`
@@ -82,7 +82,7 @@ function GrantCard({ grant }: { grant: ResolvedGrant }) {
               href={grant.applyUrl}
               target="_blank"
               rel="noreferrer noopener"
-              className="text-brand underline underline-offset-2"
+              className="text-brand-strong underline underline-offset-2"
             >
               바로가기
             </a>
@@ -180,7 +180,7 @@ export function BirthGrantsTool({ tool, fallbackToday }: { tool: Tool; fallbackT
                     href={outcome.result.value.districtLookupUrl}
                     target="_blank"
                     rel="noreferrer noopener"
-                    className="text-brand underline underline-offset-2"
+                    className="text-brand-strong underline underline-offset-2"
                   >
                     정부24 지역별 조회에서 확인하기
                   </a>

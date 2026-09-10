@@ -1,3 +1,4 @@
+import type { IconName } from '@/components/ui/Icon';
 import type { Profile } from '@/lib/profile/schema';
 
 export type EventKey =
@@ -6,7 +7,8 @@ export type EventKey =
   | 'housing'
   | 'jobchange'
   | 'retirement'
-  | 'inheritance';
+  | 'inheritance'
+  | 'socialdues';
 
 export type LifeEvent = {
   key: EventKey;
@@ -14,7 +16,7 @@ export type LifeEvent = {
   /** 사용자 언어로 된 한 줄. 홈에서 이 문장을 보고 고른다. */
   lead: string;
   status: 'live' | 'soon';
-  emoji: string;
+  icon: IconName;
 };
 
 export const EVENTS: LifeEvent[] = [
@@ -23,42 +25,49 @@ export const EVENTS: LifeEvent[] = [
     title: '출산 · 육아',
     lead: '아이가 생겼는데 뭘 언제 신청해야 하는지 하나도 모르겠어요',
     status: 'live',
-    emoji: '🍼',
+    icon: 'childcare',
   },
   {
     key: 'marriage',
     title: '결혼',
     lead: '결혼하면 세금이랑 청약이 어떻게 달라지나요',
     status: 'soon',
-    emoji: '💍',
+    icon: 'marriage',
   },
   {
     key: 'housing',
     title: '내 집 마련',
     lead: '전세랑 매매 중에 뭐가 나은지 계산해 주세요',
     status: 'soon',
-    emoji: '🏠',
+    icon: 'housing',
   },
   {
     key: 'jobchange',
     title: '이직',
     lead: '연봉 얼마를 불러야 지금보다 이득인가요',
     status: 'soon',
-    emoji: '💼',
+    icon: 'jobchange',
   },
   {
     key: 'retirement',
     title: '퇴직',
     lead: '퇴직금이랑 실업급여가 얼마나 나오나요',
     status: 'soon',
-    emoji: '🌤️',
+    icon: 'retirement',
   },
   {
     key: 'inheritance',
     title: '상속 · 증여',
     lead: '물려받으면 세금을 얼마나 내야 하나요',
     status: 'soon',
-    emoji: '📜',
+    icon: 'inheritance',
+  },
+  {
+    key: 'socialdues',
+    title: '남의 경조사',
+    lead: '이 사람 결혼식에 얼마 내야 실례가 아닌가요',
+    status: 'soon',
+    icon: 'socialdues',
   },
 ];
 

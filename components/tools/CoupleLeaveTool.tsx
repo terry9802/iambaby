@@ -130,7 +130,7 @@ export function CoupleLeaveTool({ tool, fallbackToday }: { tool: Tool; fallbackT
           {formatKRW(outcome.result.value.soloBaseline.total)}
         </span>
         이라, 나눠 쓰는 쪽이{' '}
-        <strong className="tnum font-bold text-good">
+        <strong className="tnum font-bold text-brand-strong">
           {formatKRW(outcome.result.value.gainVsSolo)}
         </strong>{' '}
         더 많아요.

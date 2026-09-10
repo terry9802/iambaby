@@ -14,7 +14,7 @@ export function CoupleGantt({ combination }: { combination: Combination }) {
   const to = cashflow[cashflow.length - 1].childMonthAge;
   const span = to - from + 1;
 
-  const band = (start: number, months: number, tone: 'brand' | 'good') => {
+  const band = (start: number, months: number, tone: 'me' | 'partner') => {
     if (months === 0) {
       return <div className="h-7 rounded-[6px] border border-dashed border-line bg-sunk" />;
     }
@@ -25,7 +25,7 @@ export function CoupleGantt({ combination }: { combination: Combination }) {
         <div
           className={
             'absolute top-0 flex h-7 items-center justify-center rounded-[6px] text-[11px] font-semibold text-white ' +
-            (tone === 'brand' ? 'bg-brand' : 'bg-good')
+            (tone === 'me' ? 'bg-brand-strong' : 'bg-partner')
           }
           style={{ left: `${left}%`, width: `${width}%` }}
         >
@@ -44,12 +44,18 @@ export function CoupleGantt({ combination }: { combination: Combination }) {
 
       <div className="mt-3 flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <span className="w-14 shrink-0 text-[12px] font-medium text-ink-soft">본인</span>
-          <div className="flex-1">{band(me.startMonthAge, me.months, 'brand')}</div>
+          <span className="flex w-14 shrink-0 items-center gap-1.5 text-[12px] font-medium text-ink-soft">
+            <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-[3px] bg-brand-strong" />
+            본인
+          </span>
+          <div className="flex-1">{band(me.startMonthAge, me.months, 'me')}</div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="w-14 shrink-0 text-[12px] font-medium text-ink-soft">배우자</span>
-          <div className="flex-1">{band(spouse.startMonthAge, spouse.months, 'good')}</div>
+          <span className="flex w-14 shrink-0 items-center gap-1.5 text-[12px] font-medium text-ink-soft">
+            <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-[3px] bg-partner" />
+            배우자
+          </span>
+          <div className="flex-1">{band(spouse.startMonthAge, spouse.months, 'partner')}</div>
         </div>
         <div className="flex items-center gap-2">
           <span className="w-14 shrink-0" />

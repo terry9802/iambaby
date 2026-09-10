@@ -164,7 +164,7 @@ export function ProfileForm() {
             ))}
             <button
               type="button"
-              className="self-start rounded-[8px] border border-line bg-surface px-3 py-2 text-[13px] font-medium text-brand hover:border-line-strong"
+              className="self-start rounded-[8px] border border-line bg-surface px-3 py-2 text-[13px] font-medium text-brand-strong hover:border-line-strong"
               onClick={() =>
                 update({ children: [...children, { birthDate: toISODate(new Date()) }] })
               }

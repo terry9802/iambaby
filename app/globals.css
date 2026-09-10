@@ -17,12 +17,19 @@
   --color-ink-soft: #59616e;
   --color-ink-faint: #8b93a1;
 
-  --color-brand: #1b3a8f;
-  --color-brand-strong: #142c6e;
-  --color-brand-soft: #eaefff;
+  /* 프라이머리 #009e6e. 다만 흰 글씨를 얹으면 대비가 3.4:1이라 작은 글씨에는 못 쓴다.
+     그래서 채움·막대·테두리에는 brand를, 버튼 배경과 링크 글씨에는 brand-strong(5.5:1)을 쓴다. */
+  --color-brand: #009e6e;
+  --color-brand-strong: #00785a;
+  --color-brand-deep: #005f47;
+  --color-brand-soft: #e4f5ee;
 
-  --color-good: #0d6b46;
-  --color-good-soft: #e7f3ed;
+  /* 배우자처럼 본인과 나란히 놓고 구분해야 하는 두 번째 계열 */
+  --color-partner: #33608f;
+  --color-partner-soft: #eaf1f7;
+
+  --color-good: #00785a;
+  --color-good-soft: #e4f5ee;
   --color-alert: #9a5209;
   --color-alert-soft: #fdf1e2;
   --color-danger: #a92620;
@@ -61,7 +68,7 @@ body {
 
 /* 키보드 사용자가 지금 어디 있는지 항상 보이게. */
 :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
-  outline: 2px solid var(--color-brand);
+  outline: 2px solid var(--color-brand-strong);
   outline-offset: 2px;
   border-radius: 4px;
 }

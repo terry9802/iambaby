@@ -30,7 +30,7 @@ export function ProfileBanner() {
         </div>
         <Link
           href="/me"
-          className="shrink-0 rounded-[8px] bg-brand px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-brand-strong"
+          className="shrink-0 rounded-[8px] bg-brand-strong px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-brand-deep"
         >
           {empty ? '채우기' : '고치기'}
         </Link>

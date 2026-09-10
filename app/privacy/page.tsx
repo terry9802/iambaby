@@ -75,7 +75,7 @@ export default function PrivacyPage() {
             href="https://tools.google.com/dlpage/gaoptout"
             target="_blank"
             rel="noreferrer noopener"
-            className="text-brand underline underline-offset-2"
+            className="text-brand-strong underline underline-offset-2"
           >
             Google Analytics 차단 브라우저 부가기능
           </a>
@@ -93,7 +93,7 @@ export default function PrivacyPage() {
             href="https://myadcenter.google.com/personalizationoff"
             target="_blank"
             rel="noreferrer noopener"
-            className="text-brand underline underline-offset-2"
+            className="text-brand-strong underline underline-offset-2"
           >
             Google 광고 설정
           </a>
@@ -102,7 +102,7 @@ export default function PrivacyPage() {
             href="https://www.aboutads.info/choices/"
             target="_blank"
             rel="noreferrer noopener"
-            className="text-brand underline underline-offset-2"
+            className="text-brand-strong underline underline-offset-2"
           >
             aboutads.info
           </a>

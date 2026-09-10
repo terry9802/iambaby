@@ -33,7 +33,7 @@ export function BasisFooter({ basis }: { basis: RuleMeta[] }) {
               href={meta.sourceUrl}
               target="_blank"
               rel="noreferrer noopener"
-              className="text-[12.5px] leading-relaxed text-brand underline underline-offset-2"
+              className="text-[12.5px] leading-relaxed text-brand-strong underline underline-offset-2"
             >
               {meta.source}
             </a>
