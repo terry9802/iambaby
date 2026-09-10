@@ -1,0 +1,240 @@
+'use client';
+
+import { useCallback, useMemo, useState } from 'react';
+import {
+  checkBirthGrants,
+  formatDDay,
+  listSeoulDistricts,
+  type BirthGrantsInput,
+  type BirthOrder,
+  type ResolvedGrant,
+} from '@/lib/calculators/birth-grants';
+import { formatKRW, formatManwon } from '@/lib/format';
+import { useProfile } from '@/lib/profile/context';
+import { Seeder, pendingExamples, resolveToday } from '@/lib/profile/seed';
+import type { Tool } from '@/lib/tools';
+import { CalcShell } from '@/components/calculator/CalcShell';
+import { ResultAside, ResultHeadline } from '@/components/calculator/ResultHeadline';
+import {
+  DateField,
+  FieldGroup,
+  SegmentedField,
+  SelectField,
+} from '@/components/ui/fields';
+
+function DeadlineChip({ grant }: { grant: ResolvedGrant }) {
+  if (!grant.deadline) return null;
+  const { status } = grant.deadline;
+  const tone =
+    status === 'passed'
+      ? 'bg-danger-soft text-danger'
+      : status === 'not-yet'
+        ? 'bg-sunk text-ink-soft'
+        : grant.deadline.dDay <= 30
+          ? 'bg-alert-soft text-alert'
+          : 'bg-brand-soft text-brand';
+  const text =
+    status === 'not-yet'
+      ? `${grant.deadline.opensAt}부터 신청`
+      : `${formatDDay(grant.deadline)} · ${grant.deadline.dueAt}까지`;
+  return (
+    <span className={`tnum rounded-full px-2 py-0.5 text-[11.5px] font-semibold ${tone}`}>
+      {text}
+    </span>
+  );
+}
+
+function GrantCard({ grant }: { grant: ResolvedGrant }) {
+  return (
+    <li className="flex flex-col gap-1.5 border-b border-line py-3.5 last:border-b-0">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="rounded-full border border-line px-2 py-0.5 text-[11px] text-ink-faint">
+          {grant.scopeLabel}
+        </span>
+        <span className="text-[14px] font-semibold text-ink">{grant.name}</span>
+        <DeadlineChip grant={grant} />
+      </div>
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="text-[12.5px] leading-relaxed text-ink-soft">{grant.description}</span>
+        <span className="tnum shrink-0 text-[15px] font-bold text-ink">
+          {formatKRW(grant.totalAmount)}
+        </span>
+      </div>
+      {grant.monthlyBreakdown && (
+        <p className="tnum text-[12px] text-ink-faint">
+          {grant.monthlyBreakdown
+            .map(
+              (b) =>
+                `생후 ${b.fromMonth}~${b.toMonth}개월 월 ${formatManwon(b.amount)}`,
+            )
+            .join(' · ')}
+        </p>
+      )}
+      {grant.deadlineNote && (
+        <p className="text-[12px] leading-relaxed text-ink-soft">{grant.deadlineNote}</p>
+      )}
+      <p className="text-[12px] text-ink-faint">
+        신청처: {grant.applyAt}
+        {grant.applyUrl && (
+          <>
+            {' · '}
+            <a
+              href={grant.applyUrl}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="text-brand underline underline-offset-2"
+            >
+              바로가기
+            </a>
+          </>
+        )}
+      </p>
+    </li>
+  );
+}
+
+export function BirthGrantsTool({ tool, fallbackToday }: { tool: Tool; fallbackToday: string }) {
+  const { profile, hydrated } = useProfile();
+  const [edits, setEdits] = useState<Partial<BirthGrantsInput>>({});
+
+  const seeded = useMemo(() => {
+    const seeder = new Seeder<BirthGrantsInput>();
+    const children = hydrated ? (profile.children ?? []) : [];
+    seeder.pick('childBirthDate', children[children.length - 1]?.birthDate, {
+      value: resolveToday(hydrated, fallbackToday),
+      label: '오늘 태어난 아이',
+    });
+    seeder.set('sido', hydrated ? profile.residence?.sido : undefined);
+    seeder.set('sigungu', hydrated ? profile.residence?.sigungu : undefined);
+
+    const order: BirthOrder =
+      children.length >= 3 ? 'thirdOrMore' : children.length === 2 ? 'second' : 'first';
+    return {
+      input: seeder.build({ birthOrder: order, sido: 'seoul' }),
+      autofilled: seeder.autofilled,
+      examples: seeder.examples,
+    };
+  }, [profile, hydrated, fallbackToday]);
+
+  const input = useMemo(() => ({ ...seeded.input, ...edits }), [seeded, edits]);
+  const set = useCallback(
+    (patch: Partial<BirthGrantsInput>) => setEdits((prev) => ({ ...prev, ...patch })),
+    [],
+  );
+  const examples = pendingExamples(seeded.examples, edits);
+
+  const districts = useMemo(
+    () => listSeoulDistricts(input.childBirthDate ?? fallbackToday),
+    [input.childBirthDate, fallbackToday],
+  );
+
+  const outcome = useMemo(() => checkBirthGrants(input), [input]);
+
+  const headline = outcome.ok ? (
+    <ResultHeadline
+      label="첫 1년 동안 통장에 들어오는 돈"
+      value={outcome.result.value.firstYearAmount}
+      sub={
+        <>
+          아동수당처럼 몇 해에 걸쳐 나오는 것까지 모두 더하면{' '}
+          <strong className="tnum font-bold text-ink">
+            {formatKRW(outcome.result.value.totalAmount)}
+          </strong>
+          이에요.
+        </>
+      }
+    >
+      {outcome.result.value.urgent.length > 0 && (
+        <ResultAside>
+          <span className="font-semibold text-alert">
+            30일 안에 신청해야 하는 항목이 {outcome.result.value.urgent.length}개 있어요.
+          </span>{' '}
+          {outcome.result.value.urgent.map((g) => g.name).join(', ')} — 기한을 넘기면 그 전 달치는
+          받을 수 없습니다.
+        </ResultAside>
+      )}
+    </ResultHeadline>
+  ) : null;
+
+  return (
+    <CalcShell
+      tool={tool}
+      outcome={outcome}
+      headline={headline}
+      exampleFields={examples}
+      detail={
+        outcome.ok ? (
+          <section className="rounded-[12px] border border-line bg-surface px-4 py-2">
+            <h2 className="pt-2 text-[14px] font-semibold text-ink">받을 수 있는 지원</h2>
+            <ul>
+              {outcome.result.value.grants.map((g) => (
+                <GrantCard key={`${g.scope}-${g.id}`} grant={g} />
+              ))}
+            </ul>
+            {outcome.result.value.districtStatus === 'unverified' && (
+              <p className="border-t border-line py-3 text-[12.5px] leading-relaxed text-ink-soft">
+                {outcome.result.value.districtName}의 자체 지원은 공식 출처로 확인하지 못해 합계에
+                넣지 않았어요.{' '}
+                {outcome.result.value.districtLookupUrl && (
+                  <a
+                    href={outcome.result.value.districtLookupUrl}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="text-brand underline underline-offset-2"
+                  >
+                    정부24 지역별 조회에서 확인하기
+                  </a>
+                )}
+              </p>
+            )}
+          </section>
+        ) : null
+      }
+      form={
+        <FieldGroup>
+          <DateField
+            label="자녀 출생일 (출산 예정일도 괜찮아요)"
+            hint="신청 기한이 전부 출생일 기준이라 이 날짜로 D-day를 세어드려요."
+            value={input.childBirthDate}
+            autofilled={seeded.autofilled.has('childBirthDate')}
+            onChange={(childBirthDate) => set({ childBirthDate })}
+          />
+          <SegmentedField<BirthOrder>
+            label="이 아이는 몇째인가요"
+            value={input.birthOrder}
+            onChange={(birthOrder) => set({ birthOrder })}
+            options={[
+              { value: 'first', label: '첫째' },
+              { value: 'second', label: '둘째' },
+              { value: 'thirdOrMore', label: '셋째 이상' },
+            ]}
+          />
+          <SegmentedField<string>
+            label="사는 지역"
+            hint="지금은 서울만 정리돼 있어요. 다른 지역은 정부24 링크로 안내해 드립니다."
+            value={input.sido}
+            autofilled={seeded.autofilled.has('sido')}
+            onChange={(sido) => set({ sido, sigungu: undefined })}
+            options={[
+              { value: 'seoul', label: '서울' },
+              { value: 'other', label: '그 밖의 지역' },
+            ]}
+          />
+          {input.sido === 'seoul' && (
+            <SelectField<string>
+              label="자치구"
+              placeholder="구를 골라 주세요"
+              value={input.sigungu}
+              autofilled={seeded.autofilled.has('sigungu')}
+              onChange={(sigungu) => set({ sigungu })}
+              options={districts.map((d) => ({
+                value: d.code,
+                label: d.status === 'verified' ? d.name : `${d.name} (자체 지원 확인 중)`,
+              }))}
+            />
+          )}
+        </FieldGroup>
+      }
+    />
+  );
+}

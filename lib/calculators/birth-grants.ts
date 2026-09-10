@@ -72,6 +72,8 @@ export type ResolvedGrant = {
   monthlyBreakdown?: { fromMonth: number; toMonth: number; amount: number }[];
   payout: 'once' | 'monthly';
   deadline: GrantDeadline | null;
+  /** 마감일을 날짜로 셀 수 없는 경우에도 남는 안내 문구 */
+  deadlineNote?: string;
   applyAt: string;
   applyUrl?: string;
   eligibility?: string;
@@ -154,6 +156,7 @@ function resolveGrant(
     monthlyBreakdown: monthly?.breakdown,
     payout: grant.payout,
     deadline: resolveDeadline(grant, birthDate, today),
+    deadlineNote: grant.applyDeadlineNote,
     applyAt: grant.applyAt,
     applyUrl: grant.applyUrl,
     eligibility: grant.eligibility,
@@ -316,3 +319,9 @@ export function formatDDay(deadline: GrantDeadline): string {
 }
 
 export { formatKRW };
+
+/** 지역 선택 UI에 쓸 목록. 룰 파일에서 그대로 뽑는다. */
+export function listSeoulDistricts(asOf: string): { code: string; name: string; status: string }[] {
+  const seoul = loadRule<SeoulRule>('birth-grants-seoul', asOf).rule.values;
+  return seoul.districts.map((d) => ({ code: d.code, name: d.name, status: d.status }));
+}

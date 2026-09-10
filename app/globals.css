@@ -1,26 +1,98 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
 @import "tailwindcss";
 
+/*
+  토큰 시스템.
+  이름은 다정하고 내용은 돈과 법이다. 말투는 사람 말로 쓰되 숫자·표·근거는 정밀하게 둔다.
+  그래서 색은 적게 쓰고(중립 회색 + 잉크블루 하나), 강조는 색이 아니라 크기와 굵기로 만든다.
+*/
+@theme {
+  --color-ground: #f4f6f8;
+  --color-surface: #ffffff;
+  --color-sunk: #f8f9fb;
+  --color-line: #e3e6eb;
+  --color-line-strong: #ccd2db;
+
+  --color-ink: #14161a;
+  --color-ink-soft: #59616e;
+  --color-ink-faint: #8b93a1;
+
+  --color-brand: #1b3a8f;
+  --color-brand-strong: #142c6e;
+  --color-brand-soft: #eaefff;
+
+  --color-good: #0d6b46;
+  --color-good-soft: #e7f3ed;
+  --color-alert: #9a5209;
+  --color-alert-soft: #fdf1e2;
+  --color-danger: #a92620;
+  --color-danger-soft: #fbebea;
+
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+    "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+
+  --radius-card: 12px;
+  --radius-control: 8px;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-ground);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* 숫자는 자릿수가 흔들리지 않아야 표로 읽힌다. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* 키보드 사용자가 지금 어디 있는지 항상 보이게. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 애니메이션을 끄고 쓰는 사람에게는 끄고 보여준다. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 접힘 영역 화살표는 브라우저 기본을 쓰지 않고 직접 그린다. */
+summary::-webkit-details-marker {
+  display: none;
+}
+summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+/* 입력창에서 숫자 스피너를 없앤다. 금액은 스피너로 올릴 값이 아니다. */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
 }

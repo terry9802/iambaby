@@ -43,3 +43,47 @@ pnpm dev
 pnpm test        # 계산 로직 테스트
 pnpm typecheck
 ```
+
+## 배포와 외부 연결
+
+`.env.example`을 복사해 값을 채웁니다. 값이 비어 있으면 해당 스크립트를 아예 넣지 않으므로,
+로컬 개발 중에는 전부 비워둬도 됩니다.
+
+| 환경변수 | 쓰임 |
+|---|---|
+| `NEXT_PUBLIC_SITE_URL` | sitemap.xml, robots.txt, canonical, OG 태그의 기준 도메인 |
+| `NEXT_PUBLIC_GA_ID` | GA4 측정 ID. 없으면 GA 스크립트를 넣지 않음 |
+| `NEXT_PUBLIC_GSC_VERIFICATION` | Search Console HTML 태그 인증값 |
+| `NEXT_PUBLIC_ADSENSE_CLIENT` | AdSense 퍼블리셔 ID. 넣으면 `/ads.txt`가 자동 생성됨 |
+| `NEXT_PUBLIC_ADSENSE_SLOT_HOME` / `_HUB` | 광고 단위 슬롯 ID. 비우면 그 자리에 광고가 안 나옴 |
+
+### Vercel
+
+1. 저장소를 Vercel에 연결하면 별도 설정 없이 빌드됩니다 (`pnpm build`).
+2. Project Settings → Environment Variables에 위 값들을 넣습니다.
+3. 도메인을 연결한 뒤 `NEXT_PUBLIC_SITE_URL`을 그 도메인으로 바꿉니다. 이 값이 틀리면
+   sitemap과 canonical이 전부 엉뚱한 주소를 가리킵니다.
+
+### Google Analytics 4
+
+측정 ID(`G-`로 시작)를 `NEXT_PUBLIC_GA_ID`에 넣으면 끝입니다. IP는 익명 처리되고,
+**계산기에 입력한 값은 어떤 형태로도 이벤트에 싣지 않습니다.** 이 원칙을 깨는 코드를 넣지 마세요.
+
+### Search Console
+
+- **DNS 인증**을 쓰면 코드 변경 없이 도메인 소유권만 확인하면 됩니다.
+- **HTML 태그 인증**을 쓴다면 `<meta name="google-site-verification" content="...">`의
+  content 값만 `NEXT_PUBLIC_GSC_VERIFICATION`에 넣습니다.
+- 등록 후 `https://<도메인>/sitemap.xml`을 제출합니다. `/me`는 개인 설정 화면이라
+  robots.txt에서 크롤링을 막아뒀습니다.
+
+### AdSense 심사
+
+심사 전에 확인할 것:
+
+1. `NEXT_PUBLIC_ADSENSE_CLIENT`를 넣고 배포한 뒤 `https://<도메인>/ads.txt`가 열리는지 확인합니다.
+2. 개인정보처리방침(`/privacy`)이 접속 가능한지 확인합니다. 쿠키·GA·AdSense 항목이 이미 들어 있습니다.
+3. 슬롯 ID는 승인 후에 발급됩니다. 그 전까지 `_SLOT_` 변수는 비워두면 광고 자리가 렌더링되지 않습니다.
+
+광고는 계산 결과 영역 안에 넣지 않습니다. 결과와 광고가 섞이면 이 사이트가 파는 유일한 것,
+곧 신뢰가 사라지기 때문입니다.
