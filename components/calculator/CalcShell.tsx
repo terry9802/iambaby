@@ -1,9 +1,9 @@
 'use client';
 
-import Link from 'next/link';
 import type { ReactNode } from 'react';
 import type { CalcOutcome } from '@/lib/rules/types';
 import { TOOL_TYPE_LABEL, findEvent, type Tool } from '@/lib/tools';
+import { BackButton } from '@/components/ui/BackButton';
 import { BasisFooter, StaleBadge, hasStaleBasis } from './BasisFooter';
 import { Callout } from './Callout';
 import { ShareButton } from './ShareButton';
@@ -42,15 +42,10 @@ export function CalcShell<T>({
 
   return (
     <div className="mx-auto flex w-full max-w-[680px] flex-col gap-4 px-4 pb-16 pt-4">
-      <nav className="text-[12.5px] text-ink-faint">
-        <Link href="/" className="hover:text-ink-soft">
-          홈
-        </Link>
-        <span className="px-1.5">·</span>
-        <Link href={`/${tool.event}`} className="hover:text-ink-soft">
-          {findEvent(tool.event)?.title ?? tool.event}
-        </Link>
-      </nav>
+      <BackButton
+        fallbackHref={`/${tool.event}`}
+        label={findEvent(tool.event)?.title ?? '뒤로'}
+      />
 
       <header className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-2">

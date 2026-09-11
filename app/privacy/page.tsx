@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { BackButton } from '@/components/ui/BackButton';
 
 export const metadata: Metadata = {
   title: '개인정보처리방침',
@@ -24,11 +24,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function PrivacyPage() {
   return (
     <div className="mx-auto flex w-full max-w-[680px] flex-col gap-6 px-4 pb-16 pt-6">
-      <nav className="text-[12.5px] text-ink-faint">
-        <Link href="/" className="hover:text-ink-soft">
-          홈
-        </Link>
-      </nav>
+      <BackButton fallbackHref="/" label="홈" />
 
       <header className="flex flex-col gap-2">
         <h1 className="text-[24px] font-bold leading-snug tracking-[-0.015em] text-ink">

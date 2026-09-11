@@ -15,7 +15,10 @@ export type IconName =
   | 'socialdues'
   | 'share'
   | 'check'
-  | 'close';
+  | 'close'
+  | 'back'
+  | 'copy'
+  | 'phone';
 
 const PATHS: Record<IconName, React.ReactNode> = {
   // 젖병
@@ -81,6 +84,21 @@ const PATHS: Record<IconName, React.ReactNode> = {
   ),
   check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
   close: <path d="M6 6l12 12M18 6 6 18" />,
+  back: (
+    <>
+      <path d="M19 12H5" />
+      <path d="m11 18-6-6 6-6" />
+    </>
+  ),
+  copy: (
+    <>
+      <rect x="9" y="9" width="11" height="11" rx="2" />
+      <path d="M5 15H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v1" />
+    </>
+  ),
+  phone: (
+    <path d="M6.5 3.5h3l1.5 3.5-2 1.2a11 11 0 0 0 4.8 4.8l1.2-2 3.5 1.5v3a1.5 1.5 0 0 1-1.6 1.5A15.5 15.5 0 0 1 5 5.1 1.5 1.5 0 0 1 6.5 3.5Z" />
+  ),
 };
 
 export function Icon({

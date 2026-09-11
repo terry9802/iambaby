@@ -48,6 +48,12 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  /*
+    아이폰에서 화면 왼쪽 가장자리를 쓸어 뒤로 가는 동작을 막지 않는다.
+    overscroll-behavior-x나 touch-action을 건드리면 이 제스처가 죽으므로
+    가로 스크롤이 필요한 곳(표, 탭 줄)에서도 기본값을 그대로 둔다.
+  */
+  overscroll-behavior-x: auto;
 }
 
 body {

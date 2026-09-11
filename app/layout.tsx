@@ -5,6 +5,7 @@ import { ProfileProvider } from '@/lib/profile/context';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 import { AdSenseScript } from '@/components/analytics/AdSense';
 import { SITE_NAME, SITE_URL } from '@/lib/site';
+import { AppHistoryTracker } from '@/components/ui/AppHistoryTracker';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -47,6 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ko">
       <body className="min-h-dvh antialiased">
+        <AppHistoryTracker />
         <ProfileProvider>
           <div className="flex min-h-dvh flex-col">
             <header className="sticky top-0 z-10 border-b border-line bg-ground/90 backdrop-blur">

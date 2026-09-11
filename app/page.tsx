@@ -1,13 +1,16 @@
-import Link from 'next/link';
 import { ARTICLES } from '@/content/index';
-import { EVENTS, TOOLS, TOOL_TYPE_LABEL } from '@/lib/tools';
-import { Icon } from '@/components/ui/Icon';
 import { ProfileBanner } from '@/components/profile/ProfileBanner';
+import { HomeTabs } from '@/components/home/HomeTabs';
 import { AdSlot } from '@/components/analytics/AdSense';
 
 export default function HomePage() {
-  const live = EVENTS.filter((e) => e.status === 'live');
-  const soon = EVENTS.filter((e) => e.status === 'soon');
+  // 글 본문까지 브라우저로 내려보낼 필요는 없으니 목록에 쓸 것만 추린다.
+  const articles = ARTICLES.map((a) => ({
+    slug: a.slug,
+    event: a.event as string,
+    question: a.question,
+    title: a.title,
+  }));
 
   return (
     <div className="mx-auto flex w-full max-w-[680px] flex-col gap-5 px-4 pb-16 pt-6">
@@ -27,92 +30,7 @@ export default function HomePage() {
 
       <ProfileBanner />
 
-      {live.map((event) => (
-        <section key={event.key} className="flex flex-col gap-3">
-          <div className="flex items-baseline justify-between gap-3">
-            <h2 className="flex items-center gap-2 text-[17px] font-bold text-ink">
-              <Icon name={event.icon} size={20} className="text-brand" />
-              {event.title}
-            </h2>
-            <Link
-              href={`/${event.key}`}
-              className="shrink-0 text-[12.5px] font-medium text-brand-strong hover:underline"
-            >
-              전체 일정 보기
-            </Link>
-          </div>
-          <p className="text-[13.5px] leading-relaxed text-ink-soft">{event.lead}</p>
-
-          <ul className="flex flex-col gap-2">
-            {TOOLS.filter((t) => t.event === event.key).map((tool) => (
-              <li key={tool.slug}>
-                <Link
-                  href={`/${tool.event}/${tool.slug}`}
-                  className="flex flex-col gap-1.5 rounded-[12px] border border-line bg-surface px-4 py-3.5 transition-colors hover:border-line-strong"
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full border border-line bg-surface px-2 py-0.5 text-[11px] font-medium text-ink-faint">
-                      {TOOL_TYPE_LABEL[tool.type]}
-                    </span>
-                  </div>
-                  <p className="text-[15px] font-semibold leading-snug text-ink">{tool.question}</p>
-                  <p className="text-[12.5px] leading-relaxed text-ink-soft">{tool.lead}</p>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
-
-      <section className="flex flex-col gap-3">
-        <div className="flex items-baseline justify-between gap-3">
-          <h2 className="text-[15px] font-bold text-ink">읽을거리</h2>
-          <Link href="/guide" className="shrink-0 text-[12.5px] font-medium text-brand-strong hover:underline">
-            전체 보기
-          </Link>
-        </div>
-        <p className="text-[13.5px] leading-relaxed text-ink-soft">
-          계산기가 &lsquo;얼마&rsquo;를 답한다면, 이 글들은 &lsquo;왜&rsquo;와 &lsquo;언제&rsquo;를
-          답합니다.
-        </p>
-        <ul className="flex flex-col gap-2">
-          {ARTICLES.slice(0, 4).map((article) => (
-            <li key={article.slug}>
-              <Link
-                href={`/guide/${article.slug}`}
-                className="flex flex-col gap-1 rounded-[12px] border border-line bg-surface px-4 py-3 transition-colors hover:border-line-strong"
-              >
-                <span className="text-[14px] font-semibold leading-snug text-ink">
-                  {article.question}
-                </span>
-                <span className="text-[12px] leading-relaxed text-ink-faint">{article.title}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="flex flex-col gap-3">
-        <h2 className="text-[15px] font-bold text-ink">준비 중인 이벤트</h2>
-        <ul className="grid grid-cols-2 gap-2">
-          {soon.map((event) => (
-            <li
-              key={event.key}
-              className="flex flex-col gap-1 rounded-[12px] border border-dashed border-line bg-surface px-3.5 py-3"
-            >
-              <span className="flex items-center gap-1.5 text-[13.5px] font-semibold text-ink-soft">
-                <Icon name={event.icon} size={17} className="shrink-0 text-ink-faint" />
-                {event.title}
-              </span>
-              <span className="text-[11.5px] leading-relaxed text-ink-faint">{event.lead}</span>
-            </li>
-          ))}
-        </ul>
-        <p className="text-[12.5px] leading-relaxed text-ink-faint">
-          하나를 제대로 만드는 편이 여러 개를 어중간하게 만드는 것보다 낫다고 생각해서, 출산·육아부터
-          끝까지 파고 있습니다.
-        </p>
-      </section>
+      <HomeTabs articles={articles} />
 
       <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOME} />
     </div>

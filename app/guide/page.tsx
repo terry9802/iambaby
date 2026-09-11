@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { BackButton } from '@/components/ui/BackButton';
 import { ARTICLES } from '@/content/index';
 import { readingMinutes } from '@/lib/content/types';
 import { AdSlot } from '@/components/analytics/AdSense';
@@ -14,11 +15,7 @@ export const metadata: Metadata = {
 export default function GuideIndexPage() {
   return (
     <div className="mx-auto flex w-full max-w-[680px] flex-col gap-5 px-4 pb-16 pt-6">
-      <nav className="text-[12.5px] text-ink-faint">
-        <Link href="/" className="hover:text-ink-soft">
-          홈
-        </Link>
-      </nav>
+      <BackButton fallbackHref="/" label="홈" />
 
       <header className="flex flex-col gap-2">
         <h1 className="text-[24px] font-bold leading-snug tracking-[-0.015em] text-ink">

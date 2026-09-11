@@ -8,6 +8,7 @@ import { toISODate } from '@/lib/format';
 import { ArticleBody } from '@/components/content/ArticleBody';
 import { BasisFooter } from '@/components/calculator/BasisFooter';
 import { AdSlot } from '@/components/analytics/AdSense';
+import { BackButton } from '@/components/ui/BackButton';
 import { SITE_NAME, SITE_URL } from '@/lib/site';
 
 
@@ -67,15 +68,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <nav className="text-[12.5px] text-ink-faint">
-        <Link href="/" className="hover:text-ink-soft">
-          홈
-        </Link>
-        <span className="px-1.5">·</span>
-        <Link href="/guide" className="hover:text-ink-soft">
-          읽을거리
-        </Link>
-      </nav>
+      <BackButton fallbackHref="/guide" label="읽을거리" />
 
       <header className="flex flex-col gap-2">
         <h1 className="text-[24px] font-bold leading-snug tracking-[-0.015em] text-ink">
