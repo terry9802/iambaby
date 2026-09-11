@@ -7,6 +7,12 @@ import { AdSenseScript } from '@/components/analytics/AdSense';
 import { SITE_NAME, SITE_URL } from '@/lib/site';
 import { AppHistoryTracker } from '@/components/ui/AppHistoryTracker';
 
+const FONT_PRELOAD = [
+  '/fonts/pretendard/PretendardVariable.subset.91.woff2',
+  '/fonts/pretendard/PretendardVariable.subset.90.woff2',
+  '/fonts/pretendard/PretendardVariable.subset.89.woff2',
+];
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
@@ -47,11 +53,24 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
+      <head>
+        {/*
+          Pretendard 동적 서브셋은 91/90/89번에 가장 자주 쓰는 글자와 영문이 들어 있어서
+          한국어 페이지는 거의 항상 이 셋을 내려받는다. CSS를 다 읽은 뒤에야 발견하지 말고
+          미리 받아 두면 글자가 기본 폰트로 한 번 깜빡였다 바뀌는 일이 줄어든다.
+          나머지 89개는 필요한 글자가 나올 때만 간다.
+        */}
+        {FONT_PRELOAD.map((href) => (
+          <link key={href} rel="preload" as="font" type="font/woff2" href={href} crossOrigin="" />
+        ))}
+      </head>
       <body className="min-h-dvh antialiased">
         <AppHistoryTracker />
         <ProfileProvider>
           <div className="flex min-h-dvh flex-col">
-            <header className="sticky top-0 z-10 border-b border-line bg-ground/90 backdrop-blur">
+            {/* 반투명 + backdrop-blur는 스크롤하는 내내 배경을 다시 그려서 휴대폰에서 눈에 띄게 버벅인다.
+                그냥 불투명하게 둔다. 보기에 달라지는 건 거의 없고 스크롤은 확실히 매끄러워진다. */}
+            <header className="sticky top-0 z-10 border-b border-line bg-ground">
               <div className="mx-auto flex w-full max-w-[680px] items-center justify-between gap-3 px-4 py-3">
                 <Link href="/" className="text-[14px] font-bold tracking-[-0.01em] text-ink">
                   난아직애긴데
@@ -80,17 +99,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   따릅니다. 기준값은 법령·고시 원문을 확인해 표기하며 확인일이 오래되면 화면에
                   표시합니다.
                 </p>
+                {/* 바닥 링크는 거의 눌리지 않는데도 모든 페이지에서 미리 받아 두면
+                    첫 방문의 데이터만 축낸다. 여기만 미리 받기를 끈다. */}
                 <nav className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[12.5px]">
-                  <Link href="/childcare" className="text-ink-soft hover:text-ink">
+                  <Link href="/childcare" prefetch={false} className="text-ink-soft hover:text-ink">
                     출산 · 육아
                   </Link>
-                  <Link href="/guide" className="text-ink-soft hover:text-ink">
+                  <Link href="/guide" prefetch={false} className="text-ink-soft hover:text-ink">
                     읽을거리
                   </Link>
-                  <Link href="/me" className="text-ink-soft hover:text-ink">
+                  <Link href="/me" prefetch={false} className="text-ink-soft hover:text-ink">
                     내 프로필
                   </Link>
-                  <Link href="/privacy" className="text-ink-soft hover:text-ink">
+                  <Link href="/privacy" prefetch={false} className="text-ink-soft hover:text-ink">
                     개인정보처리방침
                   </Link>
                 </nav>

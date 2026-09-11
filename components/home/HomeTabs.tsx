@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useSyncExternalStore } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 import { EVENTS, TOOLS, TOOL_TYPE_LABEL } from '@/lib/tools';
 import type { IconName } from '@/components/ui/Icon';
 import { Icon } from '@/components/ui/Icon';
@@ -29,6 +29,14 @@ export function HomeTabs({ articles }: { articles: ArticleLink[] }) {
   ];
   const active = tabs.some((t) => t.key === stored) ? stored : live[0].key;
 
+  /*
+    스크롤바를 감췄으니, 고른 탭이 화면 밖에 있으면 아무것도 안 골라진 것처럼 보인다.
+    고른 탭이 보이는 자리로만 살짝 밀어준다. block:'nearest'라서 페이지가 위아래로 튀지 않는다.
+  */
+  const revealSelected = useCallback((el: HTMLButtonElement | null) => {
+    el?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }, []);
+
   const event = live.find((e) => e.key === active);
   const tools = TOOLS.filter((t) => t.event === active);
   const eventArticles = articles.filter((a) => a.event === active);
@@ -38,13 +46,16 @@ export function HomeTabs({ articles }: { articles: ArticleLink[] }) {
       <div
         role="tablist"
         aria-label="관심 있는 주제"
-        className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1"
+        /* 탭이 화면보다 길면 옆으로 밀어서 본다. 다만 스크롤바 줄은 보이지 않게 한다 —
+           알약 모양 탭이 잘려 보이는 것 자체가 "옆에 더 있다"는 신호라 막대는 군더더기다. */
+        className="no-scrollbar -mx-4 flex gap-1.5 overflow-x-auto px-4 py-0.5"
       >
         {tabs.map((tab) => {
           const selected = tab.key === active;
           return (
             <button
               key={tab.key}
+              ref={selected ? revealSelected : undefined}
               role="tab"
               aria-selected={selected}
               onClick={() => setTab(tab.key)}
