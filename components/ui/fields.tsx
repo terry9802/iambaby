@@ -266,6 +266,47 @@ export function SelectField<T extends string>({
   );
 }
 
+export function PercentField({
+  label,
+  hint,
+  value,
+  onChange,
+  placeholder,
+  required,
+}: {
+  label: string;
+  hint?: string;
+  /** 0.025 같은 비율로 주고받는다 */
+  value: number | undefined;
+  onChange: (next: number | undefined) => void;
+  placeholder?: string;
+  required?: boolean;
+}) {
+  const id = useId();
+  return (
+    <FieldFrame id={id} label={label} hint={hint} required={required}>
+      <div className="relative">
+        <input
+          id={id}
+          className={`${inputClass} tnum pr-8 text-right`}
+          inputMode="decimal"
+          value={value === undefined ? '' : String(Math.round(value * 10000) / 100)}
+          placeholder={placeholder}
+          onChange={(e) => {
+            const cleaned = e.target.value.replace(/[^0-9.]/g, '');
+            if (cleaned === '') return onChange(undefined);
+            const num = Number(cleaned);
+            onChange(Number.isFinite(num) ? num / 100 : undefined);
+          }}
+        />
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[14px] text-ink-faint">
+          %
+        </span>
+      </div>
+    </FieldFrame>
+  );
+}
+
 export function ToggleField({
   label,
   hint,

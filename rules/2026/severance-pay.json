@@ -1,0 +1,25 @@
+{
+  "meta": {
+    "ruleId": "severance-pay",
+    "title": "퇴직금",
+    "effectiveFrom": "2026-01-01",
+    "effectiveTo": null,
+    "source": "근로자퇴직급여 보장법 제4조·제8조, 근로기준법 제2조(평균임금)",
+    "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B7%BC%EB%A1%9C%EC%9E%90%ED%87%B4%EC%A7%81%EA%B8%89%EC%97%AC%EB%B3%B4%EC%9E%A5%EB%B2%95",
+    "verifiedAt": "2026-09-11",
+    "verifiedBy": "근로자퇴직급여 보장법 조문",
+    "note": "퇴직금은 '계속근로기간 1년에 대하여 30일분 이상의 평균임금'이다. 평균임금이 통상임금보다 적으면 통상임금을 평균임금으로 본다(근로기준법 제2조 제2항)."
+  },
+  "values": {
+    "daysPerYear": 30,
+    "yearDays": 365,
+    "minMonths": 12,
+    "minWeeklyHours": 15,
+    "averageWagePeriodDays": 90,
+    "useOrdinaryWageIfHigher": true,
+    "claimYears": 3,
+    "claimNote": "퇴직금 청구권은 퇴직한 날부터 3년간 행사하지 않으면 시효로 소멸한다(근로자퇴직급여 보장법 제10조).",
+    "payWithinDays": 14,
+    "payNote": "회사는 퇴직일부터 14일 이내에 지급해야 한다. 당사자 합의로 기일을 미룰 수 있다."
+  }
+}

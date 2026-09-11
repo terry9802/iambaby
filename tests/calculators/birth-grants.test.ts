@@ -130,6 +130,58 @@ describe('출산·육아 지원금 통합 조회', () => {
     expect(out.result.value.extraNotes.some((n) => n.scope === '노원구')).toBe(true);
   });
 
+  it('확인 안 된 구에는 확인된 구들의 평균을 짐작할 출발점으로 준다', () => {
+    const out = checkBirthGrants({
+      childBirthDate: BIRTH,
+      birthOrder: 'thirdOrMore',
+      sido: 'seoul',
+      sigungu: 'nowon',
+      today: '2026-03-05',
+    });
+    if (!out.ok) throw new Error('계산 실패');
+    // 셋째 기준 확인된 8개 구 평균
+    // (강남 300 + 광진 100 + 성동 300 + 중랑 100 + 양천 70 + 구로 60 + 금천 70 + 영등포 300) / 8
+    expect(out.result.value.districtEstimate).toBe(163 * MAN);
+    expect(out.result.value.districtOverride).toBeNull();
+  });
+
+  it('구청에 물어 넣은 금액은 합계에 더하되 우리가 검증한 값이 아님을 밝힌다', () => {
+    const base = checkBirthGrants({
+      childBirthDate: BIRTH,
+      birthOrder: 'first',
+      sido: 'seoul',
+      sigungu: 'nowon',
+      today: '2026-03-05',
+    });
+    const withAmount = checkBirthGrants({
+      childBirthDate: BIRTH,
+      birthOrder: 'first',
+      sido: 'seoul',
+      sigungu: 'nowon',
+      districtAmount: 50 * MAN,
+      today: '2026-03-05',
+    });
+    if (!base.ok || !withAmount.ok) throw new Error('계산 실패');
+    expect(withAmount.result.value.totalAmount - base.result.value.totalAmount).toBe(50 * MAN);
+    expect(withAmount.result.value.districtOverride).toBe(50 * MAN);
+    const manual = withAmount.result.value.grants.find((g) => g.id === 'district-manual');
+    expect(manual?.description).toContain('검증한 값이 아니');
+  });
+
+  it('이미 금액을 확인한 구에는 직접 입력을 받지 않는다', () => {
+    const out = checkBirthGrants({
+      childBirthDate: BIRTH,
+      birthOrder: 'first',
+      sido: 'seoul',
+      sigungu: 'gangnam',
+      districtAmount: 999 * MAN,
+      today: '2026-03-05',
+    });
+    if (!out.ok) throw new Error('계산 실패');
+    expect(out.result.value.districtOverride).toBeNull();
+    expect(out.result.value.totalAmount).toBe(3450 * MAN);
+  });
+
   it('금액을 확인한 자치구는 여덟 곳이고 전부 출처가 붙어 있다', () => {
     const seoul = listSeoulDistricts(BIRTH);
     expect(seoul.length).toBe(25);

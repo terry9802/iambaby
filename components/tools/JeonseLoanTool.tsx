@@ -16,9 +16,11 @@ import {
   FieldGroup,
   MoneyField,
   NumberField,
+  PercentField,
   SegmentedField,
   ToggleField,
 } from '@/components/ui/fields';
+import { ConsultBox } from '@/components/ui/PhoneCopy';
 import { Icon } from '@/components/ui/Icon';
 
 export function JeonseLoanTool({ tool }: { tool: Tool }) {
@@ -38,6 +40,7 @@ export function JeonseLoanTool({ tool }: { tool: Tool }) {
       region: region === 'capital' || region === 'other' ? (region as Region) : undefined,
       children: qNum(sp, 'kids'),
       eContract: qBool(sp, 'ec'),
+      rateOverride: qNum(sp, 'rate'),
     });
   }, [hydrated]);
 
@@ -87,6 +90,7 @@ export function JeonseLoanTool({ tool }: { tool: Tool }) {
     rg: input.region,
     kids: input.children,
     ec: input.eContract,
+    rate: input.rateOverride,
   });
 
   const headline = outcome.ok ? (
@@ -161,6 +165,19 @@ export function JeonseLoanTool({ tool }: { tool: Tool }) {
           </section>
         ) : null
       }
+      extra={
+        <ConsultBox
+          title="금리는 은행에서 확정됩니다"
+          lead="부부합산 소득과 보증금 구간에 따라 정해지는 표가 따로 있어, 여기서는 범위로만 보여드립니다. 상담에서 안내받은 금리가 있으면 아래에 넣어 다시 계산해 보세요."
+          phones={[
+            {
+              label: '주택도시보증공사 콜센터',
+              number: '1566-9009',
+              note: '자산 심사와 대출 조건 상담은 여기가 가장 정확합니다.',
+            },
+          ]}
+        />
+      }
       form={
         <FieldGroup>
           <MoneyField
@@ -227,6 +244,13 @@ export function JeonseLoanTool({ tool }: { tool: Tool }) {
             hint="금리가 0.1%p 내려갑니다."
             checked={input.eContract ?? false}
             onChange={(eContract) => set({ eContract })}
+          />
+          <PercentField
+            label="은행에서 안내받은 금리 (연)"
+            hint="상담 전이면 비워두세요. 비워두면 연 1.9~3.3% 범위로 보여드립니다."
+            value={input.rateOverride}
+            placeholder="상담 전이면 비워두세요"
+            onChange={(rateOverride) => set({ rateOverride })}
           />
         </FieldGroup>
       }

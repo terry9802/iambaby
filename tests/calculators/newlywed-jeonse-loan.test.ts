@@ -108,6 +108,23 @@ describe('신혼부부 전세자금대출 판정기', () => {
     );
   });
 
+  it('은행에서 안내받은 금리를 넣으면 범위 대신 그 값으로 계산한다', () => {
+    const out = checkNewlywedJeonseLoan({
+      deposit: 2 * EOK,
+      householdIncome: 5000 * MAN,
+      marriedYears: 2,
+      rateOverride: 0.025,
+    });
+    if (!out.ok) throw new Error('계산 실패');
+    expect(out.result.value.usedOwnRate).toBe(true);
+    expect(out.result.value.rateMin).toBe(0.025);
+    expect(out.result.value.rateMax).toBe(0.025);
+    expect(out.result.value.monthlyInterestMin).toBe(out.result.value.monthlyInterestMax);
+    // 1.6억 × 2.5% ÷ 12
+    expect(out.result.value.monthlyInterestMax).toBe(Math.round((1.6 * EOK * 0.025) / 12));
+    expect(out.result.warnings.some((w) => w.includes('안내받은 금리로'))).toBe(true);
+  });
+
   it('0·빈 입력은 무엇이 부족한지 돌려준다', () => {
     const out = checkNewlywedJeonseLoan({});
     expect(out.ok).toBe(false);

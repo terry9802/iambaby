@@ -44,6 +44,8 @@ export type JeonseLoanInput = {
   deposit?: number;
   children?: number;
   eContract?: boolean;
+  /** 은행에서 안내받은 실제 금리(연). 넣으면 범위 대신 이 값으로 계산한다. */
+  rateOverride?: number;
   asOf?: string;
 };
 
@@ -65,6 +67,8 @@ export type JeonseLoanValue = {
   discount: number;
   monthlyInterestMin: number;
   monthlyInterestMax: number;
+  /** 사용자가 직접 넣은 금리를 썼는가 */
+  usedOwnRate: boolean;
 };
 
 export function checkNewlywedJeonseLoan(
@@ -152,8 +156,13 @@ export function checkNewlywedJeonseLoan(
     : 0;
   const discount = childDiscount + eContractDiscount;
 
-  const rateMin = Math.max(0.01, rule.rateRange.min - discount);
-  const rateMax = Math.max(0.01, rule.rateRange.max - discount);
+  const usedOwnRate = input.rateOverride !== undefined && input.rateOverride > 0;
+  const rateMin = usedOwnRate
+    ? (input.rateOverride as number)
+    : Math.max(0.01, rule.rateRange.min - discount);
+  const rateMax = usedOwnRate
+    ? (input.rateOverride as number)
+    : Math.max(0.01, rule.rateRange.max - discount);
   const monthlyInterestMin = Math.round((maxLoan * rateMin) / 12);
   const monthlyInterestMax = Math.round((maxLoan * rateMax) / 12);
 
@@ -217,7 +226,9 @@ export function checkNewlywedJeonseLoan(
   ];
 
   const warnings = [
-    '**금리는 범위로만 보여드립니다.** 실제 금리는 부부합산 소득과 보증금 구간에 따라 정해지는 표로 결정되고, 은행 상담에서 확정됩니다.',
+    usedOwnRate
+      ? '은행에서 안내받은 금리로 계산했어요. 우대금리가 빠져 있지 않은지 확인해 보세요.'
+      : '**금리는 범위로만 보여드립니다.** 실제 금리는 부부합산 소득과 보증금 구간에 따라 정해지는 표로 결정되고, 은행 상담에서 확정됩니다. 안내받은 금리가 있으면 아래에 넣어 다시 계산해 보세요.',
     '집주인의 동의와 주택 상태(등기부, 선순위 보증금 등)에 따라 대출이 거절될 수 있습니다. 계약서를 쓰기 전에 은행에 먼저 확인하세요.',
     '대출 신청은 임대차계약서상 잔금 지급일과 주민등록 전입일 중 빠른 날부터 3개월 안에 해야 합니다.',
   ];
@@ -245,6 +256,7 @@ export function checkNewlywedJeonseLoan(
       discount,
       monthlyInterestMin,
       monthlyInterestMax,
+      usedOwnRate,
     },
     steps,
     assumptions,

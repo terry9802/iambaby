@@ -12,16 +12,18 @@ import {
 import { formatKRW, formatManwon } from '@/lib/format';
 import { useProfile } from '@/lib/profile/context';
 import { Seeder, pendingExamples, resolveToday } from '@/lib/profile/seed';
-import { buildShareQuery, pickDefined, qStr, readShareQuery } from '@/lib/share';
+import { buildShareQuery, pickDefined, qNum, qStr, readShareQuery } from '@/lib/share';
 import type { Tool } from '@/lib/tools';
 import { CalcShell } from '@/components/calculator/CalcShell';
 import { ResultAside, ResultHeadline } from '@/components/calculator/ResultHeadline';
 import {
   DateField,
   FieldGroup,
+  MoneyField,
   SegmentedField,
   SelectField,
 } from '@/components/ui/fields';
+import { ConsultBox } from '@/components/ui/PhoneCopy';
 
 function DeadlineChip({ grant }: { grant: ResolvedGrant }) {
   if (!grant.deadline) return null;
@@ -128,6 +130,7 @@ export function BirthGrantsTool({ tool, fallbackToday }: { tool: Tool; fallbackT
           : undefined,
       sido: qStr(sp, 'sido'),
       sigungu: qStr(sp, 'gu'),
+      districtAmount: qNum(sp, 'guAmt'),
     });
   }, [hydrated]);
 
@@ -148,6 +151,7 @@ export function BirthGrantsTool({ tool, fallbackToday }: { tool: Tool; fallbackT
     order: input.birthOrder,
     sido: input.sido,
     gu: input.sigungu,
+    guAmt: input.districtAmount,
   });
 
   const districts = useMemo(
@@ -191,6 +195,21 @@ export function BirthGrantsTool({ tool, fallbackToday }: { tool: Tool; fallbackT
       exampleFields={examples}
       shareQuery={shareQuery}
       fromSharedLink={Object.keys(fromLink).length > 0}
+      extra={
+        outcome.ok && outcome.result.value.districtStatus === 'unverified' ? (
+          <ConsultBox
+            title={`${outcome.result.value.districtName ?? '이 자치구'}는 전화로 확인하는 게 빠릅니다`}
+            lead={`구청 홈페이지에서 금액을 찾지 못했습니다. 지어낸 숫자를 보여드리는 대신 물어보실 곳을 안내해 드려요. 확인된 8개 구 평균은 ${formatManwon(outcome.result.value.districtEstimate)} 정도입니다.`}
+            phones={[
+              {
+                label: '서울 다산콜센터',
+                number: '120',
+                note: '서울 전체와 자치구 민원을 함께 안내합니다. "출산지원금 있나요"라고 물으시면 됩니다.',
+              },
+            ]}
+          />
+        ) : null
+      }
       detail={
         outcome.ok ? (
           <section className="rounded-[12px] border border-line bg-surface px-4 py-2">
@@ -273,6 +292,15 @@ export function BirthGrantsTool({ tool, fallbackToday }: { tool: Tool; fallbackT
                 value: d.code,
                 label: d.status === 'verified' ? d.name : `${d.name} (자체 지원 확인 중)`,
               }))}
+            />
+          )}
+          {input.sido === 'seoul' && outcome.ok && outcome.result.value.districtStatus === 'unverified' && (
+            <MoneyField
+              label="구청에서 알려준 금액"
+              hint={`전화로 확인하셨으면 넣어주세요. 합계에 함께 더해 드립니다. 확인된 구들의 평균은 ${formatManwon(outcome.result.value.districtEstimate)} 정도예요.`}
+              value={input.districtAmount}
+              placeholder={String(outcome.result.value.districtEstimate)}
+              onChange={(districtAmount) => set({ districtAmount })}
             />
           )}
         </FieldGroup>

@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "ruleId": "unemployment-benefit",
+    "title": "실업급여 (구직급여)",
+    "effectiveFrom": "2026-01-01",
+    "effectiveTo": null,
+    "source": "고용보험법 제45조·제46조, 같은 법 별표 1(구직급여의 소정급여일수)",
+    "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B3%A0%EC%9A%A9%EB%B3%B4%ED%97%98%EB%B2%95",
+    "verifiedAt": "2026-09-11",
+    "verifiedBy": "고용보험법 조문 및 고용노동부 고객상담센터 안내",
+    "note": "상한액은 2019년 1월 이후 1일 66,000원으로 고시돼 있으나 해마다 바뀔 수 있어 화면에서 고칠 수 있게 두었다. 하한액은 최저임금일액의 80%라 최저임금이 오르면 함께 오른다."
+  },
+  "values": {
+    "wageReplacementRate": 0.6,
+    "dailyCap": 66000,
+    "dailyCapNeedsCheck": true,
+    "minimumWage": {
+      "hourly": 10320,
+      "dailyHours": 8,
+      "floorRate": 0.8,
+      "source": "2026년 적용 최저임금 고시 (시간급 10,320원)"
+    },
+    "requiredInsuredDays": 180,
+    "applyWithinMonths": 12,
+    "benefitDays": [
+      {
+        "ageGroup": "under50",
+        "label": "만 50세 미만",
+        "rows": [
+          { "maxYears": 1, "days": 120 },
+          { "maxYears": 3, "days": 150 },
+          { "maxYears": 5, "days": 180 },
+          { "maxYears": 10, "days": 210 },
+          { "maxYears": null, "days": 240 }
+        ]
+      },
+      {
+        "ageGroup": "over50",
+        "label": "만 50세 이상 또는 장애인",
+        "rows": [
+          { "maxYears": 1, "days": 120 },
+          { "maxYears": 3, "days": 180 },
+          { "maxYears": 5, "days": 210 },
+          { "maxYears": 10, "days": 240 },
+          { "maxYears": null, "days": 270 }
+        ]
+      }
+    ],
+    "consult": {
+      "label": "고용노동부 고객상담센터",
+      "number": "1350",
+      "note": "상한액과 내 수급 자격은 여기가 가장 정확합니다."
+    }
+  }
+}

@@ -22,6 +22,7 @@ export function CalcShell<T>({
   exampleFields,
   shareQuery,
   fromSharedLink,
+  extra,
 }: {
   tool: Tool;
   outcome: CalcOutcome<T>;
@@ -37,6 +38,8 @@ export function CalcShell<T>({
   shareQuery?: string;
   /** 공유받은 링크의 값으로 계산 중인가 */
   fromSharedLink?: boolean;
+  /** 사이트가 답할 수 없는 것을 어디에 물어야 하는지 안내하는 자리 */
+  extra?: ReactNode;
 }) {
   const stale = outcome.ok && hasStaleBasis(outcome.result.basis);
 
@@ -107,6 +110,8 @@ export function CalcShell<T>({
           입력한 값은 이 브라우저 밖으로 나가지 않아요. 서버로 보내지 않고 여기서 계산합니다.
         </p>
       </section>
+
+      {extra}
 
       {detail}
 

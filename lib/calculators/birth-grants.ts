@@ -92,6 +92,10 @@ export type BirthGrantsValue = {
   districtLookupUrl?: string;
   /** 합계에 안 들어가지만 알려드릴 것 */
   extraNotes: { scope: string; text: string }[];
+  /** 금액을 확인한 구들의 평균. 확인 안 된 구에서 짐작할 출발점으로 쓴다. */
+  districtEstimate: number;
+  /** 사용자가 구청에 물어 직접 넣은 금액 */
+  districtOverride: number | null;
 };
 
 function amountFor(grant: RawGrant, order: BirthOrder): number {
@@ -172,6 +176,8 @@ export type BirthGrantsInput = {
   birthOrder?: BirthOrder;
   sido?: string;
   sigungu?: string;
+  /** 구청에 물어서 알게 된 실제 금액. 넣으면 합계에 들어간다. */
+  districtAmount?: number;
   /** 테스트에서 오늘 날짜를 고정하기 위한 값 */
   today?: string;
 };
@@ -209,6 +215,7 @@ export function checkBirthGrants(input: BirthGrantsInput): CalcOutcome<BirthGran
   let districtStatus: BirthGrantsValue['districtStatus'] = 'unsupported';
   let districtName: string | null = null;
   let districtLookupUrl: string | undefined;
+  let districtEstimate = 0;
 
   if (input.sido === 'seoul') {
     const seoulLookup = loadRule<SeoulRule>('birth-grants-seoul', birthDateIso);
@@ -220,6 +227,16 @@ export function checkBirthGrants(input: BirthGrantsInput): CalcOutcome<BirthGran
     }
     for (const text of seoul.sido.extraNotes ?? []) {
       extraNotes.push({ scope: seoul.sido.name, text });
+    }
+
+    // 금액을 확인한 구들의 평균. 첫째에게 아무것도 주지 않는 구도 0원으로 함께 센다.
+    const verified = seoul.districts.filter((d) => d.status === 'verified');
+    if (verified.length > 0) {
+      const sum = verified.reduce(
+        (acc, d) => acc + d.items.reduce((s2, item) => s2 + amountFor(item, order), 0),
+        0,
+      );
+      districtEstimate = Math.round(sum / verified.length / 10000) * 10000;
     }
 
     const district = seoul.districts.find((d) => d.code === input.sigungu);
@@ -242,6 +259,27 @@ export function checkBirthGrants(input: BirthGrantsInput): CalcOutcome<BirthGran
         });
       }
     }
+  }
+
+  // 구청에 물어 직접 넣은 금액은 확인 안 된 구에서만 합계에 넣는다.
+  const districtOverride =
+    districtStatus === 'unverified' && input.districtAmount !== undefined && input.districtAmount > 0
+      ? input.districtAmount
+      : null;
+  if (districtOverride !== null && districtName) {
+    grants.push({
+      id: 'district-manual',
+      name: `${districtName} 자체 지원 (직접 입력)`,
+      scope: 'district',
+      scopeLabel: districtName,
+      kind: 'cash',
+      description: '구청에 확인하고 넣으신 금액입니다. 저희가 검증한 값이 아니에요.',
+      totalAmount: districtOverride,
+      firstYearAmount: districtOverride,
+      payout: 'once',
+      deadline: null,
+      applyAt: '주소지 동주민센터',
+    });
   }
 
   const totalAmount = grants.reduce((acc, g) => acc + g.totalAmount, 0);
@@ -324,6 +362,8 @@ export function checkBirthGrants(input: BirthGrantsInput): CalcOutcome<BirthGran
       districtName,
       districtLookupUrl,
       extraNotes,
+      districtEstimate,
+      districtOverride,
     },
     steps,
     assumptions,

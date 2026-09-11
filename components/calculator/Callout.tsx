@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { InlineText } from '@/components/ui/InlineText';
 
 const TONE = {
   warning: {
@@ -36,7 +37,9 @@ export function Callout({
           {items.map((item, i) => (
             <li key={i} className="flex gap-2 text-[13px] leading-relaxed text-ink-soft">
               <span aria-hidden className="mt-[7px] h-[3px] w-[3px] shrink-0 rounded-full bg-ink-faint" />
-              <span>{item}</span>
+              <span>
+                <InlineText text={item} />
+              </span>
             </li>
           ))}
         </ul>

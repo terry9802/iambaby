@@ -1,0 +1,67 @@
+{
+  "meta": {
+    "ruleId": "payroll",
+    "title": "4대보험 요율과 근로소득세",
+    "effectiveFrom": "2026-07-01",
+    "effectiveTo": null,
+    "source": "국민연금법(기준소득월액 고시), 국민건강보험법 시행령, 고용보험법 시행령, 소득세법 제47조·제55조·제59조",
+    "sourceUrl": "https://www.nps.or.kr/pnsinfo/ntpsklg/getOHAF0038M0.do",
+    "verifiedAt": "2026-09-11",
+    "verifiedBy": "국민연금공단 기준소득월액 조정 안내, 국민건강보험공단 2026년 보험료율 안내, 국세청 연말정산 안내",
+    "note": "실수령액은 회사가 매달 떼는 간이세액표 기준과 연말정산 결과가 다르다. 여기 계산은 연간 기준의 근사치이며, 개인별 공제(의료비·기부금·주택청약 등)는 반영하지 않는다."
+  },
+  "values": {
+    "nationalPension": {
+      "totalRate": 0.095,
+      "employeeShare": 0.5,
+      "baseMin": 410000,
+      "baseMax": 6590000,
+      "note": "2026년 7월 1일부터 2027년 6월 30일까지 적용되는 기준소득월액 상·하한액. 요율은 연금개혁에 따라 2026년부터 매년 0.5%p씩 오른다."
+    },
+    "healthInsurance": { "totalRate": 0.0719, "employeeShare": 0.5 },
+    "longTermCare": {
+      "totalRate": 0.009448,
+      "employeeShare": 0.5,
+      "note": "보수월액 대비 요율. 건강보험료에 곱하는 방식(12.95%대)과 결과가 같다."
+    },
+    "employmentInsurance": { "employeeRate": 0.009 },
+    "taxFreeMealLimit": 200000,
+    "earnedIncomeDeduction": [
+      { "upTo": 5000000, "base": 0, "rate": 0.7, "over": 0 },
+      { "upTo": 15000000, "base": 3500000, "rate": 0.4, "over": 5000000 },
+      { "upTo": 45000000, "base": 7500000, "rate": 0.15, "over": 15000000 },
+      { "upTo": 100000000, "base": 12000000, "rate": 0.05, "over": 45000000 },
+      { "upTo": null, "base": 14750000, "rate": 0.02, "over": 100000000 }
+    ],
+    "earnedIncomeDeductionCap": 20000000,
+    "personalDeduction": 1500000,
+    "taxBrackets": [
+      { "upTo": 14000000, "rate": 0.06 },
+      { "upTo": 50000000, "rate": 0.15 },
+      { "upTo": 88000000, "rate": 0.24 },
+      { "upTo": 150000000, "rate": 0.35 },
+      { "upTo": 300000000, "rate": 0.38 },
+      { "upTo": 500000000, "rate": 0.4 },
+      { "upTo": 1000000000, "rate": 0.42 },
+      { "upTo": null, "rate": 0.45 }
+    ],
+    "earnedIncomeTaxCredit": {
+      "threshold": 1300000,
+      "lowRate": 0.55,
+      "highBase": 715000,
+      "highRate": 0.3,
+      "limits": [
+        { "salaryUpTo": 33000000, "limit": 740000 },
+        { "salaryUpTo": 70000000, "from": 740000, "minus": 0.008, "floor": 660000 },
+        { "salaryUpTo": 120000000, "from": 660000, "minus": 0.5, "floor": 500000 },
+        { "salaryUpTo": null, "from": 500000, "minus": 0.5, "floor": 200000 }
+      ]
+    },
+    "localIncomeTaxRate": 0.1,
+    "consult": {
+      "label": "국세청 세미래 콜센터",
+      "number": "126",
+      "note": "내 연말정산 결과는 여기나 회사 인사팀이 정확합니다."
+    }
+  }
+}
