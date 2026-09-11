@@ -1,0 +1,34 @@
+{
+  "meta": {
+    "ruleId": "newlywed-jeonse-loan",
+    "title": "신혼부부전용 전세자금 대출 (주택도시기금)",
+    "effectiveFrom": "2026-01-01",
+    "effectiveTo": null,
+    "source": "주택도시기금 신혼부부전용 전세자금 상품 안내",
+    "sourceUrl": "https://nhuf.molit.go.kr/FP/FP05/FP0502/FP05020401.jsp",
+    "verifiedAt": "2026-09-11",
+    "verifiedBy": "국토교통부 주택도시기금 공식 상품 페이지",
+    "note": "금리는 부부합산 소득과 임차보증금 구간에 따라 정해지는 표가 따로 있다. 이 계산기는 그 표를 옮겨 적지 않고 범위만 보여주며, 실제 금리는 은행 상담에서 확정된다."
+  },
+  "values": {
+    "incomeLimit": 75000000,
+    "netAssetLimit": 345000000,
+    "marriageYearsLimit": 7,
+    "preMarriageMonths": 3,
+    "requiresNoHome": true,
+    "loanLimit": { "capital": 250000000, "other": 160000000 },
+    "depositCeiling": { "capital": 400000000, "other": 300000000 },
+    "loanToDepositRatio": 0.8,
+    "rateRange": { "min": 0.019, "max": 0.033 },
+    "preferential": [
+      { "key": "child1", "label": "자녀 1명", "value": 0.003 },
+      { "key": "child2", "label": "자녀 2명", "value": 0.005 },
+      { "key": "child3", "label": "자녀 3명 이상", "value": 0.007 },
+      { "key": "eContract", "label": "부동산 전자계약", "value": 0.001 }
+    ],
+    "termYears": 2,
+    "maxTermYears": 10,
+    "repayment": "일시상환",
+    "capitalAreaNote": "수도권은 서울·경기·인천을 말한다."
+  }
+}

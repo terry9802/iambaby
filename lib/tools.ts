@@ -149,6 +149,17 @@ export const TOOLS: Tool[] = [
     timing: '혼인신고 전후',
   },
   {
+    slug: 'jeonse-loan',
+    event: 'marriage',
+    type: 'checker',
+    title: '신혼부부 전세자금대출 판정기',
+    question: '우리도 신혼부부 전세대출 받을 수 있나요?',
+    lead: '소득·자산·혼인 기간 요건을 하나씩 확인해 얼마까지 빌릴 수 있는지 알려드립니다.',
+    profileFields: ['income', 'spouse', 'housing'],
+    ruleFile: 'newlywed-jeonse-loan',
+    timing: '집 구할 때',
+  },
+  {
     slug: 'social-dues',
     event: 'socialdues',
     type: 'calculator',

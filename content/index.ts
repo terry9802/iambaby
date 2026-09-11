@@ -9,6 +9,11 @@ import { article as maternityLeave90 } from '@/content/childcare/maternity-leave
 import { article as priorityCompany } from '@/content/childcare/priority-company';
 import { article as apply30DaysBefore } from '@/content/childcare/apply-30-days-before';
 import { article as ordinaryWage } from '@/content/childcare/ordinary-wage';
+import { article as seoulDistrictGrants } from '@/content/childcare/seoul-district-grants';
+import { article as marriageTaxCredit } from '@/content/marriage/tax-credit';
+import { article as newlywedJeonseLoan } from '@/content/marriage/jeonse-loan';
+import { article as weddingGiftMoney } from '@/content/socialdues/wedding-gift-money';
+import { article as condolenceMoney } from '@/content/socialdues/condolence-money';
 
 /** 읽는 순서대로. 목록 화면이 이 순서를 그대로 쓴다. */
 export const ARTICLES: Article[] = [
@@ -22,6 +27,11 @@ export const ARTICLES: Article[] = [
   priorityCompany,
   first60Days,
   threeCashBenefits,
+  seoulDistrictGrants,
+  marriageTaxCredit,
+  newlywedJeonseLoan,
+  weddingGiftMoney,
+  condolenceMoney,
 ];
 
 export function findArticle(slug: string): Article | undefined {

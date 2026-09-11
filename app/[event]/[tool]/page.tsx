@@ -8,6 +8,7 @@ import { BirthGrantsTool } from '@/components/tools/BirthGrantsTool';
 import { LeaveTimelineTool } from '@/components/tools/LeaveTimelineTool';
 import { SocialDuesTool } from '@/components/tools/SocialDuesTool';
 import { MarriageTaxCreditTool } from '@/components/tools/MarriageTaxCreditTool';
+import { JeonseLoanTool } from '@/components/tools/JeonseLoanTool';
 
 export function generateStaticParams() {
   return TOOLS.map((t) => ({ event: t.event, tool: t.slug }));
@@ -53,6 +54,8 @@ export default async function ToolPage({
       return <LeaveTimelineTool tool={found} fallbackToday={fallbackToday} />;
     case 'social-dues':
       return <SocialDuesTool tool={found} />;
+    case 'jeonse-loan':
+      return <JeonseLoanTool tool={found} />;
     case 'marriage-tax-credit':
       return <MarriageTaxCreditTool tool={found} fallbackToday={fallbackToday} />;
     default:

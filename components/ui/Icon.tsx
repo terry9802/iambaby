@@ -14,7 +14,8 @@ export type IconName =
   | 'inheritance'
   | 'socialdues'
   | 'share'
-  | 'check';
+  | 'check'
+  | 'close';
 
 const PATHS: Record<IconName, React.ReactNode> = {
   // 젖병
@@ -79,6 +80,7 @@ const PATHS: Record<IconName, React.ReactNode> = {
     </>
   ),
   check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
+  close: <path d="M6 6l12 12M18 6 6 18" />,
 };
 
 export function Icon({
