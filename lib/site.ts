@@ -17,3 +17,20 @@ function resolveSiteUrl(): string {
 
 export const SITE_URL = resolveSiteUrl();
 export const SITE_NAME = '난아직애긴데세상이너무어려워요';
+
+/**
+ * 공유 링크에 붙는 대표 이미지.
+ * 카카오톡·슬랙 같은 데서 미리보기로 보이는 그 그림이다.
+ * scripts/make-og.mjs 로 미리 구워 public/og 에 둔다 — 수집기는 느린 응답을 기다려 주지 않는다.
+ */
+const OG_CARDS = new Set(['childcare', 'marriage', 'jobchange', 'retirement', 'socialdues', 'guide']);
+
+export function ogImage(key?: string) {
+  const name = key && OG_CARDS.has(key) ? key : 'default';
+  return {
+    url: `/og/${name}.png`,
+    width: 1200,
+    height: 630,
+    alt: `${SITE_NAME} — ${name === 'default' ? '처음 겪는 일 앞에서 필요한 계산' : name}`,
+  };
+}

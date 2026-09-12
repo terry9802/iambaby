@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function ProfilePage() {
   return (
-    <div className="mx-auto flex w-full max-w-[680px] flex-col gap-4 px-4 pb-16 pt-6">
+    <div className="mx-auto flex max-w-[680px] flex-col gap-4 px-4 pb-16 pt-6">
       <BackButton fallbackHref="/" label="홈" />
       <header className="flex flex-col gap-2">
         <h1 className="text-[24px] font-bold leading-snug tracking-[-0.015em] text-ink">

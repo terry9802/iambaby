@@ -36,7 +36,7 @@ function ComboCard({
       onClick={onSelect}
       aria-pressed={selected}
       className={
-        'flex w-full flex-col gap-1.5 rounded-[10px] border px-3.5 py-3 text-left transition-colors ' +
+        'flex flex-col gap-1.5 rounded-[10px] border px-3.5 py-3 text-left transition-colors ' +
         (selected ? 'border-brand bg-brand-soft' : 'border-line bg-surface hover:border-line-strong')
       }
     >
@@ -138,6 +138,10 @@ export function CoupleLeaveTool({ tool, fallbackToday }: { tool: Tool; fallbackT
     overlap: input.allowOverlap,
   });
 
+  const shareText = outcome.ok
+    ? `부부가 나눠 쓰면 ${formatManwon(outcome.result.value.best.total)}까지 받아요. 같은 기간을 한 사람이 몰아 쓸 때보다 ${formatManwon(outcome.result.value.gainVsSolo)} 더 많습니다.`
+    : undefined;
+
   const headline = outcome.ok ? (
     <ResultHeadline
       label="부부가 함께 받을 수 있는 최대 금액"
@@ -177,6 +181,7 @@ export function CoupleLeaveTool({ tool, fallbackToday }: { tool: Tool; fallbackT
       headline={headline}
       exampleFields={examples}
       shareQuery={shareQuery}
+      shareText={shareText}
       fromSharedLink={Object.keys(fromLink).length > 0}
       detail={
         outcome.ok && shown ? (

@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { ARTICLES, findArticle } from '@/content/index';
 import { readingMinutes } from '@/lib/content/types';
 import { ruleMetaOf } from '@/lib/rules/loader';
+import { ogImage } from '@/lib/site';
 import { toISODate } from '@/lib/format';
 import { ArticleBody } from '@/components/content/ArticleBody';
 import { BasisFooter } from '@/components/calculator/BasisFooter';
@@ -36,7 +37,9 @@ export async function generateMetadata({
       description: article.description,
       publishedTime: article.publishedAt,
       modifiedTime: article.updatedAt,
+      images: [ogImage(article.event)],
     },
+    twitter: { card: 'summary_large_image', images: [ogImage(article.event).url] },
   };
 }
 
@@ -62,7 +65,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-[680px] flex-col gap-5 px-4 pb-16 pt-4">
+    <div className="mx-auto flex max-w-[680px] flex-col gap-5 px-4 pb-16 pt-4">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

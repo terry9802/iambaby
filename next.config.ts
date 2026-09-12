@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
         headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
       {
+        /* 대표 이미지는 내용이 바뀔 수 있으니 무한 캐시는 주지 않는다. 하루면 충분하다. */
+        source: '/og/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400' }],
+      },
+      {
         source: '/docs/:path*',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=86400' }],
       },

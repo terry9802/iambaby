@@ -136,7 +136,7 @@ export function ProfileForm() {
                 <input
                   type="date"
                   aria-label={`${i + 1}째 아이 생년월일`}
-                  className="tnum w-full rounded-[8px] border border-line bg-surface px-3 py-2.5 text-[15px] text-ink focus:border-brand focus:outline-none"
+                  className="tnum min-w-0 flex-1 rounded-[8px] border border-line bg-surface px-3 py-2.5 text-[16px] text-ink focus:border-brand focus:outline-none"
                   value={child.birthDate}
                   onChange={(e) => {
                     const next = [...children];
@@ -297,7 +297,7 @@ export function ProfileForm() {
 
       {/* 저장 바. 고친 게 있을 때만 올라온다. */}
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface/95 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-[680px] items-center justify-between gap-3 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="mx-auto flex max-w-[680px] items-center justify-between gap-3 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <p className="text-[12.5px] leading-snug text-ink-soft">
             {dirty ? (
               <span className="font-medium text-ink">저장하지 않은 변경이 있어요</span>

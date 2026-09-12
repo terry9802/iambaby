@@ -40,9 +40,32 @@ function FieldFrame({
   );
 }
 
+/*
+  입력칸의 폭을 width:100%로 잡으면, 브라우저가 box-sizing을 다르게 계산할 때
+  좌우 padding이 그대로 더해지면서 칸이 카드 밖으로 삐져나온다.
+  (카카오톡 인앱 브라우저에서 실제로 그렇게 보였다.)
+
+  그래서 폭을 숫자로 지정하지 않고 flex가 남은 자리를 채우게 둔다.
+  flex는 padding과 테두리를 포함해서 자리를 나누므로 box-sizing이 무엇이든 밖으로 못 나간다.
+  min-w-0은 입력칸이 제 내용 크기 아래로 줄어들 수 있게 해주는 짝이다.
+*/
 const inputClass =
-  'w-full rounded-[8px] border border-line bg-surface px-3 py-2.5 text-[15px] text-ink ' +
+  'min-w-0 flex-1 rounded-[8px] border border-line bg-surface px-3 py-2.5 text-[16px] text-ink ' +
   'placeholder:text-ink-faint focus:border-brand focus:outline-none';
+
+/** 입력칸 한 줄. 단위 글자(원, %, 개월)를 얹을 수 있도록 relative를 함께 준다. */
+function ControlRow({ children }: { children: ReactNode }) {
+  return <div className="relative flex w-full items-stretch">{children}</div>;
+}
+
+/** 입력칸 오른쪽 안쪽에 붙는 단위 글자. */
+function Suffix({ children }: { children: ReactNode }) {
+  return (
+    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[14px] text-ink-faint">
+      {children}
+    </span>
+  );
+}
 
 export function MoneyField({
   label,
@@ -64,7 +87,7 @@ export function MoneyField({
   const id = useId();
   return (
     <FieldFrame id={id} label={label} hint={hint} autofilled={autofilled} required={required}>
-      <div className="relative">
+      <ControlRow>
         <input
           id={id}
           className={`${inputClass} tnum pr-10 text-right`}
@@ -76,10 +99,8 @@ export function MoneyField({
             onChange(digits === '' ? undefined : Number(digits));
           }}
         />
-        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[14px] text-ink-faint">
-          원
-        </span>
-      </div>
+        <Suffix>원</Suffix>
+      </ControlRow>
       {value !== undefined && value > 0 && (
         <p className="tnum text-right text-[12.5px] text-ink-soft">{formatManwon(value)}</p>
       )}
@@ -122,10 +143,10 @@ export function NumberField({
         >
           −
         </button>
-        <div className="relative flex-1">
+        <div className="relative flex min-w-0 flex-1 items-stretch">
           <input
             id={id}
-            className={`${inputClass} tnum text-center`}
+            className={`${inputClass} tnum ${unit ? 'pr-12' : ''} text-center`}
             inputMode="numeric"
             value={value === undefined ? '' : String(value)}
             onChange={(e) => {
@@ -133,11 +154,7 @@ export function NumberField({
               onChange(digits === '' ? undefined : Math.min(max, Number(digits)));
             }}
           />
-          {unit && (
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[14px] text-ink-faint">
-              {unit}
-            </span>
-          )}
+          {unit && <Suffix>{unit}</Suffix>}
         </div>
         <button
           type="button"
@@ -170,13 +187,15 @@ export function DateField({
   const id = useId();
   return (
     <FieldFrame id={id} label={label} hint={hint} autofilled={autofilled} required={required}>
-      <input
-        id={id}
-        type="date"
-        className={`${inputClass} tnum`}
-        value={value ?? ''}
-        onChange={(e) => onChange(e.target.value || undefined)}
-      />
+      <ControlRow>
+        <input
+          id={id}
+          type="date"
+          className={`${inputClass} tnum`}
+          value={value ?? ''}
+          onChange={(e) => onChange(e.target.value || undefined)}
+        />
+      </ControlRow>
     </FieldFrame>
   );
 }
@@ -249,19 +268,21 @@ export function SelectField<T extends string>({
   const id = useId();
   return (
     <FieldFrame id={id} label={label} hint={hint} autofilled={autofilled} required={required}>
-      <select
-        id={id}
-        className={inputClass}
-        value={value ?? ''}
-        onChange={(e) => onChange((e.target.value || undefined) as T | undefined)}
-      >
-        <option value="">{placeholder ?? '선택해 주세요'}</option>
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
+      <ControlRow>
+        <select
+          id={id}
+          className={inputClass}
+          value={value ?? ''}
+          onChange={(e) => onChange((e.target.value || undefined) as T | undefined)}
+        >
+          <option value="">{placeholder ?? '선택해 주세요'}</option>
+          {options.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      </ControlRow>
     </FieldFrame>
   );
 }
@@ -285,10 +306,10 @@ export function PercentField({
   const id = useId();
   return (
     <FieldFrame id={id} label={label} hint={hint} required={required}>
-      <div className="relative">
+      <ControlRow>
         <input
           id={id}
-          className={`${inputClass} tnum pr-8 text-right`}
+          className={`${inputClass} tnum pr-9 text-right`}
           inputMode="decimal"
           value={value === undefined ? '' : String(Math.round(value * 10000) / 100)}
           placeholder={placeholder}
@@ -299,10 +320,8 @@ export function PercentField({
             onChange(Number.isFinite(num) ? num / 100 : undefined);
           }}
         />
-        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[14px] text-ink-faint">
-          %
-        </span>
-      </div>
+        <Suffix>%</Suffix>
+      </ControlRow>
     </FieldFrame>
   );
 }

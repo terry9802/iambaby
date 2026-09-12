@@ -13,7 +13,7 @@ export default function HomePage() {
   }));
 
   return (
-    <div className="mx-auto flex w-full max-w-[680px] flex-col gap-5 px-4 pb-16 pt-6">
+    <div className="mx-auto flex max-w-[680px] flex-col gap-5 px-4 pb-16 pt-6">
       <header className="flex flex-col gap-2.5">
         <h1 className="text-[26px] font-bold leading-snug tracking-[-0.015em] text-ink">
           몰라도 괜찮아요.

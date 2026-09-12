@@ -5,7 +5,7 @@ import {
   calcMarriageTaxCredit,
   type MarriageTaxCreditInput,
 } from '@/lib/calculators/marriage-tax-credit';
-import { formatDate, formatKRW } from '@/lib/format';
+import { formatDate, formatKRW, formatManwon } from '@/lib/format';
 import { useProfile } from '@/lib/profile/context';
 import { resolveToday } from '@/lib/profile/seed';
 import { buildShareQuery, pickDefined, qBool, qStr, readShareQuery } from '@/lib/share';
@@ -59,6 +59,12 @@ export function MarriageTaxCreditTool({
     sc: input.spouseAlreadyClaimed,
   });
 
+  const shareText = outcome.ok
+    ? outcome.result.value.eligible
+      ? `혼인신고만 하면 부부가 ${formatManwon(outcome.result.value.total)}을 돌려받아요. 이 제도는 ${outcome.result.value.daysLeft}일 뒤에 끝납니다.`
+      : '결혼세액공제, 내가 받을 수 있는지 30초면 확인돼요.'
+    : undefined;
+
   const headline = outcome.ok ? (
     <ResultHeadline
       label={outcome.result.value.eligible ? '부부가 함께 돌려받는 세금' : '이 조건으로는 해당되지 않아요'}
@@ -91,6 +97,7 @@ export function MarriageTaxCreditTool({
       outcome={outcome}
       headline={headline}
       shareQuery={shareQuery}
+      shareText={shareText}
       fromSharedLink={Object.keys(fromLink).length > 0}
       form={
         <FieldGroup>

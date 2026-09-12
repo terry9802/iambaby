@@ -84,6 +84,10 @@ export function SocialDuesTool({ tool }: { tool: Tool }) {
     got: input.receivedBefore,
   });
 
+  const shareText = outcome.ok
+    ? `이 관계라면 ${outcome.result.value.occasionLabel}은 ${formatManwon(outcome.result.value.recommended)}이 무난해요. 너무 적지도 많지도 않은 선은 ${formatManwon(outcome.result.value.min)}에서 ${formatManwon(outcome.result.value.max)} 사이입니다.`
+    : undefined;
+
   const headline = outcome.ok ? (
     <ResultHeadline
       label={`이 정도면 무난한 ${outcome.result.value.occasionLabel}`}
@@ -122,6 +126,7 @@ export function SocialDuesTool({ tool }: { tool: Tool }) {
       outcome={outcome}
       headline={headline}
       shareQuery={shareQuery}
+      shareText={shareText}
       fromSharedLink={Object.keys(fromLink).length > 0}
       form={
         <FieldGroup>

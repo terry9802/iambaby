@@ -23,7 +23,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export default function PrivacyPage() {
   return (
-    <div className="mx-auto flex w-full max-w-[680px] flex-col gap-6 px-4 pb-16 pt-6">
+    <div className="mx-auto flex max-w-[680px] flex-col gap-6 px-4 pb-16 pt-6">
       <BackButton fallbackHref="/" label="홈" />
 
       <header className="flex flex-col gap-2">

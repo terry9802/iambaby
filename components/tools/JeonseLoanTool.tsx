@@ -93,6 +93,12 @@ export function JeonseLoanTool({ tool }: { tool: Tool }) {
     rate: input.rateOverride,
   });
 
+  const shareText = outcome.ok
+    ? outcome.result.value.eligible
+      ? `버팀목 전세자금대출로 ${formatManwon(outcome.result.value.maxLoan)}까지 빌릴 수 있어요. 내 돈은 ${formatManwon(outcome.result.value.ownFunds)}만 있으면 됩니다.`
+      : '신혼부부 전세자금대출, 어떤 요건에서 걸리는지 한 화면으로 봐요.'
+    : undefined;
+
   const headline = outcome.ok ? (
     outcome.result.value.eligible ? (
       <ResultHeadline
@@ -133,6 +139,7 @@ export function JeonseLoanTool({ tool }: { tool: Tool }) {
       outcome={outcome}
       headline={headline}
       shareQuery={shareQuery}
+      shareText={shareText}
       fromSharedLink={Object.keys(fromLink).length > 0}
       detail={
         outcome.ok ? (

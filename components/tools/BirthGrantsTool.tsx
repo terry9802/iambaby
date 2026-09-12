@@ -161,6 +161,10 @@ export function BirthGrantsTool({ tool, fallbackToday }: { tool: Tool; fallbackT
 
   const outcome = useMemo(() => checkBirthGrants(input), [input]);
 
+  const shareText = outcome.ok
+    ? `첫 1년에 받을 수 있는 돈이 ${formatManwon(outcome.result.value.firstYearAmount)}이에요. 나중에 나오는 것까지 더하면 ${formatManwon(outcome.result.value.totalAmount)}입니다.`
+    : undefined;
+
   const headline = outcome.ok ? (
     <ResultHeadline
       label="첫 1년 동안 통장에 들어오는 돈"
@@ -194,6 +198,7 @@ export function BirthGrantsTool({ tool, fallbackToday }: { tool: Tool; fallbackT
       headline={headline}
       exampleFields={examples}
       shareQuery={shareQuery}
+      shareText={shareText}
       fromSharedLink={Object.keys(fromLink).length > 0}
       extra={
         outcome.ok && outcome.result.value.districtStatus === 'unverified' ? (

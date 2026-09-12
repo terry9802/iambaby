@@ -53,6 +53,12 @@ export function SeverancePayTool({ tool, fallbackToday }: { tool: Tool; fallback
     ord: input.ordinaryMonthlyWage,
   });
 
+  const shareText = outcome.ok
+    ? outcome.result.value.eligible
+      ? `지금 그만두면 퇴직금이 ${formatManwon(outcome.result.value.severance)}이에요. 정확히는 ${formatKRW(outcome.result.value.severance)}.`
+      : '1년을 못 채우면 퇴직금이 없어요. 며칠 차이인지 확인해 보세요.'
+    : undefined;
+
   const headline = outcome.ok ? (
     <ResultHeadline
       label={outcome.result.value.eligible ? '받는 퇴직금' : '아직 받을 수 없어요'}
@@ -85,6 +91,7 @@ export function SeverancePayTool({ tool, fallbackToday }: { tool: Tool; fallback
       outcome={outcome}
       headline={headline}
       shareQuery={shareQuery}
+      shareText={shareText}
       fromSharedLink={Object.keys(fromLink).length > 0}
       form={
         <FieldGroup>

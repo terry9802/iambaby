@@ -60,6 +60,10 @@ export function ParentalLeaveTool({ tool, fallbackToday }: { tool: Tool; fallbac
     single: input.singleParent,
   });
 
+  const shareText = outcome.ok
+    ? `육아휴직 ${outcome.result.value.months}개월이면 다 합쳐서 ${formatManwon(outcome.result.value.total)}을 받아요. 첫 달에 들어오는 건 ${formatManwon(outcome.result.value.firstMonthAmount)}입니다.`
+    : undefined;
+
   const headline = outcome.ok ? (
     <ResultHeadline
       label={`첫 달에 받는 금액${input.singleParent ? ' (한부모 기준)' : ''}`}
@@ -91,6 +95,7 @@ export function ParentalLeaveTool({ tool, fallbackToday }: { tool: Tool; fallbac
       headline={headline}
       exampleFields={examples}
       shareQuery={shareQuery}
+      shareText={shareText}
       fromSharedLink={Object.keys(fromLink).length > 0}
       detail={
         outcome.ok ? (

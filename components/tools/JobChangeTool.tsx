@@ -53,6 +53,12 @@ export function JobChangeTool({ tool }: { tool: Tool }) {
     dep: input.dependents,
   });
 
+  const shareText = outcome.ok
+    ? outcome.result.value.better
+      ? `옮기면 실수령액이 매달 ${formatManwon(outcome.result.value.monthlyDiff)} 늘어요. 1년이면 ${formatManwon(outcome.result.value.annualDiff)} 차이입니다.`
+      : `옮기면 실수령액이 매달 ${formatManwon(Math.abs(outcome.result.value.monthlyDiff))} 줄어요. 지금과 같아지려면 연봉 ${formatManwon(outcome.result.value.breakEvenSalary)}은 받아야 합니다.`
+    : undefined;
+
   const headline = outcome.ok ? (
     <ResultHeadline
       label={outcome.result.value.better ? '매달 이만큼 더 받아요' : '매달 이만큼 줄어요'}
@@ -83,6 +89,7 @@ export function JobChangeTool({ tool }: { tool: Tool }) {
       outcome={outcome}
       headline={headline}
       shareQuery={shareQuery}
+      shareText={shareText}
       fromSharedLink={Object.keys(fromLink).length > 0}
       detail={
         outcome.ok ? (

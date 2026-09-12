@@ -21,6 +21,7 @@ export function CalcShell<T>({
   detail,
   exampleFields,
   shareQuery,
+  shareText,
   fromSharedLink,
   extra,
 }: {
@@ -36,6 +37,8 @@ export function CalcShell<T>({
   exampleFields?: string[];
   /** 지금 입력값을 담은 공유용 주소 조각 */
   shareQuery?: string;
+  /** 공유할 때 주소 앞에 붙는 한 문장. 방금 계산된 금액·기간이 들어간다. */
+  shareText?: string;
   /** 공유받은 링크의 값으로 계산 중인가 */
   fromSharedLink?: boolean;
   /** 사이트가 답할 수 없는 것을 어디에 물어야 하는지 안내하는 자리 */
@@ -44,7 +47,7 @@ export function CalcShell<T>({
   const stale = outcome.ok && hasStaleBasis(outcome.result.basis);
 
   return (
-    <div className="mx-auto flex w-full max-w-[680px] flex-col gap-4 px-4 pb-16 pt-4">
+    <div className="mx-auto flex max-w-[680px] flex-col gap-4 px-4 pb-16 pt-4">
       <BackButton
         fallbackHref={`/${tool.event}`}
         label={findEvent(tool.event)?.title ?? '뒤로'}
@@ -101,7 +104,9 @@ export function CalcShell<T>({
         )}
       </section>
 
-      {outcome.ok && shareQuery && <ShareButton query={shareQuery} title={tool.question} />}
+      {outcome.ok && shareQuery && (
+        <ShareButton query={shareQuery} title={tool.question} text={shareText} />
+      )}
 
       <section className="rounded-[12px] border border-line bg-surface px-4 py-4">
         <h2 className="mb-3.5 text-[14px] font-semibold text-ink">입력한 값</h2>

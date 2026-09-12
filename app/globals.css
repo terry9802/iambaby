@@ -67,6 +67,31 @@ body {
 }
 
 /*
+  폼 요소의 안전장치.
+  Tailwind의 초기화는 @layer base 안에 있어서, 어떤 브라우저에서 그 블록을 건너뛰면
+  입력칸이 content-box로 계산되고 좌우 padding만큼 카드 밖으로 삐져나온다.
+  이 규칙은 @layer 밖에 있어서 레이어 안의 어떤 규칙보다 우선한다. 한 번 더 못을 박아 둔다.
+
+  font-size 16px는 취향이 아니라 필요다. 아이폰 사파리는 16px보다 작은 입력칸을 누르면
+  화면을 확대해 버려서, 글자를 하나 넣었을 뿐인데 레이아웃이 밖으로 밀려난 것처럼 보인다.
+*/
+input,
+select,
+textarea {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+}
+
+@supports (-webkit-touch-callout: none) {
+  input,
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+}
+
+/*
   가로로 넘치는 줄(탭 줄 등)에서 스크롤바만 감춘다.
   스크롤 자체는 그대로 둬야 하므로 overflow는 건드리지 않는다.
 */

@@ -4,7 +4,7 @@ import './globals.css';
 import { ProfileProvider } from '@/lib/profile/context';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 import { AdSenseScript } from '@/components/analytics/AdSense';
-import { SITE_NAME, SITE_URL } from '@/lib/site';
+import { SITE_NAME, SITE_URL, ogImage } from '@/lib/site';
 import { AppHistoryTracker } from '@/components/ui/AppHistoryTracker';
 
 const FONT_PRELOAD = [
@@ -37,6 +37,14 @@ export const metadata: Metadata = {
     title: `${SITE_NAME} · 출산·육아 계산기`,
     description:
       '몰라도 괜찮아요. 뭘 모르는지 몰라도 괜찮아요. 복잡한 세상에서 우린 아직 애기인거죠.',
+    images: [ogImage()],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `${SITE_NAME} · 출산·육아 계산기`,
+    description:
+      '몰라도 괜찮아요. 뭘 모르는지 몰라도 괜찮아요. 복잡한 세상에서 우린 아직 애기인거죠.',
+    images: [ogImage().url],
   },
   robots: { index: true, follow: true },
   verification: process.env.NEXT_PUBLIC_GSC_VERIFICATION
@@ -71,7 +79,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {/* 반투명 + backdrop-blur는 스크롤하는 내내 배경을 다시 그려서 휴대폰에서 눈에 띄게 버벅인다.
                 그냥 불투명하게 둔다. 보기에 달라지는 건 거의 없고 스크롤은 확실히 매끄러워진다. */}
             <header className="sticky top-0 z-10 border-b border-line bg-ground">
-              <div className="mx-auto flex w-full max-w-[680px] items-center justify-between gap-3 px-4 py-3">
+              <div className="mx-auto flex max-w-[680px] items-center justify-between gap-3 px-4 py-3">
                 <Link href="/" className="text-[14px] font-bold tracking-[-0.01em] text-ink">
                   난아직애긴데
                   <span className="font-medium text-ink-faint">세상이너무어려워요</span>
@@ -88,7 +96,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <main className="flex-1">{children}</main>
 
             <footer className="border-t border-line bg-surface">
-              <div className="mx-auto flex w-full max-w-[680px] flex-col gap-2 px-4 py-8">
+              <div className="mx-auto flex max-w-[680px] flex-col gap-2 px-4 py-8">
                 <p className="text-[13px] font-semibold text-ink">{SITE_NAME}</p>
                 <p className="text-[12.5px] leading-relaxed text-ink-soft">
                   입력한 값은 이 브라우저에만 저장되고 서버로 전송되지 않습니다. 계산은 전부

@@ -6,7 +6,7 @@ import {
   type CompanySize,
   type LeaveTimelineInput,
 } from '@/lib/calculators/leave-timeline';
-import { addDays, formatDate, formatKRW, parseDate, toISODate } from '@/lib/format';
+import { addDays, formatDate, formatKRW, formatManwon, parseDate, toISODate } from '@/lib/format';
 import { useProfile } from '@/lib/profile/context';
 import { Seeder, pendingExamples, resolveToday } from '@/lib/profile/seed';
 import { buildShareQuery, pickDefined, qBool, qNum, qStr, readShareQuery } from '@/lib/share';
@@ -79,6 +79,10 @@ export function LeaveTimelineTool({ tool, fallbackToday }: { tool: Tool; fallbac
 
   const outcome = useMemo(() => calcLeaveTimeline(input), [input]);
 
+  const shareText = outcome.ok
+    ? `출산전후휴가부터 복직까지 ${outcome.result.value.totalDaysOff.toLocaleString('ko-KR')}일을 쉬고, 그동안 ${formatManwon(outcome.result.value.grandTotal)}을 받아요.`
+    : undefined;
+
   const headline = outcome.ok ? (
     <ResultHeadline
       label="복직하는 날"
@@ -118,6 +122,7 @@ export function LeaveTimelineTool({ tool, fallbackToday }: { tool: Tool; fallbac
       headline={headline}
       exampleFields={examples}
       shareQuery={shareQuery}
+      shareText={shareText}
       fromSharedLink={Object.keys(fromLink).length > 0}
       detail={
         outcome.ok ? (

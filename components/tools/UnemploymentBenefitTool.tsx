@@ -56,6 +56,10 @@ export function UnemploymentBenefitTool({ tool }: { tool: Tool }) {
     cap: input.dailyCapOverride,
   });
 
+  const shareText = outcome.ok
+    ? `실업급여를 하루 ${formatKRW(outcome.result.value.dailyBenefit)}씩 ${outcome.result.value.benefitDays}일 받아요. 다 합치면 ${formatManwon(outcome.result.value.total)}입니다.`
+    : undefined;
+
   const headline = outcome.ok ? (
     <ResultHeadline
       label="전부 받으면 이만큼"
@@ -84,6 +88,7 @@ export function UnemploymentBenefitTool({ tool }: { tool: Tool }) {
       outcome={outcome}
       headline={headline}
       shareQuery={shareQuery}
+      shareText={shareText}
       fromSharedLink={Object.keys(fromLink).length > 0}
       detail={
         <ConsultBox
