@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { ARTICLES, findArticle } from '@/content/index';
 import { readingMinutes } from '@/lib/content/types';
 import { ruleMetaOf } from '@/lib/rules/loader';
-import { ogImage } from '@/lib/site';
+import { ogMeta } from '@/lib/site';
 import { toISODate } from '@/lib/format';
 import { ArticleBody } from '@/components/content/ArticleBody';
 import { BasisFooter } from '@/components/calculator/BasisFooter';
@@ -31,15 +31,14 @@ export async function generateMetadata({
     description: article.description,
     keywords: article.keywords,
     alternates: { canonical: `/guide/${article.slug}` },
-    openGraph: {
-      type: 'article',
+    ...ogMeta({
+      path: `/guide/${article.slug}`,
       title: article.question,
       description: article.description,
-      publishedTime: article.publishedAt,
-      modifiedTime: article.updatedAt,
-      images: [ogImage(article.event)],
-    },
-    twitter: { card: 'summary_large_image', images: [ogImage(article.event).url] },
+      card: article.event,
+      type: 'article',
+      extra: { publishedTime: article.publishedAt, modifiedTime: article.updatedAt },
+    }),
   };
 }
 

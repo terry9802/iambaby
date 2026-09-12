@@ -32,6 +32,51 @@ const OG_CARDS: Record<string, string> = {
   guide: '읽을거리',
 };
 
+/**
+ * 공유 미리보기에 필요한 한 벌.
+ *
+ * 카카오톡은 og:title, og:description, og:image, **og:url** 네 개를 모두 봐야 카드를 만든다.
+ * 페이지마다 openGraph를 따로 쓰면 루트에 적어둔 url·type·siteName이 통째로 덮여 사라지므로,
+ * 여기서 한 번에 만들어 쓴다. 새 페이지를 추가할 때도 이 함수만 부르면 빠지는 게 없다.
+ */
+export function ogMeta({
+  path,
+  title,
+  description,
+  card,
+  type = 'website',
+  extra,
+}: {
+  /** '/childcare/leave-timeline' 처럼 앞에 슬래시가 붙은 경로 */
+  path: string;
+  title: string;
+  description: string;
+  /** 대표 이미지 종류. 이벤트 키나 'guide' */
+  card?: string;
+  type?: 'website' | 'article';
+  extra?: Record<string, unknown>;
+}) {
+  const image = ogImage(card);
+  return {
+    openGraph: {
+      type,
+      locale: 'ko_KR',
+      siteName: SITE_NAME,
+      url: `${SITE_URL}${path}`,
+      title,
+      description,
+      images: [image],
+      ...extra,
+    },
+    twitter: {
+      card: 'summary_large_image' as const,
+      title,
+      description,
+      images: [image.url],
+    },
+  };
+}
+
 export function ogImage(key?: string) {
   const name = key && key in OG_CARDS ? key : 'default';
   // 이 글은 화면을 못 보는 사람이 읽는 자리다. 내부에서 쓰는 키를 그대로 내보내지 않는다.

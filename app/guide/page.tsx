@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { BackButton } from '@/components/ui/BackButton';
 import { ARTICLES } from '@/content/index';
 import { readingMinutes } from '@/lib/content/types';
-import { ogImage } from '@/lib/site';
+import { ogMeta } from '@/lib/site';
 import { AdSlot } from '@/components/analytics/AdSense';
 
 export const metadata: Metadata = {
@@ -11,12 +11,12 @@ export const metadata: Metadata = {
   description:
     '육아휴직 급여, 6+6 부모육아휴직제, 출산전후휴가, 지원금 신청 기한까지. 용어를 모르는 상태에서 읽어도 되도록 쓴 설명 글 모음입니다.',
   alternates: { canonical: '/guide' },
-  openGraph: {
-    title: '읽을거리',
+  ...ogMeta({
+    path: '/guide',
+    title: '읽을거리 — 숫자만 던지지 않고, 왜 그 숫자인지까지',
     description: '숫자만 던지지 않고, 왜 그 숫자인지까지 적었습니다.',
-    images: [ogImage('guide')],
-  },
-  twitter: { card: 'summary_large_image', images: [ogImage('guide').url] },
+    card: 'guide',
+  }),
 };
 
 export default function GuideIndexPage() {

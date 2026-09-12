@@ -29,7 +29,9 @@ export function ShareButton({
 
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
-        await navigator.share(text ? { title, text, url } : { title, url });
+        // text와 url을 따로 넘기면 카카오톡에서 말풍선이 두 개로 쪼개진다.
+        // (문구 한 개, 주소 한 개) 한 덩어리로 보내야 문구와 링크가 붙어서 간다.
+        await navigator.share({ title, text: body });
       } catch {
         // 사용자가 공유창을 닫은 경우도 여기로 온다. 조용히 넘어간다.
       }

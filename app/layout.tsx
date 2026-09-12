@@ -4,7 +4,7 @@ import './globals.css';
 import { ProfileProvider } from '@/lib/profile/context';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 import { AdSenseScript } from '@/components/analytics/AdSense';
-import { SITE_NAME, SITE_URL, ogImage } from '@/lib/site';
+import { SITE_NAME, SITE_URL, ogMeta } from '@/lib/site';
 import { AppHistoryTracker } from '@/components/ui/AppHistoryTracker';
 
 const FONT_PRELOAD = [
@@ -29,23 +29,12 @@ export const metadata: Metadata = {
     '부모급여',
     '첫만남이용권',
   ],
-  openGraph: {
-    type: 'website',
-    locale: 'ko_KR',
-    siteName: SITE_NAME,
-    url: SITE_URL,
-    title: `${SITE_NAME} · 출산·육아 계산기`,
+  ...ogMeta({
+    path: '/',
+    title: `${SITE_NAME} · 처음 겪는 일 앞에서 필요한 계산`,
     description:
       '몰라도 괜찮아요. 뭘 모르는지 몰라도 괜찮아요. 복잡한 세상에서 우린 아직 애기인거죠.',
-    images: [ogImage()],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: `${SITE_NAME} · 출산·육아 계산기`,
-    description:
-      '몰라도 괜찮아요. 뭘 모르는지 몰라도 괜찮아요. 복잡한 세상에서 우린 아직 애기인거죠.',
-    images: [ogImage().url],
-  },
+  }),
   robots: { index: true, follow: true },
   verification: process.env.NEXT_PUBLIC_GSC_VERIFICATION
     ? { google: process.env.NEXT_PUBLIC_GSC_VERIFICATION }

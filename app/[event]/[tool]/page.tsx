@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { toISODate } from '@/lib/format';
 import { TOOLS, findTool } from '@/lib/tools';
-import { ogImage } from '@/lib/site';
+import { ogMeta } from '@/lib/site';
 import { ParentalLeaveTool } from '@/components/tools/ParentalLeaveTool';
 import { CoupleLeaveTool } from '@/components/tools/CoupleLeaveTool';
 import { BirthGrantsTool } from '@/components/tools/BirthGrantsTool';
@@ -26,14 +26,13 @@ export async function generateMetadata({
   const { event, tool } = await params;
   const found = findTool(event, tool);
   if (!found) return {};
-  const image = ogImage(found.event);
+  const path = `/${found.event}/${found.slug}`;
   const description = `${found.lead} 계산 과정과 근거 조문을 함께 보여드립니다.`;
   return {
     title: `${found.question} — ${found.title}`,
     description,
-    alternates: { canonical: `/${found.event}/${found.slug}` },
-    openGraph: { title: found.question, description, images: [image] },
-    twitter: { card: 'summary_large_image', images: [image.url] },
+    alternates: { canonical: path },
+    ...ogMeta({ path, title: found.question, description, card: found.event }),
   };
 }
 

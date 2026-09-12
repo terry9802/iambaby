@@ -4,7 +4,7 @@ import { BackButton } from '@/components/ui/BackButton';
 import { notFound } from 'next/navigation';
 import { articlesOf } from '@/content/index';
 import { EVENTS, TOOL_TYPE_LABEL, findEvent, toolsOf } from '@/lib/tools';
-import { ogImage } from '@/lib/site';
+import { ogMeta } from '@/lib/site';
 import { Icon } from '@/components/ui/Icon';
 import { ProfileBanner } from '@/components/profile/ProfileBanner';
 import { AdSlot } from '@/components/analytics/AdSense';
@@ -21,13 +21,16 @@ export async function generateMetadata({
   const { event } = await params;
   const found = findEvent(event);
   if (!found) return {};
-  const image = ogImage(found.key);
   return {
     title: `${found.title} — 언제 뭘 해야 하는지 순서대로`,
     description: found.lead,
     alternates: { canonical: `/${found.key}` },
-    openGraph: { title: found.title, description: found.lead, images: [image] },
-    twitter: { card: 'summary_large_image', images: [image.url] },
+    ...ogMeta({
+      path: `/${found.key}`,
+      title: `${found.title} — ${found.lead}`,
+      description: found.lead,
+      card: found.key,
+    }),
   };
 }
 
