@@ -14,6 +14,12 @@ import { article as marriageTaxCredit } from '@/content/marriage/tax-credit';
 import { article as newlywedJeonseLoan } from '@/content/marriage/jeonse-loan';
 import { article as weddingGiftMoney } from '@/content/socialdues/wedding-gift-money';
 import { article as condolenceMoney } from '@/content/socialdues/condolence-money';
+import { article as netSalaryGap } from '@/content/jobchange/net-salary-gap';
+import { article as taxFreeAllowance } from '@/content/jobchange/tax-free-allowance';
+import { article as payrollDeductions } from '@/content/jobchange/payroll-deductions';
+import { article as averageWage } from '@/content/retirement/average-wage';
+import { article as severanceOneYear } from '@/content/retirement/severance-one-year';
+import { article as unemploymentVoluntary } from '@/content/retirement/unemployment-voluntary';
 
 /** 읽는 순서대로. 목록 화면이 이 순서를 그대로 쓴다. */
 export const ARTICLES: Article[] = [
@@ -32,6 +38,12 @@ export const ARTICLES: Article[] = [
   newlywedJeonseLoan,
   weddingGiftMoney,
   condolenceMoney,
+  netSalaryGap,
+  taxFreeAllowance,
+  payrollDeductions,
+  averageWage,
+  severanceOneYear,
+  unemploymentVoluntary,
 ];
 
 export function findArticle(slug: string): Article | undefined {
