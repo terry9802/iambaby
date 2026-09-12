@@ -23,14 +23,23 @@ export const SITE_NAME = '난아직애긴데세상이너무어려워요';
  * 카카오톡·슬랙 같은 데서 미리보기로 보이는 그 그림이다.
  * scripts/make-og.mjs 로 미리 구워 public/og 에 둔다 — 수집기는 느린 응답을 기다려 주지 않는다.
  */
-const OG_CARDS = new Set(['childcare', 'marriage', 'jobchange', 'retirement', 'socialdues', 'guide']);
+const OG_CARDS: Record<string, string> = {
+  childcare: '출산 · 육아 계산기',
+  marriage: '내 결혼 계산기',
+  jobchange: '이직 계산기',
+  retirement: '퇴직 계산기',
+  socialdues: '남의 경조사 계산기',
+  guide: '읽을거리',
+};
 
 export function ogImage(key?: string) {
-  const name = key && OG_CARDS.has(key) ? key : 'default';
+  const name = key && key in OG_CARDS ? key : 'default';
+  // 이 글은 화면을 못 보는 사람이 읽는 자리다. 내부에서 쓰는 키를 그대로 내보내지 않는다.
+  const what = OG_CARDS[name] ?? '처음 겪는 일 앞에서 필요한 계산';
   return {
     url: `/og/${name}.png`,
     width: 1200,
     height: 630,
-    alt: `${SITE_NAME} — ${name === 'default' ? '처음 겪는 일 앞에서 필요한 계산' : name}`,
+    alt: `${SITE_NAME} — ${what}`,
   };
 }
