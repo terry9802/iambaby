@@ -15,6 +15,8 @@ import { Seeder, pendingExamples, resolveToday } from '@/lib/profile/seed';
 import { buildShareQuery, pickDefined, qNum, qStr, readShareQuery } from '@/lib/share';
 import type { Tool } from '@/lib/tools';
 import { CalcShell } from '@/components/calculator/CalcShell';
+import { PendingReform } from '@/components/calculator/PendingReform';
+import { pendingReformsFor } from '@/lib/calculators/pending-reforms';
 import { ResultAside, ResultHeadline } from '@/components/calculator/ResultHeadline';
 import {
   DateField,
@@ -201,19 +203,22 @@ export function BirthGrantsTool({ tool, fallbackToday }: { tool: Tool; fallbackT
       shareText={shareText}
       fromSharedLink={Object.keys(fromLink).length > 0}
       extra={
-        outcome.ok && outcome.result.value.districtStatus === 'unverified' ? (
-          <ConsultBox
-            title={`${outcome.result.value.districtName ?? '이 자치구'}는 전화로 확인하는 게 빠릅니다`}
-            lead={`구청 홈페이지에서 금액을 찾지 못했습니다. 지어낸 숫자를 보여드리는 대신 물어보실 곳을 안내해 드려요. 확인된 8개 구 평균은 ${formatManwon(outcome.result.value.districtEstimate)} 정도입니다.`}
-            phones={[
-              {
-                label: '서울 다산콜센터',
-                number: '120',
-                note: '서울 전체와 자치구 민원을 함께 안내합니다. "출산지원금 있나요"라고 물으시면 됩니다.',
-              },
-            ]}
-          />
-        ) : null
+        <>
+          <PendingReform notice={pendingReformsFor('childcare')} />
+          {outcome.ok && outcome.result.value.districtStatus === 'unverified' ? (
+            <ConsultBox
+              title={`${outcome.result.value.districtName ?? '이 자치구'}는 전화로 확인하는 게 빠릅니다`}
+              lead={`구청 홈페이지에서 금액을 찾지 못했습니다. 지어낸 숫자를 보여드리는 대신 물어보실 곳을 안내해 드려요. 확인된 8개 구 평균은 ${formatManwon(outcome.result.value.districtEstimate)} 정도입니다.`}
+              phones={[
+                {
+                  label: '서울 다산콜센터',
+                  number: '120',
+                  note: '서울 전체와 자치구 민원을 함께 안내합니다. "출산지원금 있나요"라고 물으시면 됩니다.',
+                },
+              ]}
+            />
+          ) : null}
+        </>
       }
       detail={
         outcome.ok ? (

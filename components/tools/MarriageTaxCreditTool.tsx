@@ -11,6 +11,8 @@ import { resolveToday } from '@/lib/profile/seed';
 import { buildShareQuery, pickDefined, qBool, qStr, readShareQuery } from '@/lib/share';
 import type { Tool } from '@/lib/tools';
 import { CalcShell } from '@/components/calculator/CalcShell';
+import { PendingReform } from '@/components/calculator/PendingReform';
+import { pendingReformsFor } from '@/lib/calculators/pending-reforms';
 import { ResultAside, ResultHeadline } from '@/components/calculator/ResultHeadline';
 import { DateField, FieldGroup, ToggleField } from '@/components/ui/fields';
 
@@ -99,6 +101,7 @@ export function MarriageTaxCreditTool({
       shareQuery={shareQuery}
       shareText={shareText}
       fromSharedLink={Object.keys(fromLink).length > 0}
+      extra={<PendingReform notice={pendingReformsFor('marriage')} />}
       form={
         <FieldGroup>
           <DateField

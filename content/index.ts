@@ -20,9 +20,12 @@ import { article as payrollDeductions } from '@/content/jobchange/payroll-deduct
 import { article as averageWage } from '@/content/retirement/average-wage';
 import { article as severanceOneYear } from '@/content/retirement/severance-one-year';
 import { article as unemploymentVoluntary } from '@/content/retirement/unemployment-voluntary';
+import { article as reform2027 } from '@/content/childcare/reform-2027';
+import { article as weddingGrant2027 } from '@/content/marriage/wedding-grant-2027';
 
 /** 읽는 순서대로. 목록 화면이 이 순서를 그대로 쓴다. */
 export const ARTICLES: Article[] = [
+  reform2027,
   ordinaryWage,
   parentalLeavePay,
   postPaymentAbolished,
@@ -34,6 +37,7 @@ export const ARTICLES: Article[] = [
   first60Days,
   threeCashBenefits,
   seoulDistrictGrants,
+  weddingGrant2027,
   marriageTaxCredit,
   newlywedJeonseLoan,
   weddingGiftMoney,
