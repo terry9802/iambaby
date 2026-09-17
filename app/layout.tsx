@@ -60,6 +60,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {FONT_PRELOAD.map((href) => (
           <link key={href} rel="preload" as="font" type="font/woff2" href={href} crossOrigin="" />
         ))}
+        {/* 구글이 사이트 확인 단계에서 HTML을 훑어 이 태그를 찾는다. head에 그대로 있어야 한다. */}
+        <AdSenseScript />
       </head>
       <body className="min-h-dvh antialiased">
         <AppHistoryTracker />
@@ -126,7 +128,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </ProfileProvider>
         <GoogleAnalytics />
-        <AdSenseScript />
       </body>
     </html>
   );

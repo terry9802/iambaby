@@ -4,13 +4,13 @@ import { notFound } from 'next/navigation';
 import { ARTICLES, findArticle } from '@/content/index';
 import { readingMinutes } from '@/lib/content/types';
 import { ruleMetaOf } from '@/lib/rules/loader';
-import { ogMeta } from '@/lib/site';
+import { ogMeta, ogImage } from '@/lib/site';
+import { ArticleJsonLd } from '@/components/seo/JsonLd';
 import { toISODate } from '@/lib/format';
 import { ArticleBody } from '@/components/content/ArticleBody';
 import { BasisFooter } from '@/components/calculator/BasisFooter';
 import { AdSlot } from '@/components/analytics/AdSense';
 import { BackButton } from '@/components/ui/BackButton';
-import { SITE_NAME, SITE_URL } from '@/lib/site';
 
 
 
@@ -51,23 +51,15 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   const basis = article.basisRuleIds.map((id) => ruleMetaOf(id, today));
   const others = ARTICLES.filter((a) => a.slug !== article.slug).slice(0, 4);
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: article.title,
-    description: article.description,
-    datePublished: article.publishedAt,
-    dateModified: article.updatedAt,
-    inLanguage: 'ko-KR',
-    mainEntityOfPage: `${SITE_URL}/guide/${article.slug}`,
-    publisher: { '@type': 'Organization', name: SITE_NAME },
-  };
-
   return (
     <div className="mx-auto flex max-w-[680px] flex-col gap-5 px-4 pb-16 pt-4">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      <ArticleJsonLd
+        slug={article.slug}
+        headline={article.title}
+        description={article.description}
+        publishedAt={article.publishedAt}
+        updatedAt={article.updatedAt}
+        image={ogImage(article.event).url}
       />
 
       <BackButton fallbackHref="/guide" label="읽을거리" />

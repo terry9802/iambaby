@@ -2,6 +2,7 @@ import { ARTICLES } from '@/content/index';
 import { ProfileBanner } from '@/components/profile/ProfileBanner';
 import { HomeTabs } from '@/components/home/HomeTabs';
 import { AdSlot } from '@/components/analytics/AdSense';
+import { SiteJsonLd } from '@/components/seo/JsonLd';
 
 export default function HomePage() {
   // 글 본문까지 브라우저로 내려보낼 필요는 없으니 목록에 쓸 것만 추린다.
@@ -14,6 +15,7 @@ export default function HomePage() {
 
   return (
     <div className="mx-auto flex max-w-[680px] flex-col gap-5 px-4 pb-16 pt-6">
+      <SiteJsonLd />
       <header className="flex flex-col gap-2.5">
         <h1 className="text-[26px] font-bold leading-snug tracking-[-0.015em] text-ink">
           몰라도 괜찮아요.

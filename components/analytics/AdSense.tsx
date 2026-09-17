@@ -1,19 +1,25 @@
 'use client';
 
-import Script from 'next/script';
 import { useEffect, useRef } from 'react';
 
 const CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
 
-/** AdSense 로더. 퍼블리셔 ID가 없으면 스크립트를 넣지 않는다. */
+/**
+ * AdSense 로더. 퍼블리셔 ID가 없으면 아무것도 넣지 않는다.
+ *
+ * next/script의 afterInteractive를 쓰면 처음 내려가는 HTML에는
+ * <link rel="preload">만 남고 진짜 <script> 태그는 하이드레이션 뒤에야 생긴다.
+ * 구글이 사이트를 확인할 때 HTML에서 이 태그를 찾으므로, 그때 없으면
+ * "코드를 찾을 수 없습니다"로 심사가 막힌다. 그래서 평범한 script 태그로 둔다.
+ * async라 그리는 것을 막지 않는다. 반드시 <head> 안에서 렌더링할 것.
+ */
 export function AdSenseScript() {
   if (!CLIENT) return null;
   return (
-    <Script
+    <script
       async
       src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${CLIENT}`}
       crossOrigin="anonymous"
-      strategy="afterInteractive"
     />
   );
 }
