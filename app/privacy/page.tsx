@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { BackButton } from '@/components/ui/BackButton';
 
 export const metadata: Metadata = {
@@ -129,6 +130,18 @@ export default function PrivacyPage() {
         <p>
           개인정보 처리에 관해 궁금한 점이나 잘못된 계산을 발견하셨다면 알려주세요. 계산 정확도가 이
           사이트의 유일한 자산이라 제보를 가장 중요하게 다룹니다.
+        </p>
+        <p>
+          연락처는{' '}
+          <Link href="/contact" className="font-medium text-brand-strong hover:underline">
+            문의
+          </Link>{' '}
+          페이지에 있습니다. 이 사이트는 입력값을 서버로 보내지 않으므로 삭제를 요청하실 개인정보
+          자체가 없고, 브라우저에 저장된 프로필은{' '}
+          <Link href="/me" className="font-medium text-brand-strong hover:underline">
+            내 프로필
+          </Link>{' '}
+          화면에서 직접 지우실 수 있습니다.
         </p>
       </Section>
     </div>

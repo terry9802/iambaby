@@ -27,6 +27,25 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly' as const,
       priority: 0.7,
     })),
+    // 소개·문의는 사이트가 뭐하는 곳인지 판단하는 데 쓰이므로 약관류보다 우선순위를 둔다
+    {
+      url: `${SITE_URL}/about`,
+      lastModified: now,
+      changeFrequency: 'monthly' as const,
+      priority: 0.6,
+    },
+    {
+      url: `${SITE_URL}/contact`,
+      lastModified: now,
+      changeFrequency: 'yearly' as const,
+      priority: 0.5,
+    },
+    {
+      url: `${SITE_URL}/terms`,
+      lastModified: now,
+      changeFrequency: 'yearly' as const,
+      priority: 0.3,
+    },
     {
       url: `${SITE_URL}/privacy`,
       lastModified: now,

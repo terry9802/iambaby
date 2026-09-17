@@ -105,13 +105,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <Link href="/guide" prefetch={false} className="text-ink-soft hover:text-ink">
                     읽을거리
                   </Link>
-                  <Link href="/me" prefetch={false} className="text-ink-soft hover:text-ink">
-                    내 프로필
+                  <Link href="/about" prefetch={false} className="text-ink-soft hover:text-ink">
+                    소개
+                  </Link>
+                  <Link href="/contact" prefetch={false} className="text-ink-soft hover:text-ink">
+                    문의
+                  </Link>
+                  <Link href="/terms" prefetch={false} className="text-ink-soft hover:text-ink">
+                    이용약관
                   </Link>
                   <Link href="/privacy" prefetch={false} className="text-ink-soft hover:text-ink">
                     개인정보처리방침
                   </Link>
                 </nav>
+                <p className="tnum mt-1 text-[12px] text-ink-faint">
+                  &copy; {new Date().getFullYear()} {SITE_NAME}
+                </p>
               </div>
             </footer>
           </div>
