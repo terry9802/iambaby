@@ -10,6 +10,7 @@ import payroll2026 from '@/rules/2026/payroll.json';
 import severancePay2026 from '@/rules/2026/severance-pay.json';
 import unemploymentBenefit2026 from '@/rules/2026/unemployment-benefit.json';
 import pendingReforms2026 from '@/rules/2026/pending-reforms.json';
+import restBenefits2026 from '@/rules/2026/rest-benefits.json';
 import type { RuleFile, RuleMeta } from './types';
 import { parseDate, toISODate } from '@/lib/format';
 
@@ -30,6 +31,7 @@ const REGISTRY = {
   'severance-pay': [severancePay2026],
   'unemployment-benefit': [unemploymentBenefit2026],
   'pending-reforms': [pendingReforms2026],
+  'rest-benefits': [restBenefits2026],
 } as const satisfies Record<string, readonly { meta: RuleMeta; values: unknown }[]>;
 
 export type RuleId = keyof typeof REGISTRY;

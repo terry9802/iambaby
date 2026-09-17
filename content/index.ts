@@ -22,6 +22,7 @@ import { article as severanceOneYear } from '@/content/retirement/severance-one-
 import { article as unemploymentVoluntary } from '@/content/retirement/unemployment-voluntary';
 import { article as reform2027 } from '@/content/childcare/reform-2027';
 import { article as weddingGrant2027 } from '@/content/marriage/wedding-grant-2027';
+import { article as restWhoGetsWhat } from '@/content/rest/who-gets-what';
 
 /** 읽는 순서대로. 목록 화면이 이 순서를 그대로 쓴다. */
 export const ARTICLES: Article[] = [
@@ -48,6 +49,7 @@ export const ARTICLES: Article[] = [
   averageWage,
   severanceOneYear,
   unemploymentVoluntary,
+  restWhoGetsWhat,
 ];
 
 export function findArticle(slug: string): Article | undefined {

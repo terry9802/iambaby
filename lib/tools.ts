@@ -8,7 +8,8 @@ export type EventKey =
   | 'jobchange'
   | 'retirement'
   | 'inheritance'
-  | 'socialdues';
+  | 'socialdues'
+  | 'rest';
 
 export type LifeEvent = {
   key: EventKey;
@@ -149,6 +150,27 @@ export const EVENTS: LifeEvent[] = [
       },
     ],
   },
+  {
+    key: 'rest',
+    title: '잘 쉬는 법',
+    lead: '쉬는 데도 돈이 드는데, 나라에서 보태주는 게 있나요',
+    status: 'live',
+    icon: 'rest',
+    tips: [
+      {
+        title: '대부분 연초에 한 번만 열립니다.',
+        body: '선착순이거나 추첨인 게 많아서, 기간을 놓치면 1년을 기다려야 합니다. 근로자 휴가지원사업은 1월 30일 선착순, 문화누리카드는 2월 2일부터, 청년문화예술패스는 2월 25일부터 시작했어요.',
+      },
+      {
+        title: '회사가 신청해 주는 것도 있어요.',
+        body: '근로자 휴가지원사업은 개인이 신청할 수 없습니다. 20만원을 내면 40만원이 되는데도 회사가 신청을 안 해서 못 받는 경우가 많아요. 총무·인사팀에 "올해 신청하나요"라고 한 번 물어보세요.',
+      },
+      {
+        title: '남은 돈은 그냥 사라집니다.',
+        body: '문화누리카드는 12월 31일, 산림복지서비스이용권은 11월 30일이 지나면 잔액이 소멸합니다. 이월도 환불도 안 돼요.',
+      },
+    ],
+  },
 ];
 
 export type ToolType = 'calculator' | 'checker' | 'optimizer';
@@ -278,6 +300,17 @@ export const TOOLS: Tool[] = [
     profileFields: ['children', 'residence'],
     ruleFile: 'birth-grants-national',
     timing: '출생신고 직후 (60일 이내)',
+  },
+  {
+    slug: 'rest-benefits',
+    event: 'rest',
+    type: 'checker',
+    title: '쉼 지원 통합 조회',
+    question: '쉬는 데 나라에서 보태주는 돈, 나는 뭐가 돼요?',
+    lead: '휴가비·문화·체육·숲 지원 다섯 가지를 놓고 내가 되는 것과 안 되는 것을 이유까지 가려냅니다.',
+    profileFields: ['birthYear', 'residence'],
+    ruleFile: 'rest-benefits',
+    timing: '연초 (1~2월에 대부분 열립니다)',
   },
 ];
 

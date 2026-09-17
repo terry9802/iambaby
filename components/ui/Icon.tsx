@@ -13,6 +13,7 @@ export type IconName =
   | 'retirement'
   | 'inheritance'
   | 'socialdues'
+  | 'rest'
   | 'share'
   | 'check'
   | 'close'
@@ -21,6 +22,14 @@ export type IconName =
   | 'phone';
 
 const PATHS: Record<IconName, React.ReactNode> = {
+  // 김이 오르는 잔 — 쉬는 시간
+  rest: (
+    <>
+      <path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9Z" />
+      <path d="M17 10.5h1.5a2.5 2.5 0 0 1 0 5H17" />
+      <path d="M8 6V4M12 6V4" />
+    </>
+  ),
   // 젖병
   childcare: (
     <>
