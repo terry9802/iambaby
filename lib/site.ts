@@ -2,17 +2,21 @@
  * 사이트의 정식 주소.
  *
  * 이 값이 틀리면 sitemap과 canonical이 통째로 엉뚱한 곳을 가리켜서 검색에 안 잡힌다.
- * 도메인을 사기 전에도 최소한 실제로 열리는 주소를 가리켜야 하므로,
- * 환경변수가 없으면 Vercel이 알려주는 배포 주소로 대신한다.
+ * 그래서 환경변수를 깜빡해도 맞도록 진짜 도메인을 기본값으로 박아 둔다.
+ * (배포 주소를 자동으로 따라가게 뒀더니 도메인을 산 뒤에도 옛 주소를 가리켰다.)
+ *
+ * www는 쓰지 않는다. 같은 내용이 두 주소로 잡히면 검색에서 손해라 하나만 정식으로 둔다.
  */
+const CANONICAL_ORIGIN = 'https://iamstillbaby.com';
+
 function resolveSiteUrl(): string {
   const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   if (explicit) return explicit.replace(/\/+$/, '');
 
-  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
-  if (vercel) return `https://${vercel.replace(/\/+$/, '')}`;
+  // 내 컴퓨터에서 띄웠을 때만 localhost. Vercel 위에서는 늘 정식 주소를 쓴다.
+  if (!process.env.VERCEL) return 'http://localhost:3000';
 
-  return 'http://localhost:3000';
+  return CANONICAL_ORIGIN;
 }
 
 export const SITE_URL = resolveSiteUrl();

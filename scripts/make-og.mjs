@@ -104,7 +104,7 @@ h1{margin-top:22px;font-size:56px;font-weight:700;line-height:1.22;letter-spacin
   <ul class="tags">${tags}</ul>
   <div class="foot">
     <p>계산 과정과 근거 조문까지 같이 보여드려요</p>
-    <b>iambaby.vercel.app</b>
+    <b>iamstillbaby.com</b>
   </div>
 </div>`;
 }
