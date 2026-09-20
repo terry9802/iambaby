@@ -1,8 +1,18 @@
+import type { Metadata } from 'next';
 import { ARTICLES } from '@/content/index';
 import { ProfileBanner } from '@/components/profile/ProfileBanner';
 import { HomeTabs } from '@/components/home/HomeTabs';
 import { AdSlot } from '@/components/analytics/AdSense';
 import { SiteJsonLd } from '@/components/seo/JsonLd';
+
+/*
+  홈은 레이아웃의 metadata를 그대로 쓰느라 canonical이 비어 있었다.
+  가장 많이 들어오는 자리인데 정식 주소 표시가 없으면, 같은 내용을 가진
+  vercel.app 주소와 검색에서 경쟁하게 된다. 여기만 따로 박아 둔다.
+*/
+export const metadata: Metadata = {
+  alternates: { canonical: '/' },
+};
 
 export default function HomePage() {
   // 글 본문까지 브라우저로 내려보낼 필요는 없으니 목록에 쓸 것만 추린다.
