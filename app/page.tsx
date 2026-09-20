@@ -31,9 +31,9 @@ export default function HomePage() {
         첫 화면에서 가장 큰 그림이라 priority를 준다. 미리 받아두지 않으면
         글보다 늦게 떠서 화면이 한 번 밀린다.
       */}
-      <div className="-mx-4 bg-band">
+      <div className="edge-fade -mx-4">
         <Image
-          src="/img/hero.jpg"
+          src="/img/hero-2.jpg"
           alt="빨간 횡단보도를 나란히 건너는 아이들"
           width={1600}
           height={462}

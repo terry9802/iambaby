@@ -120,6 +120,29 @@ textarea {
   display: none;
 }
 
+/*
+  대표 사진의 좌우 끝을 페이지 바탕으로 녹인다. 사진 배경은 이미 바탕색과
+  같은 색이라(scripts/make-hero.mjs), 실제로 흐려지는 건 횡단보도와 강아지처럼
+  가장자리에 걸친 것들뿐이다. 사진이 잘린 네모가 아니라 페이지에서 이어지는
+  장면처럼 보이게 하려는 것이다.
+*/
+.edge-fade {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 30px,
+    #000 calc(100% - 30px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 30px,
+    #000 calc(100% - 30px),
+    transparent 100%
+  );
+}
+
 /* 숫자는 자릿수가 흔들리지 않아야 표로 읽힌다. */
 .tnum {
   font-variant-numeric: tabular-nums;
