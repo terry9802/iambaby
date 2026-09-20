@@ -36,7 +36,7 @@ export default function AboutPage() {
       <BackButton fallbackHref="/" label="홈" />
 
       <header className="flex flex-col gap-2">
-        <h1 className="text-[24px] font-bold leading-snug tracking-[-0.015em] text-ink">
+        <h1 className="text-[21px] font-bold leading-[1.4] tracking-[-0.02em] text-ink">
           이 사이트가 뭐하는 곳인가요
         </h1>
         <p className="text-[14px] leading-relaxed text-ink-soft">

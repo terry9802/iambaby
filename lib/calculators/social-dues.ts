@@ -1,6 +1,6 @@
 import { loadRule } from '@/lib/rules/loader';
 import { missing, ok, type CalcOutcome, type CalcStep } from '@/lib/rules/types';
-import { formatKRW, formatManwon } from '@/lib/format';
+import { formatKRW } from '@/lib/format';
 
 /**
  * 경조사비 계산기.
@@ -130,7 +130,7 @@ export function calcSocialDues(input: SocialDuesInput): CalcOutcome<SocialDuesVa
   const afterFrequency = base * frequency.factor;
   steps.push({
     label: `${frequency.label} 보는 사이`,
-    formula: `${formatManwon(base)} × ${frequency.factor}`,
+    formula: `${formatKRW(base)} × ${frequency.factor}`,
     result: Math.round(afterFrequency),
     unit: 'KRW',
     note: '자주 볼수록 앞으로도 주고받을 일이 많아 조금 올라갑니다.',
@@ -139,7 +139,7 @@ export function calcSocialDues(input: SocialDuesInput): CalcOutcome<SocialDuesVa
   const afterCloseness = afterFrequency * closeness.factor;
   steps.push({
     label: closeness.label,
-    formula: `${formatManwon(afterFrequency)} × ${closeness.factor}`,
+    formula: `${formatKRW(afterFrequency)} × ${closeness.factor}`,
     result: Math.round(afterCloseness),
     unit: 'KRW',
   });
@@ -148,7 +148,7 @@ export function calcSocialDues(input: SocialDuesInput): CalcOutcome<SocialDuesVa
   if (occasion.factor !== 1) {
     steps.push({
       label: `${occasion.label} 기준`,
-      formula: `${formatManwon(afterCloseness)} × ${occasion.factor}`,
+      formula: `${formatKRW(afterCloseness)} × ${occasion.factor}`,
       result: Math.round(afterOccasion),
       unit: 'KRW',
     });
@@ -158,7 +158,7 @@ export function calcSocialDues(input: SocialDuesInput): CalcOutcome<SocialDuesVa
   if (attendance.factor && attendance.factor !== 1) {
     steps.push({
       label: attendance.label,
-      formula: `${formatManwon(afterOccasion)} × ${attendance.factor}`,
+      formula: `${formatKRW(afterOccasion)} × ${attendance.factor}`,
       result: Math.round(afterAttendance),
       unit: 'KRW',
       note: '식사를 안 하면 식대 부담이 없어 조금 낮춰도 괜찮습니다.',
@@ -178,7 +178,7 @@ export function calcSocialDues(input: SocialDuesInput): CalcOutcome<SocialDuesVa
   if (mealFloor > 0) {
     steps.push({
       label: `식사하는 사람 ${partySize}명`,
-      formula: `1인 ${formatManwon(rule.mealCostPerPerson[venue])} × ${partySize}명`,
+      formula: `1인 ${formatKRW(rule.mealCostPerPerson[venue])} × ${partySize}명`,
       result: mealFloor,
       unit: 'KRW',
       note: '적어도 먹는 값은 넘겨야 상대가 손해를 보지 않습니다.',
@@ -199,14 +199,14 @@ export function calcSocialDues(input: SocialDuesInput): CalcOutcome<SocialDuesVa
   const recommended = Math.max(snapped, mealFloor, reciprocityFloor);
   steps.push({
     label: '그래서 이 정도',
-    formula: `셋 중 가장 큰 값 (${formatManwon(snapped)}, ${formatManwon(mealFloor)}, ${formatManwon(reciprocityFloor)})`,
+    formula: `셋 중 가장 큰 값 (${formatKRW(snapped)}, ${formatKRW(mealFloor)}, ${formatKRW(reciprocityFloor)})`,
     result: recommended,
     unit: 'KRW',
   });
 
   const assumptions = [
     '설문조사에서 사람들이 실제로 답한 금액과 판단 기준을 그대로 계산에 옮겼어요.',
-    '식대는 일반 예식장 1인 5만원, 호텔 1인 10만원으로 잡았어요. 실제 식대는 장소마다 다릅니다.',
+    '식대는 일반 예식장 1인 50,000원, 호텔 1인 100,000원으로 잡았어요. 실제 식대는 장소마다 다릅니다.',
     occasion.key === 'funeral'
       ? '장례식은 결혼식과 달리 식사를 하더라도 금액을 더 얹지 않는 분위기인 곳도 많아요.'
       : '결혼식은 식사 여부와 동행 인원이 금액에 크게 영향을 줍니다.',
@@ -222,7 +222,7 @@ export function calcSocialDues(input: SocialDuesInput): CalcOutcome<SocialDuesVa
     );
   }
   if (recommended >= 100000 && recommended % 100000 !== 0) {
-    warnings.push('10만원이 넘어가면 보통 10만원 단위로 맞춥니다.');
+    warnings.push('100,000원이 넘어가면 보통 100,000원 단위로 맞춥니다.');
   }
   if (input.occasion === 'funeral') {
     warnings.push('조의금 봉투에는 축하 문구를 쓰지 않습니다. 부의(賻儀) 또는 근조(謹弔)라고 적으면 됩니다.');

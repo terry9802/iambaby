@@ -1,5 +1,5 @@
 import { missing, ok, type CalcOutcome, type CalcStep } from '@/lib/rules/types';
-import { formatKRW, formatManwon } from '@/lib/format';
+import { formatKRW } from '@/lib/format';
 import { calcNetSalary, grossForNet, type NetSalaryBreakdown } from './net-salary';
 
 /** 이직 제안을 받았을 때, 실제로 손에 쥐는 돈이 얼마나 달라지는지 */
@@ -67,7 +67,7 @@ export function compareJobChange(input: JobChangeInput): CalcOutcome<JobChangeVa
 
   const row = (label: string, b: NetSalaryBreakdown): CalcStep => ({
     label,
-    formula: `세전 월 ${formatManwon(b.grossMonthly)} − 4대보험 ${formatManwon(b.insuranceTotal)} − 세금 ${formatManwon(b.taxTotal)}`,
+    formula: `세전 월 ${formatKRW(b.grossMonthly)} − 4대보험 ${formatKRW(b.insuranceTotal)} − 세금 ${formatKRW(b.taxTotal)}`,
     result: b.netMonthly,
     unit: 'KRW',
     children: [
@@ -91,7 +91,7 @@ export function compareJobChange(input: JobChangeInput): CalcOutcome<JobChangeVa
     },
     {
       label: '연 차이',
-      formula: `월 ${formatManwon(monthlyDiff)} × 12개월`,
+      formula: `월 ${formatKRW(monthlyDiff)} × 12개월`,
       result: monthlyDiff * 12,
       unit: 'KRW',
     },
@@ -116,7 +116,7 @@ export function compareJobChange(input: JobChangeInput): CalcOutcome<JobChangeVa
   ];
   if (monthlyDiff < 0) {
     warnings.push(
-      `제안받은 연봉이 지금보다 높아 보여도 실수령액은 월 ${formatManwon(Math.abs(monthlyDiff))} 줄어듭니다. 비과세 수당 차이 때문일 수 있어요.`,
+      `제안받은 연봉이 지금보다 높아 보여도 실수령액은 월 ${formatKRW(Math.abs(monthlyDiff))} 줄어듭니다. 비과세 수당 차이 때문일 수 있어요.`,
     );
   }
   if (offeredTaxFree < currentTaxFree) {

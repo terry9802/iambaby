@@ -1,4 +1,4 @@
-import { formatKRW, formatManwon } from '@/lib/format';
+import { formatKRW } from '@/lib/format';
 import type { Combination } from '@/lib/calculators/parental-leave-optimizer';
 
 /**
@@ -107,7 +107,7 @@ export function CoupleGantt({ combination }: { combination: Combination }) {
         <p className="mt-3 text-[12px] leading-relaxed text-ink-soft">
           가장 얇은 달은 생후 {combination.leanestMonth.childMonthAge}개월로, 부부 합쳐{' '}
           <span className="tnum font-semibold text-ink">
-            {formatManwon(combination.leanestMonth.household)}
+            {formatKRW(combination.leanestMonth.household)}
           </span>
           이 들어옵니다.
           {combination.leanestMonth.bothOnLeave && ' 이 달은 두 사람 모두 휴직 중이라 급여 외 수입이 없어요.'}

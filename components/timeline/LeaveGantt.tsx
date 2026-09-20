@@ -1,4 +1,4 @@
-import { diffDays, formatDate, formatKRW, formatManwon, parseDate } from '@/lib/format';
+import { diffDays, formatDate, formatKRW, parseDate } from '@/lib/format';
 import type { TimelineSegment } from '@/lib/calculators/leave-timeline';
 
 type Phase = {
@@ -42,7 +42,7 @@ export function groupPhases(segments: TimelineSegment[]): Phase[] {
       days: parental.reduce((acc, s) => acc + s.days, 0),
       amount: parental.reduce((acc, s) => acc + s.amount, 0),
       payerLabel: '고용보험',
-      note: `첫 달 ${formatManwon(first.amount)}에서 시작해 마지막 달 ${formatManwon(last.amount)}까지 줄어듭니다.`,
+      note: `첫 달 ${formatKRW(first.amount)}에서 시작해 마지막 달 ${formatKRW(last.amount)}까지 줄어듭니다.`,
     });
   }
 

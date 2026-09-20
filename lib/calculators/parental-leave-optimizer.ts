@@ -1,6 +1,6 @@
 import { fallbackWarning, loadRule } from '@/lib/rules/loader';
 import { missing, ok, type CalcOutcome, type CalcStep } from '@/lib/rules/types';
-import { addMonths, formatKRW, formatManwon, parseDate, toISODate } from '@/lib/format';
+import { addMonths, formatKRW, parseDate, toISODate } from '@/lib/format';
 import { findBracket, type Bracket, type ParentalLeaveRule } from './parental-leave';
 
 /**
@@ -366,26 +366,26 @@ export function optimizeCoupleLeave(input: CoupleLeaveInput): CalcOutcome<Couple
     },
     {
       label: `본인 ${best.me.months}개월`,
-      formula: best.me.monthly.map((m) => formatManwon(m.amount)).join(' + ') || '사용 안 함',
+      formula: best.me.monthly.map((m) => formatKRW(m.amount)).join(' + ') || '사용 안 함',
       result: best.me.total,
       unit: 'KRW',
       note: `자녀 ${best.me.startMonthAge}개월(${toISODate(addMonths(birth, best.me.startMonthAge))})부터 시작`,
       children: best.me.monthly.map((m) => ({
         label: `${m.month}개월차 (자녀 ${m.childMonthAge}개월)`,
-        formula: `${m.special ? '특례' : '일반'} 상한 ${formatManwon(m.cap)}`,
+        formula: `${m.special ? '특례' : '일반'} 상한 ${formatKRW(m.cap)}`,
         result: m.amount,
         unit: 'KRW' as const,
       })),
     },
     {
       label: `배우자 ${best.spouse.months}개월`,
-      formula: best.spouse.monthly.map((m) => formatManwon(m.amount)).join(' + ') || '사용 안 함',
+      formula: best.spouse.monthly.map((m) => formatKRW(m.amount)).join(' + ') || '사용 안 함',
       result: best.spouse.total,
       unit: 'KRW',
       note: `자녀 ${best.spouse.startMonthAge}개월(${toISODate(addMonths(birth, best.spouse.startMonthAge))})부터 시작`,
       children: best.spouse.monthly.map((m) => ({
         label: `${m.month}개월차 (자녀 ${m.childMonthAge}개월)`,
-        formula: `${m.special ? '특례' : '일반'} 상한 ${formatManwon(m.cap)}`,
+        formula: `${m.special ? '특례' : '일반'} 상한 ${formatKRW(m.cap)}`,
         result: m.amount,
         unit: 'KRW' as const,
       })),
@@ -426,7 +426,7 @@ export function optimizeCoupleLeave(input: CoupleLeaveInput): CalcOutcome<Couple
   ];
   if (best.leanestMonth && best.leanestMonth.bothOnLeave) {
     warnings.push(
-      `이 조합에서는 자녀 ${best.leanestMonth.childMonthAge}개월 무렵 부부가 함께 쉬어 그 달 가구 수입이 ${formatManwon(best.leanestMonth.household)}까지 내려가요.`,
+      `이 조합에서는 자녀 ${best.leanestMonth.childMonthAge}개월 무렵 부부가 함께 쉬어 그 달 가구 수입이 ${formatKRW(best.leanestMonth.household)}까지 내려가요.`,
     );
   }
 

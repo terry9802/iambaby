@@ -139,7 +139,7 @@ export function SeverancePayTool({ tool, fallbackToday }: { tool: Tool; fallback
             <p className="mt-1.5 text-[13px] leading-relaxed text-ink-soft">
               지금 조건으로 1년을 채우면 약{' '}
               <strong className="tnum font-semibold text-ink">
-                {formatManwon(
+                {formatKRW(
                   Math.round(outcome.result.value.appliedDailyWage * 30),
                 )}
               </strong>

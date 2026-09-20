@@ -51,7 +51,7 @@ function ComboCard({
         <strong className="tnum font-semibold">{combination.spouse.months}개월</strong>
         <span className="text-ink-soft"> · 특례 {combination.specialMonths}개월 적용</span>
       </p>
-      {rank > 1 && <p className="tnum text-[12px] text-ink-faint">1순위보다 {formatManwon(diff)}</p>}
+      {rank > 1 && <p className="tnum text-[12px] text-ink-faint">1순위보다 {formatKRW(diff)}</p>}
     </button>
   );
 }
@@ -68,11 +68,11 @@ export function CoupleLeaveTool({ tool, fallbackToday }: { tool: Tool; fallbackT
     const seeder = new Seeder<CoupleLeaveInput>();
     seeder.pick('myWage', hydrated ? profile.income?.monthlyWage : undefined, {
       value: 3_500_000,
-      label: '본인 통상임금 350만원',
+      label: '본인 통상임금 3,500,000원',
     });
     seeder.pick('spouseWage', hydrated ? profile.spouse?.monthlyWage : undefined, {
       value: 3_000_000,
-      label: '배우자 통상임금 300만원',
+      label: '배우자 통상임금 3,000,000원',
     });
     const children = hydrated ? (profile.children ?? []) : [];
     seeder.pick('childBirthDate', children[children.length - 1]?.birthDate, {

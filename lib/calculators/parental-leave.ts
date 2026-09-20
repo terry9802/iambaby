@@ -5,7 +5,7 @@ import {
   type CalcOutcome,
   type CalcStep,
 } from '@/lib/rules/types';
-import { formatKRW, formatManwon, formatPercent } from '@/lib/format';
+import { formatKRW, formatPercent } from '@/lib/format';
 
 /**
  * 7-1 육아휴직 급여 계산기.
@@ -108,9 +108,9 @@ function groupSteps(monthly: MonthlyPayment[]): CalcStep[] {
     const span = first.month === last.month ? `${first.month}개월차` : `${first.month}~${last.month}개월차`;
     const sum = bucket.reduce((acc, m) => acc + m.amount, 0);
     const reason = first.capped
-      ? `통상임금의 ${formatPercent(first.rate)}가 상한액을 넘어 상한액인 ${formatManwon(first.cap)}으로 지급`
+      ? `통상임금의 ${formatPercent(first.rate)}가 상한액을 넘어 상한액인 ${formatKRW(first.cap)}으로 지급`
       : first.floored
-        ? `통상임금의 ${formatPercent(first.rate)}가 하한액보다 적어 하한액인 ${formatManwon(first.floor)}으로 지급`
+        ? `통상임금의 ${formatPercent(first.rate)}가 하한액보다 적어 하한액인 ${formatKRW(first.floor)}으로 지급`
         : `통상임금의 ${formatPercent(first.rate)} 그대로 지급`;
 
     steps.push({
@@ -202,7 +202,7 @@ export function calcParentalLeave(input: ParentalLeaveInput): CalcOutcome<Parent
     ...groupSteps(monthly),
     {
       label: `${months}개월 총 수령액`,
-      formula: monthly.map((m) => formatManwon(m.amount)).join(' + '),
+      formula: monthly.map((m) => formatKRW(m.amount)).join(' + '),
       result: total,
       unit: 'KRW',
     },

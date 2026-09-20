@@ -1,4 +1,4 @@
-import { formatManwon } from '@/lib/format';
+import { formatKRW } from '@/lib/format';
 import { InlineText } from '@/components/ui/InlineText';
 import type { PendingReformNotice } from '@/lib/calculators/pending-reforms';
 
@@ -38,7 +38,7 @@ export function PendingReform({ notice }: { notice: PendingReformNotice | null }
                   className="rounded-[6px] border border-line bg-sunk px-2 py-1 text-[12px] text-ink-soft"
                 >
                   {amount.label}{' '}
-                  <span className="tnum font-semibold text-ink">{formatManwon(amount.value)}</span>
+                  <span className="tnum font-semibold text-ink">{formatKRW(amount.value)}</span>
                 </li>
               ))}
             </ul>

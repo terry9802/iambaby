@@ -1,6 +1,6 @@
 import { fallbackWarning, loadRule } from '@/lib/rules/loader';
 import { missing, ok, type CalcOutcome, type CalcStep, type RuleMeta } from '@/lib/rules/types';
-import { addDays, addMonths, diffDays, formatKRW, formatManwon, parseDate, toISODate } from '@/lib/format';
+import { addDays, addMonths, diffDays, formatKRW, parseDate, toISODate } from '@/lib/format';
 import { calcParentalLeave, type ParentalLeaveRule } from './parental-leave';
 
 /**
@@ -163,7 +163,7 @@ export function calcLeaveTimeline(input: LeaveTimelineInput): CalcOutcome<LeaveT
       payer: 'insurance',
       payerLabel: '고용보험',
       amount: Math.round((insuranceMonthlyBase / 30) * insuranceDays),
-      note: `월 상한 ${formatManwon(m.monthlyCap)} 기준으로 계산했어요.`,
+      note: `월 상한 ${formatKRW(m.monthlyCap)} 기준으로 계산했어요.`,
     });
   }
 
@@ -199,7 +199,7 @@ export function calcLeaveTimeline(input: LeaveTimelineInput): CalcOutcome<LeaveT
           payerLabel: '고용보험',
           amount: month.amount,
           note: month.capped
-            ? `상한 ${formatManwon(month.cap)} 적용`
+            ? `상한 ${formatKRW(month.cap)} 적용`
             : `통상임금의 ${Math.round(month.rate * 100)}%`,
         });
       }
@@ -296,7 +296,7 @@ export function calcLeaveTimeline(input: LeaveTimelineInput): CalcOutcome<LeaveT
       label: '출산전후휴가 급여',
       formula: segments
         .filter((s) => s.id.startsWith('maternity'))
-        .map((s) => `${s.payerLabel} ${s.days}일 ${formatManwon(s.amount)}`)
+        .map((s) => `${s.payerLabel} ${s.days}일 ${formatKRW(s.amount)}`)
         .join(' + '),
       result: maternityTotal,
       unit: 'KRW',

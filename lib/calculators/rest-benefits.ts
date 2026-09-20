@@ -1,6 +1,6 @@
 import { loadRule } from '@/lib/rules/loader';
 import { missing, ok, type CalcOutcome, type CalcStep } from '@/lib/rules/types';
-import { formatKRW, formatManwon, parseDate, toISODate } from '@/lib/format';
+import { formatKRW, parseDate, toISODate } from '@/lib/format';
 
 /**
  * 쉬는 데 보태주는 국가 지원 판정기.
@@ -209,15 +209,15 @@ export function checkRestBenefits(input: RestBenefitsInput): CalcOutcome<RestBen
     const bonusLabels: string[] = [];
     if (viaDisability && item.disabilityTrack) {
       amount = item.disabilityTrack.amount;
-      bonusLabels.push(`${item.disabilityTrack.label} ${formatManwon(amount)}`);
+      bonusLabels.push(`${item.disabilityTrack.label} ${formatKRW(amount)}`);
     } else if (item.amountByRegion) {
       amount = region === 'capital' ? item.amountByRegion.capital : item.amountByRegion.nonCapital;
-      bonusLabels.push(region === 'capital' ? '수도권 기준' : '비수도권이라 5만원 더');
+      bonusLabels.push(region === 'capital' ? '수도권 기준' : '비수도권이라 50,000원 더');
     }
     for (const bonus of item.bonuses ?? []) {
       if (inBirthRange(birthYear, bonus.birthYearMin, bonus.birthYearMax)) {
         amount += bonus.amount;
-        bonusLabels.push(`${bonus.label} +${formatManwon(bonus.amount)}`);
+        bonusLabels.push(`${bonus.label} +${formatKRW(bonus.amount)}`);
       }
     }
 

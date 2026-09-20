@@ -1,7 +1,7 @@
 'use client';
 
 import { useId, type ReactNode } from 'react';
-import { formatManwon } from '@/lib/format';
+import { formatKRW } from '@/lib/format';
 
 /** 입력 한 칸의 공통 껍데기. 라벨 · 도움말 · 자동채움 표시를 한 자리에서 관리한다. */
 function FieldFrame({
@@ -102,7 +102,7 @@ export function MoneyField({
         <Suffix>원</Suffix>
       </ControlRow>
       {value !== undefined && value > 0 && (
-        <p className="tnum text-right text-[12.5px] text-ink-soft">{formatManwon(value)}</p>
+        <p className="tnum text-right text-[12.5px] text-ink-soft">{formatKRW(value)}</p>
       )}
     </FieldFrame>
   );

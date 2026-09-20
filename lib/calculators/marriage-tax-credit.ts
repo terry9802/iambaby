@@ -1,6 +1,6 @@
 import { loadRule } from '@/lib/rules/loader';
 import { missing, ok, type CalcOutcome, type CalcStep } from '@/lib/rules/types';
-import { diffDays, formatKRW, formatDate, parseDate } from '@/lib/format';
+import { diffDays, formatDate, formatKRW, parseDate } from '@/lib/format';
 
 /**
  * 결혼세액공제 계산기.
@@ -117,7 +117,7 @@ export function calcMarriageTaxCredit(
 
   const assumptions = [
     '두 분 다 국내에 거주하고 혼인신고한 해에 소득이 있다고 보고 계산했어요.',
-    '세액공제는 낼 세금에서 빼주는 것이라, 낼 세금이 50만원보다 적으면 그 세금만큼만 줄어듭니다.',
+    '세액공제는 낼 세금에서 빼주는 것이라, 낼 세금이 500,000원보다 적으면 그 세금만큼만 줄어듭니다.',
     '재혼도 받을 수 있지만 예전에 이 공제를 받은 사람은 다시 받을 수 없어요.',
   ];
 

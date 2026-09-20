@@ -6,6 +6,7 @@ import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 import { AdSenseScript } from '@/components/analytics/AdSense';
 import { SITE_NAME, SITE_URL, ogMeta } from '@/lib/site';
 import { AppHistoryTracker } from '@/components/ui/AppHistoryTracker';
+import { Logo } from '@/components/ui/Logo';
 
 const FONT_PRELOAD = [
   '/fonts/pretendard/PretendardVariable.subset.91.woff2',
@@ -44,7 +45,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#f4f6f8',
+  themeColor: '#eceeed',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -71,9 +72,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 그냥 불투명하게 둔다. 보기에 달라지는 건 거의 없고 스크롤은 확실히 매끄러워진다. */}
             <header className="sticky top-0 z-10 border-b border-line bg-ground">
               <div className="mx-auto flex max-w-[680px] items-center justify-between gap-3 px-4 py-3">
-                <Link href="/" className="text-[14px] font-bold tracking-[-0.01em] text-ink">
-                  난아직애긴데
-                  <span className="font-medium text-ink-faint">세상이너무어려워요</span>
+                <Link href="/" aria-label="홈으로">
+                  <Logo size={20} />
                 </Link>
                 <Link
                   href="/me"
@@ -88,7 +88,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
             <footer className="border-t border-line bg-surface">
               <div className="mx-auto flex max-w-[680px] flex-col gap-2 px-4 py-8">
-                <p className="text-[13px] font-semibold text-ink">{SITE_NAME}</p>
+                <Logo size={17} />
                 <p className="text-[12.5px] leading-relaxed text-ink-soft">
                   입력한 값은 이 브라우저에만 저장되고 서버로 전송되지 않습니다. 계산은 전부
                   브라우저 안에서 이뤄집니다.

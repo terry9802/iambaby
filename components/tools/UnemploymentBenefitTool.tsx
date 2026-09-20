@@ -68,7 +68,7 @@ export function UnemploymentBenefitTool({ tool }: { tool: Tool }) {
         <>
           하루 <strong className="tnum font-bold text-ink">{formatKRW(outcome.result.value.dailyBenefit)}</strong>
           씩 <strong className="tnum font-bold text-ink">{outcome.result.value.benefitDays}일</strong> 받습니다.
-          한 달로 치면 약 {formatManwon(outcome.result.value.dailyBenefit * 30)}이에요.
+          한 달로 치면 약 {formatKRW(outcome.result.value.dailyBenefit * 30)}이에요.
         </>
       }
     >

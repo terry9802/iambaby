@@ -1,6 +1,6 @@
 import { loadRule } from '@/lib/rules/loader';
 import { missing, ok, type CalcOutcome, type CalcStep } from '@/lib/rules/types';
-import { addMonths, diffDays, formatKRW, formatManwon, parseDate, toISODate } from '@/lib/format';
+import { addMonths, diffDays, formatKRW, parseDate, toISODate } from '@/lib/format';
 
 /** 퇴직금 = 1일 평균임금 × 30일 × (재직일수 / 365) */
 
@@ -112,9 +112,9 @@ export function calcSeverancePay(input: SeverancePayInput): CalcOutcome<Severanc
     {
       label: '퇴직 전 3개월 임금 총액',
       formula: [
-        `월급 ${formatManwon(monthlyWage)} × 3개월`,
-        bonusPortion > 0 ? `상여금 ${formatManwon(input.annualBonus ?? 0)} × 3/12` : '',
-        leavePortion > 0 ? `연차수당 ${formatManwon(input.annualLeaveAllowance ?? 0)} × 3/12` : '',
+        `월급 ${formatKRW(monthlyWage)} × 3개월`,
+        bonusPortion > 0 ? `상여금 ${formatKRW(input.annualBonus ?? 0)} × 3/12` : '',
+        leavePortion > 0 ? `연차수당 ${formatKRW(input.annualLeaveAllowance ?? 0)} × 3/12` : '',
       ]
         .filter(Boolean)
         .join(' + '),

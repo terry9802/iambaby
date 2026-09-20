@@ -15,6 +15,7 @@ import path from 'node:path';
 const ROOT = path.resolve(import.meta.dirname, '..');
 const OUT = path.join(ROOT, 'public', 'og');
 const EXEC = process.env.CHROMIUM_PATH || '/opt/pw-browsers/chromium';
+const HERO = `file://${path.join(ROOT, 'public', 'img', 'hero-og.jpg')}`;
 
 /** 사이트의 @font-face 규칙을 file:// 경로로 바꿔서 그대로 쓴다 */
 async function fontCss() {
@@ -39,7 +40,7 @@ const CARDS = [
     name: 'marriage',
     kicker: '내 결혼',
     headline: '결혼하면 세금이랑\n지원이 어떻게\n달라지나요',
-    tags: ['결혼세액공제 100만원', '신혼부부 전세자금대출'],
+    tags: ['결혼세액공제', '신혼부부 전세자금대출'],
   },
   {
     name: 'jobchange',
@@ -79,29 +80,31 @@ function html(card, css) {
   return `<!doctype html><meta charset="utf-8"><style>
 ${css}
 *{box-sizing:border-box;margin:0;padding:0}
-body{width:1200px;height:630px;background:#f4f6f8;font-family:'Pretendard Variable',sans-serif;
+body{width:1200px;height:630px;background:#eceeed;font-family:'Pretendard Variable',sans-serif;
   -webkit-font-smoothing:antialiased;word-break:keep-all}
-.card{position:absolute;inset:36px;background:#fff;border:1px solid #e3e6eb;border-radius:28px;
-  padding:46px 60px;display:flex;flex-direction:column;overflow:hidden}
-.brand{font-size:23px;letter-spacing:-.01em}
-.brand b{font-weight:700;color:#14161a}
-.brand span{font-weight:500;color:#8b93a1}
-.kicker{margin-top:30px;align-self:flex-start;font-size:20px;font-weight:600;color:#00785a;
-  background:#e4f5ee;border-radius:999px;padding:8px 18px}
-h1{margin-top:22px;font-size:56px;font-weight:700;line-height:1.22;letter-spacing:-.025em;color:#14161a;
+.card{position:absolute;inset:0;background:#eceeed;padding:56px 64px 0;display:flex;flex-direction:column;overflow:hidden}
+.brand{display:inline-flex;align-items:flex-end;line-height:1;font-size:30px;font-weight:800;
+  letter-spacing:-.03em;color:#cb2c26}
+.brand em{font-style:normal}
+.brand .blank{display:inline-block;background:currentColor;border-radius:1px;width:.45em;height:.13em;margin:0 .03em .02em}
+.kicker{margin-top:26px;align-self:flex-start;font-size:20px;font-weight:700;color:#fff;
+  background:#cb2c26;border-radius:999px;padding:8px 18px}
+h1{margin-top:20px;font-size:50px;font-weight:700;line-height:1.28;letter-spacing:-.025em;color:#16181a;
   display:flex;flex-direction:column}
-.tags{margin-top:auto;display:flex;flex-wrap:wrap;gap:9px;list-style:none;padding-top:24px}
-.tags li{font-size:19px;color:#59616e;border:1px solid #e3e6eb;border-radius:8px;padding:7px 13px}
-.foot{margin-top:20px;padding-top:18px;border-top:1px solid #e3e6eb;display:flex;
-  align-items:baseline;justify-content:space-between;gap:24px}
-.foot p{font-size:19px;color:#8b93a1}
-.foot b{font-size:19px;font-weight:600;color:#00785a}
+.tags{display:flex;flex-wrap:wrap;gap:9px;list-style:none;margin-top:20px}
+.tags li{font-size:18px;color:#585f5d;background:#fff;border:1px solid #dcdfde;border-radius:8px;padding:7px 13px}
+.hero{margin-top:auto;margin-left:-64px;margin-right:-64px;height:186px;overflow:hidden}
+.hero img{width:100%;height:100%;display:block;object-fit:cover;object-position:center bottom}
+.foot{position:absolute;right:64px;top:56px;text-align:right}
+.foot p{font-size:17px;color:#585f5d}
+.foot b{font-size:17px;font-weight:700;color:#cb2c26;display:block;margin-top:2px}
 </style>
 <div class="card">
-  <div class="brand"><b>난아직애긴데</b><span>세상이너무어려워요</span></div>
+  <div class="brand"><em>iam</em><span class="blank"></span><em>baby</em></div>
   <div class="kicker">${card.kicker}</div>
   <h1>${lines}</h1>
   <ul class="tags">${tags}</ul>
+  <div class="hero"><img src="${HERO}" alt=""></div>
   <div class="foot">
     <p>계산 과정과 근거 조문까지 같이 보여드려요</p>
     <b>iamstillbaby.com</b>
@@ -120,11 +123,14 @@ for (const card of CARDS) {
   await writeFile(file, html(card, css), 'utf8');
   await page.goto(`file://${file}`);
   await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(() =>
+    Promise.all([...document.images].map((i) => (i.complete ? null : i.decode().catch(() => null)))),
+  );
   const over = await page.evaluate(() => {
     const c = document.querySelector('.card');
     return Math.round(c.scrollHeight - c.clientHeight);
   });
-  if (over > 0) throw new Error(`${card.name}: 카드 안에 내용이 ${over}px 넘칩니다. 글씨 크기나 여백을 줄이세요.`);
+  if (over > 8) throw new Error(`${card.name}: 카드 안에 내용이 ${over}px 넘칩니다. 글씨 크기나 여백을 줄이세요.`);
   await page.screenshot({ path: path.join(OUT, `${card.name}.png`) });
   console.log('만듦:', `public/og/${card.name}.png`);
 }

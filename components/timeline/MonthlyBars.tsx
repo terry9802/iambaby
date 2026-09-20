@@ -1,4 +1,4 @@
-import { formatKRW, formatManwon } from '@/lib/format';
+import { formatKRW } from '@/lib/format';
 
 export type BarRow = {
   label: string;
@@ -41,7 +41,7 @@ export function MonthlyBars({ rows, caption }: { rows: BarRow[]; caption?: strin
         ))}
       </ul>
       <p className="tnum mt-3 border-t border-line pt-2.5 text-right text-[12.5px] text-ink-soft">
-        합계 {formatManwon(rows.reduce((acc, r) => acc + r.amount, 0))}
+        합계 {formatKRW(rows.reduce((acc, r) => acc + r.amount, 0))}
       </p>
     </section>
   );

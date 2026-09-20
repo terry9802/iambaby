@@ -1,5 +1,5 @@
 import type { CalcStep } from '@/lib/rules/types';
-import { formatKRW, formatManwon } from '@/lib/format';
+import { formatKRW } from '@/lib/format';
 
 function renderValue(step: CalcStep): string {
   switch (step.unit) {
@@ -48,7 +48,7 @@ function StepRow({ step, depth = 0 }: { step: CalcStep; depth?: number }) {
           <p className="text-[12.5px] leading-relaxed text-ink-soft">{step.note}</p>
         )}
         {isMoney && depth === 0 && step.result >= 10000 && (
-          <p className="tnum text-[12px] text-ink-faint">= {formatManwon(step.result)}</p>
+          <p className="tnum text-[12px] text-ink-faint">= {formatKRW(step.result)}</p>
         )}
       </div>
 

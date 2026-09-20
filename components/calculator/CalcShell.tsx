@@ -60,7 +60,7 @@ export function CalcShell<T>({
           </span>
           {stale && <StaleBadge />}
         </div>
-        <h1 className="text-[24px] font-bold leading-snug tracking-[-0.01em] text-ink">
+        <h1 className="text-[21px] font-bold leading-[1.4] tracking-[-0.02em] text-ink">
           {tool.question}
         </h1>
         <p className="text-[14px] leading-relaxed text-ink-soft">{tool.lead}</p>
@@ -81,7 +81,7 @@ export function CalcShell<T>({
             )}
             {exampleFields && exampleFields.length > 0 && (
               <p className="mt-3.5 rounded-[8px] bg-sunk px-3 py-2.5 text-[12.5px] leading-relaxed text-ink-soft">
-                아직 프로필이 비어 있어서 {exampleFields.join(', ')}를 예시값으로 채워 계산했어요.
+                아직 프로필이 비어 있어서 {exampleFields.join(', ')} 항목을 예시값으로 채워 계산했어요.
                 아래에서 내 값으로 바꾸면 바로 다시 계산됩니다.
               </p>
             )}

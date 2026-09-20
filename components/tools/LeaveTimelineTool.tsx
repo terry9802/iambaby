@@ -31,7 +31,7 @@ export function LeaveTimelineTool({ tool, fallbackToday }: { tool: Tool; fallbac
     const seeder = new Seeder<LeaveTimelineInput>();
     seeder.pick('monthlyWage', hydrated ? profile.income?.monthlyWage : undefined, {
       value: 3_000_000,
-      label: '통상임금 300만원',
+      label: '통상임금 3,000,000원',
     });
     const children = hydrated ? (profile.children ?? []) : [];
     seeder.pick('dueDate', children[children.length - 1]?.birthDate, {

@@ -33,7 +33,7 @@ export default function ContactPage() {
       <BackButton fallbackHref="/" label="홈" />
 
       <header className="flex flex-col gap-2">
-        <h1 className="text-[24px] font-bold leading-snug tracking-[-0.015em] text-ink">문의</h1>
+        <h1 className="text-[21px] font-bold leading-[1.4] tracking-[-0.02em] text-ink">문의</h1>
         <p className="text-[14px] leading-relaxed text-ink-soft">
           틀린 숫자를 발견하셨다면 알려주세요. 가장 먼저 처리합니다.
         </p>

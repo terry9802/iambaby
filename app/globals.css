@@ -7,33 +7,47 @@
   그래서 색은 적게 쓰고(중립 회색 + 잉크블루 하나), 강조는 색이 아니라 크기와 굵기로 만든다.
 */
 @theme {
-  --color-ground: #f4f6f8;
+  /*
+    사진(빨간 횡단보도를 건너는 아이들)에서 뽑은 색.
+    빨강 #cb2c26은 워드마크에서, 회색 #d3d6d5는 스튜디오 배경에서 그대로 가져왔다.
+  */
+  --color-ground: #eceeed;      /* 사진 회색을 밝힌 것. 페이지 바탕 */
+  --color-band: #d3d6d5;        /* 사진과 같은 회색. 사진이 얹히는 구획 */
   --color-surface: #ffffff;
-  --color-sunk: #f8f9fb;
-  --color-line: #e3e6eb;
-  --color-line-strong: #ccd2db;
+  --color-sunk: #f4f6f5;
+  --color-line: #dcdfde;
+  --color-line-strong: #c2c6c5;
 
-  --color-ink: #14161a;
-  --color-ink-soft: #59616e;
-  --color-ink-faint: #8b93a1;
+  --color-ink: #16181a;
+  --color-ink-soft: #585f5d;
+  --color-ink-faint: #8b918f;
 
-  /* 프라이머리 #009e6e. 다만 흰 글씨를 얹으면 대비가 3.4:1이라 작은 글씨에는 못 쓴다.
-     그래서 채움·막대·테두리에는 brand를, 버튼 배경과 링크 글씨에는 brand-strong(5.5:1)을 쓴다. */
-  --color-brand: #009e6e;
-  --color-brand-strong: #00785a;
-  --color-brand-deep: #005f47;
-  --color-brand-soft: #e4f5ee;
+  /*
+    브랜드 빨강. 흰 배경에서 5.3:1이라 본문 글씨로 써도 되고,
+    이 색 위에 흰 글씨를 얹어도 같은 대비가 나온다. 그래서 brand와 brand-strong을 같은 값으로 둔다.
+  */
+  --color-brand: #cb2c26;
+  --color-brand-strong: #cb2c26;
+  --color-brand-deep: #a3211c;  /* 눌렀을 때 */
+  --color-brand-soft: #fceceb;
+  --color-stripe: #c73d35;      /* 횡단보도 띠 그래픽 */
 
   /* 배우자처럼 본인과 나란히 놓고 구분해야 하는 두 번째 계열 */
   --color-partner: #33608f;
   --color-partner-soft: #eaf1f7;
 
-  --color-good: #00785a;
-  --color-good-soft: #e4f5ee;
-  --color-alert: #9a5209;
-  --color-alert-soft: #fdf1e2;
-  --color-danger: #a92620;
-  --color-danger-soft: #fbebea;
+  --color-good: #17714f;
+  --color-good-soft: #e3f2eb;
+
+  /*
+    빨강이 브랜드가 됐으므로 경고를 빨강으로 두면 무엇이 경고인지 구분이 안 된다.
+    그래서 주의는 호박색으로 옮기고, '지남·미달·마감' 같은 상태는 색으로 겁주는 대신
+    중립 회색으로 가라앉힌다. 빨강은 브랜드와 핵심 숫자에만 쓴다.
+  */
+  --color-alert: #8a5510;
+  --color-alert-soft: #fcf1e2;
+  --color-danger: #5a6260;
+  --color-danger-soft: #e7eae9;
 
   --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
     "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
@@ -41,6 +55,7 @@
   --radius-card: 12px;
   --radius-control: 8px;
 }
+
 
 :root {
   color-scheme: light;

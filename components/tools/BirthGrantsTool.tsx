@@ -70,7 +70,7 @@ function GrantCard({ grant }: { grant: ResolvedGrant }) {
           {grant.monthlyBreakdown
             .map(
               (b) =>
-                `생후 ${b.fromMonth}~${b.toMonth}개월 월 ${formatManwon(b.amount)}`,
+                `생후 ${b.fromMonth}~${b.toMonth}개월 월 ${formatKRW(b.amount)}`,
             )
             .join(' · ')}
         </p>
@@ -208,7 +208,7 @@ export function BirthGrantsTool({ tool, fallbackToday }: { tool: Tool; fallbackT
           {outcome.ok && outcome.result.value.districtStatus === 'unverified' ? (
             <ConsultBox
               title={`${outcome.result.value.districtName ?? '이 자치구'}는 전화로 확인하는 게 빠릅니다`}
-              lead={`구청 홈페이지에서 금액을 찾지 못했습니다. 지어낸 숫자를 보여드리는 대신 물어보실 곳을 안내해 드려요. 확인된 8개 구 평균은 ${formatManwon(outcome.result.value.districtEstimate)} 정도입니다.`}
+              lead={`구청 홈페이지에서 금액을 찾지 못했습니다. 지어낸 숫자를 보여드리는 대신 물어보실 곳을 안내해 드려요. 확인된 8개 구 평균은 ${formatKRW(outcome.result.value.districtEstimate)} 정도입니다.`}
               phones={[
                 {
                   label: '서울 다산콜센터',
@@ -307,7 +307,7 @@ export function BirthGrantsTool({ tool, fallbackToday }: { tool: Tool; fallbackT
           {input.sido === 'seoul' && outcome.ok && outcome.result.value.districtStatus === 'unverified' && (
             <MoneyField
               label="구청에서 알려준 금액"
-              hint={`전화로 확인하셨으면 넣어주세요. 합계에 함께 더해 드립니다. 확인된 구들의 평균은 ${formatManwon(outcome.result.value.districtEstimate)} 정도예요.`}
+              hint={`전화로 확인하셨으면 넣어주세요. 합계에 함께 더해 드립니다. 확인된 구들의 평균은 ${formatKRW(outcome.result.value.districtEstimate)} 정도예요.`}
               value={input.districtAmount}
               placeholder={String(outcome.result.value.districtEstimate)}
               onChange={(districtAmount) => set({ districtAmount })}

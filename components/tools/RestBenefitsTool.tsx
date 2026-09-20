@@ -48,12 +48,12 @@ function BenefitCard({ benefit }: { benefit: RestBenefit }) {
         <span className="tnum shrink-0 text-right">
           <span className="block text-[16px] font-bold text-ink">
             {benefit.unit === 'month'
-              ? `월 ${formatManwon(benefit.amount)}`
+              ? `월 ${formatKRW(benefit.amount)}`
               : formatKRW(benefit.amount)}
           </span>
           {benefit.myCost > 0 && (
             <span className="block text-[11.5px] text-ink-faint">
-              내 부담 {formatManwon(benefit.myCost)}
+              내 부담 {formatKRW(benefit.myCost)}
             </span>
           )}
         </span>
@@ -212,7 +212,7 @@ export function RestBenefitsTool({ tool, fallbackToday }: { tool: Tool; fallback
       >
         <ResultAside>
           다만 <strong className="font-semibold text-ink">근로자 휴가지원사업</strong>은 회사가
-          신청만 해주면 20만원을 내고 40만원을 받습니다. 중소기업에 다니신다면 총무·인사팀에 한 번
+          신청만 해주면 200,000원을 내고 400,000원을 받습니다. 중소기업에 다니신다면 총무·인사팀에 한 번
           물어볼 만해요.
         </ResultAside>
       </ResultHeadline>
@@ -322,13 +322,13 @@ export function RestBenefitsTool({ tool, fallbackToday }: { tool: Tool; fallback
               { value: 'nonCapital', label: '비수도권' },
             ]}
             autofilled={seeded.autofilled.has('region') && !('region' in edits)}
-            hint="청년문화예술패스는 비수도권이 5만원 더 많습니다."
+            hint="청년문화예술패스는 비수도권이 50,000원 더 많습니다."
           />
           <ToggleField
             label="장애가 있어요"
             checked={input.disabled ?? false}
             onChange={(v) => edit({ disabled: v })}
-            hint="스포츠강좌이용권은 장애인이면 소득과 관계없이 받고, 금액도 월 11만원으로 더 많습니다."
+            hint="스포츠강좌이용권은 장애인이면 소득과 관계없이 받고, 금액도 월 110,000원으로 더 많습니다."
           />
         </FieldGroup>
       }

@@ -20,7 +20,7 @@ export function ParentalLeaveTool({ tool, fallbackToday }: { tool: Tool; fallbac
     const seeder = new Seeder<ParentalLeaveInput>();
     seeder.pick('monthlyWage', hydrated ? profile.income?.monthlyWage : undefined, {
       value: 3_000_000,
-      label: '통상임금 300만원',
+      label: '통상임금 3,000,000원',
     });
     seeder.set('singleParent', hydrated ? profile.singleParent : undefined);
     return {
@@ -81,7 +81,7 @@ export function ParentalLeaveTool({ tool, fallbackToday }: { tool: Tool; fallbac
       <ResultAside>
         달마다 같은 금액이 아니에요. 1~3개월차가 가장 많고 7개월차부터 확 줄어듭니다. 평균은 월{' '}
         <span className="tnum font-semibold text-ink">
-          {formatManwon(outcome.result.value.averageMonthly)}
+          {formatKRW(outcome.result.value.averageMonthly)}
         </span>
         예요.
       </ResultAside>
@@ -106,9 +106,9 @@ export function ParentalLeaveTool({ tool, fallbackToday }: { tool: Tool; fallbac
               amount: m.amount,
               emphasis: m.month <= 3,
               note: m.capped
-                ? `상한 ${formatManwon(m.cap)}에 걸렸어요`
+                ? `상한 ${formatKRW(m.cap)}에 걸렸어요`
                 : m.floored
-                  ? `하한 ${formatManwon(m.floor)}이 적용됐어요`
+                  ? `하한 ${formatKRW(m.floor)}이 적용됐어요`
                   : `통상임금의 ${Math.round(m.rate * 100)}%`,
             }))}
           />
@@ -135,7 +135,7 @@ export function ParentalLeaveTool({ tool, fallbackToday }: { tool: Tool; fallbac
           />
           <ToggleField
             label="한부모예요"
-            hint="한부모는 첫 3개월 상한액이 250만원이 아니라 300만원입니다."
+            hint="한부모는 첫 3개월 상한액이 2,500,000원이 아니라 3,000,000원입니다."
             checked={input.singleParent ?? false}
             onChange={(singleParent) => set({ singleParent })}
           />

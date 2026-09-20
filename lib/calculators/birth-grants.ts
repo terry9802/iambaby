@@ -1,6 +1,6 @@
 import { loadRule } from '@/lib/rules/loader';
 import { missing, ok, type CalcOutcome, type CalcStep, type RuleMeta } from '@/lib/rules/types';
-import { addDays, diffDays, formatKRW, formatManwon, parseDate, toISODate } from '@/lib/format';
+import { addDays, diffDays, formatKRW, parseDate, toISODate } from '@/lib/format';
 
 /**
  * 7-3 출산·육아 지원금 통합 조회.
@@ -296,7 +296,7 @@ export function checkBirthGrants(input: BirthGrantsInput): CalcOutcome<BirthGran
           ? g.monthlyBreakdown
               .map(
                 (b) =>
-                  `${formatManwon(b.amount)} × ${b.toMonth - b.fromMonth + 1}개월(생후 ${b.fromMonth}~${b.toMonth}개월)`,
+                  `${formatKRW(b.amount)} × ${b.toMonth - b.fromMonth + 1}개월(생후 ${b.fromMonth}~${b.toMonth}개월)`,
               )
               .join(' + ')
           : '한 번 지급',
@@ -310,14 +310,14 @@ export function checkBirthGrants(input: BirthGrantsInput): CalcOutcome<BirthGran
     })),
     {
       label: '전 기간 합계',
-      formula: grants.map((g) => formatManwon(g.totalAmount)).join(' + '),
+      formula: grants.map((g) => formatKRW(g.totalAmount)).join(' + '),
       result: totalAmount,
       unit: 'KRW',
       note: '아동수당처럼 몇 해에 걸쳐 나오는 돈까지 모두 더한 금액이에요.',
     },
     {
       label: '첫 1년 동안 들어오는 돈',
-      formula: grants.map((g) => formatManwon(g.firstYearAmount)).join(' + '),
+      formula: grants.map((g) => formatKRW(g.firstYearAmount)).join(' + '),
       result: firstYearAmount,
       unit: 'KRW',
       note: '아이가 태어난 뒤 12개월 안에 실제로 통장에 들어오는 금액이에요.',
@@ -326,7 +326,7 @@ export function checkBirthGrants(input: BirthGrantsInput): CalcOutcome<BirthGran
 
   const assumptions = [
     '소득이나 재산과 무관하게 모두에게 나오는 지원만 담았어요. 저소득·다자녀·장애 가정 대상 지원은 빠져 있습니다.',
-    '아동수당은 수도권 기준 월 10만원으로 계산했어요. 비수도권과 인구감소지역은 더 많이 받습니다.',
+    '아동수당은 수도권 기준 월 100,000원으로 계산했어요. 비수도권과 인구감소지역은 더 많이 받습니다.',
     '어린이집이나 유치원을 이용하면 부모급여에서 보육료를 뺀 차액만 현금으로 들어와요.',
   ];
 

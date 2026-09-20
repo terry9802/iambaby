@@ -76,7 +76,7 @@ export function JobChangeTool({ tool }: { tool: Tool }) {
       <ResultAside>
         지금과 실수령액이 같아지는 연봉은{' '}
         <strong className="tnum font-bold text-brand-strong">
-          {formatManwon(outcome.result.value.breakEvenSalary)}
+          {formatKRW(outcome.result.value.breakEvenSalary)}
         </strong>
         이에요. 이보다 낮게 부르면 손해입니다.
       </ResultAside>
@@ -181,7 +181,7 @@ export function JobChangeTool({ tool }: { tool: Tool }) {
           />
           <MoneyField
             label="지금 회사 월 비과세 수당"
-            hint="식대 등 세금이 안 붙는 수당이에요. 월 20만원까지 인정됩니다."
+            hint="식대 등 세금이 안 붙는 수당이에요. 월 200,000원까지 인정됩니다."
             value={input.currentTaxFree}
             placeholder="200,000"
             onChange={(currentTaxFree) => set({ currentTaxFree })}

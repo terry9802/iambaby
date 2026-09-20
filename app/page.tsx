@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import { ARTICLES } from '@/content/index';
 import { ProfileBanner } from '@/components/profile/ProfileBanner';
 import { HomeTabs } from '@/components/home/HomeTabs';
@@ -24,10 +25,25 @@ export default function HomePage() {
   }));
 
   return (
-    <div className="mx-auto flex max-w-[680px] flex-col gap-5 px-4 pb-16 pt-6">
+    <div className="mx-auto flex max-w-[680px] flex-col gap-5 px-4 pb-16 pt-0">
       <SiteJsonLd />
-      <header className="flex flex-col gap-2.5">
-        <h1 className="text-[26px] font-bold leading-snug tracking-[-0.015em] text-ink">
+      {/*
+        첫 화면에서 가장 큰 그림이라 priority를 준다. 미리 받아두지 않으면
+        글보다 늦게 떠서 화면이 한 번 밀린다.
+      */}
+      <div className="-mx-4 bg-band">
+        <Image
+          src="/img/hero.jpg"
+          alt="빨간 횡단보도를 나란히 건너는 아이들"
+          width={1600}
+          height={462}
+          priority
+          sizes="(max-width: 680px) 100vw, 680px"
+          className="h-auto w-full"
+        />
+      </div>
+      <header className="flex flex-col gap-2.5 pt-1">
+        <h1 className="text-[22px] font-bold leading-[1.4] tracking-[-0.02em] text-ink">
           몰라도 괜찮아요.
           <br />
           뭘 모르는지 몰라도 괜찮아요.

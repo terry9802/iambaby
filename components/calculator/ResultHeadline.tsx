@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { formatKRW, formatManwon } from '@/lib/format';
+import { formatKRW } from '@/lib/format';
 
 /**
  * 결과 첫 화면. 큰 숫자 하나와 그 숫자를 읽는 법.
@@ -22,12 +22,10 @@ export function ResultHeadline({
   return (
     <div className="flex flex-col gap-1">
       <p className="text-[13px] font-medium text-ink-soft">{label}</p>
-      <p className="tnum text-[32px] font-bold leading-[1.15] tracking-[-0.02em] text-ink">
+      {/* 한 화면에서 가장 큰 글씨. 숫자가 혼자 튀지 않게 26px로 잡는다. */}
+      <p className="tnum text-[26px] font-bold leading-[1.25] tracking-[-0.02em] text-brand">
         {valueText ?? formatKRW(value ?? 0)}
       </p>
-      {value !== undefined && value >= 10000 && (
-        <p className="tnum text-[14px] font-medium text-ink-soft">{formatManwon(value)}</p>
-      )}
       {sub && <div className="mt-2 text-[13.5px] leading-relaxed text-ink-soft">{sub}</div>}
       {children}
     </div>

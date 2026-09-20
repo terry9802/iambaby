@@ -118,8 +118,8 @@ export function JeonseLoanTool({ tool }: { tool: Tool }) {
           금리는 연 {formatPercent(outcome.result.value.rateMin)} ~{' '}
           {formatPercent(outcome.result.value.rateMax)} 사이이고, 매달 내는 이자는{' '}
           <span className="tnum font-semibold text-ink">
-            {formatManwon(outcome.result.value.monthlyInterestMin)} ~{' '}
-            {formatManwon(outcome.result.value.monthlyInterestMax)}
+            {formatKRW(outcome.result.value.monthlyInterestMin)} ~{' '}
+            {formatKRW(outcome.result.value.monthlyInterestMax)}
           </span>{' '}
           정도입니다.
         </ResultAside>
@@ -157,7 +157,7 @@ export function JeonseLoanTool({ tool }: { tool: Tool }) {
                   <span
                     className={
                       'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full ' +
-                      (check.passed ? 'bg-brand-soft text-brand-strong' : 'bg-danger-soft text-danger')
+                      (check.passed ? 'bg-good-soft text-good' : 'bg-danger-soft text-danger')
                     }
                   >
                     <Icon name={check.passed ? 'check' : 'close'} size={11} strokeWidth={2.5} />
@@ -205,14 +205,14 @@ export function JeonseLoanTool({ tool }: { tool: Tool }) {
           />
           <MoneyField
             label="부부합산 연소득 (세전)"
-            hint="두 사람 연봉을 더한 금액이에요. 7,500만원을 넘으면 이 상품은 받을 수 없습니다."
+            hint="두 사람 연봉을 더한 금액이에요. 75,000,000원을 넘으면 이 상품은 받을 수 없습니다."
             value={input.householdIncome}
             placeholder="60,000,000"
             onChange={(householdIncome) => set({ householdIncome })}
           />
           <MoneyField
             label="부부합산 순자산"
-            hint="예금, 주식, 자동차 등을 더하고 빚을 뺀 금액이에요. 3억 4,500만원 이하여야 합니다."
+            hint="예금, 주식, 자동차 등을 더하고 빚을 뺀 금액이에요. 345,000,000원 이하여야 합니다."
             value={input.netAsset}
             placeholder="50,000,000"
             onChange={(netAsset) => set({ netAsset })}

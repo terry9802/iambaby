@@ -96,7 +96,7 @@ export function SocialDuesTool({ tool }: { tool: Tool }) {
         <>
           너무 적지도 많지도 않은 선은{' '}
           <strong className="tnum font-semibold text-ink">
-            {formatManwon(outcome.result.value.min)} ~ {formatManwon(outcome.result.value.max)}
+            {formatKRW(outcome.result.value.min)} ~ {formatKRW(outcome.result.value.max)}
           </strong>{' '}
           사이예요.
         </>
@@ -110,7 +110,7 @@ export function SocialDuesTool({ tool }: { tool: Tool }) {
           </>
         ) : outcome.result.value.mealFloor > 0 ? (
           <>
-            식사하시는 분이 있어 식대 {formatManwon(outcome.result.value.mealFloor)}을 밑돌지 않게
+            식사하시는 분이 있어 식대 {formatKRW(outcome.result.value.mealFloor)}을 밑돌지 않게
             잡았어요.
           </>
         ) : (

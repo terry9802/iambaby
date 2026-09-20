@@ -1,6 +1,6 @@
 import { loadRule } from '@/lib/rules/loader';
 import { missing, ok, type CalcOutcome, type CalcStep } from '@/lib/rules/types';
-import { formatKRW, formatManwon, formatPercent } from '@/lib/format';
+import { formatKRW, formatPercent } from '@/lib/format';
 
 /**
  * 신혼부부전용 전세자금 대출 자격 판정기.
@@ -110,12 +110,12 @@ export function checkNewlywedJeonseLoan(
     {
       label: '부부합산 연소득',
       passed: income <= rule.incomeLimit,
-      detail: `${formatManwon(income)} / 기준 ${formatManwon(rule.incomeLimit)} 이하`,
+      detail: `${formatKRW(income)} / 기준 ${formatKRW(rule.incomeLimit)} 이하`,
     },
     {
       label: '부부합산 순자산',
       passed: netAsset <= rule.netAssetLimit,
-      detail: `${formatManwon(netAsset)} / 기준 ${formatManwon(rule.netAssetLimit)} 이하`,
+      detail: `${formatKRW(netAsset)} / 기준 ${formatKRW(rule.netAssetLimit)} 이하`,
     },
     {
       label: '혼인 기간',
@@ -132,7 +132,7 @@ export function checkNewlywedJeonseLoan(
     {
       label: `${regionLabel} 보증금 한도`,
       passed: deposit <= rule.depositCeiling[region],
-      detail: `${formatManwon(deposit)} / 기준 ${formatManwon(rule.depositCeiling[region])} 이하`,
+      detail: `${formatKRW(deposit)} / 기준 ${formatKRW(rule.depositCeiling[region])} 이하`,
     },
   ];
 
@@ -169,7 +169,7 @@ export function checkNewlywedJeonseLoan(
   const steps: CalcStep[] = [
     {
       label: '보증금의 80%까지',
-      formula: `${formatManwon(deposit)} × 80%`,
+      formula: `${formatKRW(deposit)} × 80%`,
       result: byRatio,
       unit: 'KRW',
     },
@@ -182,14 +182,14 @@ export function checkNewlywedJeonseLoan(
     {
       label: '빌릴 수 있는 금액',
       formula: eligible
-        ? `둘 중 작은 값 (${formatManwon(byRatio)}, ${formatManwon(byRegion)})`
+        ? `둘 중 작은 값 (${formatKRW(byRatio)}, ${formatKRW(byRegion)})`
         : '요건을 못 채워 대출이 되지 않습니다',
       result: maxLoan,
       unit: 'KRW',
     },
     {
       label: '내가 따로 마련할 금액',
-      formula: `${formatManwon(deposit)} − ${formatManwon(maxLoan)}`,
+      formula: `${formatKRW(deposit)} − ${formatKRW(maxLoan)}`,
       result: ownFunds,
       unit: 'KRW',
       note: '보증금에서 대출금을 뺀 나머지입니다. 여기에 중개수수료와 이사비가 더 듭니다.',
@@ -212,7 +212,7 @@ export function checkNewlywedJeonseLoan(
   if (eligible) {
     steps.push({
       label: '월 이자 (일시상환)',
-      formula: `${formatManwon(maxLoan)} × 연 ${formatPercent(rateMin)}~${formatPercent(rateMax)} ÷ 12개월`,
+      formula: `${formatKRW(maxLoan)} × 연 ${formatPercent(rateMin)}~${formatPercent(rateMax)} ÷ 12개월`,
       result: monthlyInterestMax,
       unit: 'KRW',
       note: `소득과 보증금 구간에 따라 월 ${formatKRW(monthlyInterestMin)} ~ ${formatKRW(monthlyInterestMax)} 사이입니다.`,
@@ -241,7 +241,7 @@ export function checkNewlywedJeonseLoan(
   }
   if (eligible && byRegion < byRatio) {
     warnings.push(
-      `보증금의 80%는 ${formatManwon(byRatio)}이지만 ${regionLabel} 한도가 ${formatManwon(byRegion)}이라 거기서 막힙니다.`,
+      `보증금의 80%는 ${formatKRW(byRatio)}이지만 ${regionLabel} 한도가 ${formatKRW(byRegion)}이라 거기서 막힙니다.`,
     );
   }
 

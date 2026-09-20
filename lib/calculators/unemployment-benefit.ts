@@ -1,6 +1,6 @@
 import { loadRule } from '@/lib/rules/loader';
 import { missing, ok, type CalcOutcome, type CalcStep } from '@/lib/rules/types';
-import { formatKRW, formatManwon } from '@/lib/format';
+import { formatKRW } from '@/lib/format';
 
 /** 실업급여(구직급여) = 1일 구직급여액 × 소정급여일수 */
 
@@ -88,7 +88,7 @@ export function calcUnemploymentBenefit(
   const steps: CalcStep[] = [
     {
       label: '1일 평균임금',
-      formula: `월 ${formatManwon(monthlyWage)} × 3개월 ÷ 91일`,
+      formula: `월 ${formatKRW(monthlyWage)} × 3개월 ÷ 91일`,
       result: Math.round(dailyAverageWage),
       unit: 'KRW',
     },

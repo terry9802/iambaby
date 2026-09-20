@@ -194,7 +194,7 @@ export function ProfileForm() {
         <FieldGroup>
           <ToggleField
             label="한부모예요"
-            hint="육아휴직 급여 첫 3개월 상한액이 250만원에서 300만원으로 올라갑니다."
+            hint="육아휴직 급여 첫 3개월 상한액이 2,500,000원에서 3,000,000원으로 올라갑니다."
             checked={current.singleParent ?? false}
             onChange={(singleParent) => edit({ singleParent })}
           />
@@ -267,7 +267,7 @@ export function ProfileForm() {
           <div className="mt-3 flex flex-wrap gap-2">
             <button
               type="button"
-              className="rounded-[8px] bg-danger px-3 py-2 text-[13px] font-semibold text-white"
+              className="rounded-[8px] bg-brand px-3 py-2 text-[13px] font-semibold text-white"
               onClick={() => {
                 reset();
                 setDraft(null);
