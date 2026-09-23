@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkBirthGrants, listSeoulDistricts } from '@/lib/calculators/birth-grants';
+import { checkBirthGrants, listSigungu } from '@/lib/calculators/birth-grants';
 
 const MAN = 10000;
 const BIRTH = '2026-03-01';
@@ -183,9 +183,44 @@ describe('출산·육아 지원금 통합 조회', () => {
   });
 
   it('금액을 확인한 자치구는 여덟 곳이고 전부 출처가 붙어 있다', () => {
-    const seoul = listSeoulDistricts(BIRTH);
+    const seoul = listSigungu('seoul', BIRTH);
     expect(seoul.length).toBe(25);
-    expect(seoul.filter((d) => d.status === 'verified').length).toBe(8);
+    expect(seoul.filter((d: { status: string }) => d.status === 'verified').length).toBe(8);
+  });
+
+  it('시도를 고르면 그 시도의 시·군·구만 나온다', () => {
+    expect(listSigungu('gyeonggi', BIRTH).length).toBe(31);
+    // 룰이 없는 지역은 빈 목록이라 화면에 선택칸 자체가 안 뜬다.
+    expect(listSigungu('busan', BIRTH)).toEqual([]);
+    expect(listSigungu(undefined, BIRTH)).toEqual([]);
+  });
+
+  it('경기도는 산후조리비가 나오고, 사업 종료일이 마감으로 잡힌다', () => {
+    const out = checkBirthGrants({
+      childBirthDate: '2026-09-01',
+      birthOrder: 'first',
+      sido: 'gyeonggi',
+      today: '2026-09-23',
+    });
+    if (!out.ok) throw new Error('계산 실패');
+    const care = out.result.value.grants.find((g) => g.id === 'gyeonggi-postpartum-care');
+    expect(care?.totalAmount).toBe(50 * MAN);
+    // 출생일 기준으로는 1년 뒤지만, 사업이 9월 30일에 끝나므로 그날이 마감이다.
+    expect(care?.deadline?.dueAt).toBe('2026-09-30');
+    expect(care?.deadline?.dDay).toBe(7);
+    expect(care?.deadline?.status).toBe('open');
+  });
+
+  it('사업 종료일이 지나면 마감된 것으로 잡는다', () => {
+    const out = checkBirthGrants({
+      childBirthDate: '2026-09-01',
+      birthOrder: 'first',
+      sido: 'gyeonggi',
+      today: '2026-10-05',
+    });
+    if (!out.ok) throw new Error('계산 실패');
+    const care = out.result.value.grants.find((g) => g.id === 'gyeonggi-postpartum-care');
+    expect(care?.deadline?.status).toBe('passed');
   });
 
   it('서울 밖 지역은 중앙정부 지원만 보여주고 그 사실을 알린다', () => {

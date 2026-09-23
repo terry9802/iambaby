@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { listSeoulDistricts } from '@/lib/calculators/birth-grants';
+import { listSigungu, listSupportedSido } from '@/lib/calculators/birth-grants';
 import { toISODate } from '@/lib/format';
 import { useProfile } from '@/lib/profile/context';
 import {
@@ -21,7 +21,8 @@ import {
 } from '@/components/ui/fields';
 import { Icon } from '@/components/ui/Icon';
 
-const DISTRICTS = listSeoulDistricts(toISODate(new Date()));
+const TODAY = toISODate(new Date());
+const SIDO = listSupportedSido(TODAY);
 
 function Section({
   title,
@@ -50,6 +51,8 @@ export function ProfileForm() {
   const [confirmReset, setConfirmReset] = useState(false);
 
   const current = draft ?? profile;
+  // 시도를 고르면 그 시도의 시·군·구만 뜬다. 룰이 없는 지역이면 빈 목록이다.
+  const sigungu = useMemo(() => listSigungu(current.residence?.sido, TODAY), [current.residence?.sido]);
   const dirty = useMemo(
     () => draft !== null && JSON.stringify(draft) !== JSON.stringify(profile),
     [draft, profile],
@@ -200,21 +203,21 @@ export function ProfileForm() {
           />
           <SegmentedField<string>
             label="사는 곳 (시 · 도)"
-            hint="지자체 지원금은 지금 서울만 정리돼 있어요."
+            hint={`지자체 지원금은 지금 ${SIDO.map((s) => s.name).join(', ')}가 정리돼 있어요.`}
             value={current.residence?.sido}
             onChange={(sido) => edit({ residence: { sido, sigungu: undefined } })}
             options={[
-              { value: 'seoul', label: '서울' },
+              ...SIDO.map((s) => ({ value: s.code as string, label: s.name.replace(/(특별시|광역시|도)$/, '') })),
               { value: 'other', label: '그 밖의 지역' },
             ]}
           />
-          {current.residence?.sido === 'seoul' && (
+          {sigungu.length > 0 && (
             <SelectField<string>
-              label="자치구"
-              placeholder="구를 골라 주세요"
+              label="시 · 군 · 구"
+              placeholder="사는 곳을 골라 주세요"
               value={current.residence?.sigungu}
-              onChange={(sigungu) => edit({ residence: { ...current.residence, sigungu } })}
-              options={DISTRICTS.map((d) => ({
+              onChange={(value) => edit({ residence: { ...current.residence, sigungu: value } })}
+              options={sigungu.map((d) => ({
                 value: d.code,
                 label: d.status === 'verified' ? d.name : `${d.name} (자체 지원 확인 중)`,
               }))}

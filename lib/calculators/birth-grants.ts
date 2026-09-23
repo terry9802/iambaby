@@ -1,4 +1,4 @@
-import { loadRule } from '@/lib/rules/loader';
+import { loadRule, type RuleId } from '@/lib/rules/loader';
 import { missing, ok, type CalcOutcome, type CalcStep, type RuleMeta } from '@/lib/rules/types';
 import { addDays, diffDays, formatKRW, parseDate, toISODate } from '@/lib/format';
 
@@ -25,6 +25,11 @@ export type RawGrant = {
   applyOffsetDays?: number;
   /** 창구가 열린 뒤 며칠 동안 신청할 수 있는가 */
   applyWindowDays?: number;
+  /**
+   * 사업 자체가 끝나는 날. 출생일 기준 기한이 아직 남았어도 이 날이 지나면 못 받는다.
+   * 경기도 산후조리비처럼 예산이 끊겨 중단되는 지원에 쓴다.
+   */
+  applyHardDeadline?: string;
   applyDeadlineNote?: string;
   applyAt: string;
   applyUrl?: string;
@@ -32,8 +37,9 @@ export type RawGrant = {
 };
 
 export type NationalRule = { items: RawGrant[] };
-export type SeoulRule = {
+export type SidoRule = {
   sido: { code: string; name: string; items: RawGrant[]; extraNotes: string[] };
+  /** 그 시도에 속한 시·군·구 */
   districts: {
     code: string;
     name: string;
@@ -49,6 +55,26 @@ export type SeoulRule = {
     lookupUrl?: string;
   }[];
 };
+
+/*
+  시도 코드에서 룰 파일을 찾는 표. 예전에는 계산기 안에 "서울이면"이 네 군데
+  박혀 있어서 다른 지역을 붙이려면 계산 로직을 고쳐야 했다. 이제 지역을
+  늘리는 일은 룰 파일 하나와 이 표의 한 줄이다.
+*/
+const SIDO_RULES = {
+  seoul: 'birth-grants-seoul',
+  gyeonggi: 'birth-grants-gyeonggi',
+} as const satisfies Record<string, RuleId>;
+
+export type SidoCode = keyof typeof SIDO_RULES;
+
+/** 지역 선택 UI에 쓸 시도 목록. 룰이 있는 곳만 고를 수 있어야 한다. */
+export function listSupportedSido(asOf: string): { code: SidoCode; name: string }[] {
+  return (Object.keys(SIDO_RULES) as SidoCode[]).map((code) => ({
+    code,
+    name: loadRule<SidoRule>(SIDO_RULES[code], asOf).rule.values.sido.name,
+  }));
+}
 
 export type GrantDeadline = {
   /** 신청 창구가 열리는 날 */
@@ -87,6 +113,8 @@ export type BirthGrantsValue = {
   firstYearAmount: number;
   /** 30일 안에 마감되는 항목 */
   urgent: ResolvedGrant[];
+  /** 고른 시도 이름. 룰이 없는 지역이면 null이다. */
+  sidoName: string | null;
   districtStatus: 'verified' | 'unverified' | 'unsupported';
   districtName: string | null;
   districtLookupUrl?: string;
@@ -123,11 +151,20 @@ function resolveDeadline(grant: RawGrant, birthDate: Date, today: Date): GrantDe
   const window = grant.applyWindowDays;
   const within = grant.applyWithinDays;
 
-  if (within === undefined && window === undefined) return null;
+  if (within === undefined && window === undefined && grant.applyHardDeadline === undefined) {
+    return null;
+  }
 
   const opens = offset > 0 ? addDays(birthDate, offset) : null;
-  const due =
+  const relativeDue =
     window !== undefined ? addDays(birthDate, offset + window) : addDays(birthDate, within as number);
+
+  /*
+    출생일 기준 기한과 사업 종료일 중 먼저 오는 날이 진짜 마감이다. 아이가 어제
+    태어났어도 사업이 다음 주에 끝나면 남은 날은 다음 주까지다.
+  */
+  const hard = grant.applyHardDeadline ? parseDate(grant.applyHardDeadline) : null;
+  const due = hard !== null && hard.getTime() < relativeDue.getTime() ? hard : relativeDue;
 
   const dDay = diffDays(today, due);
   const notOpenYet = opens !== null && diffDays(today, opens) > 0;
@@ -217,20 +254,24 @@ export function checkBirthGrants(input: BirthGrantsInput): CalcOutcome<BirthGran
   let districtLookupUrl: string | undefined;
   let districtEstimate = 0;
 
-  if (input.sido === 'seoul') {
-    const seoulLookup = loadRule<SeoulRule>('birth-grants-seoul', birthDateIso);
-    const seoul = seoulLookup.rule.values;
-    basis.push(seoulLookup.rule.meta);
+  const sidoRuleId = input.sido ? SIDO_RULES[input.sido as SidoCode] : undefined;
+  let sidoName: string | null = null;
 
-    for (const item of seoul.sido.items) {
-      grants.push(resolveGrant(item, 'sido', seoul.sido.name, order, birthDate, today));
+  if (sidoRuleId) {
+    const sidoLookup = loadRule<SidoRule>(sidoRuleId, birthDateIso);
+    const region = sidoLookup.rule.values;
+    basis.push(sidoLookup.rule.meta);
+    sidoName = region.sido.name;
+
+    for (const item of region.sido.items) {
+      grants.push(resolveGrant(item, 'sido', region.sido.name, order, birthDate, today));
     }
-    for (const text of seoul.sido.extraNotes ?? []) {
-      extraNotes.push({ scope: seoul.sido.name, text });
+    for (const text of region.sido.extraNotes ?? []) {
+      extraNotes.push({ scope: region.sido.name, text });
     }
 
-    // 금액을 확인한 구들의 평균. 첫째에게 아무것도 주지 않는 구도 0원으로 함께 센다.
-    const verified = seoul.districts.filter((d) => d.status === 'verified');
+    // 금액을 확인한 시군구들의 평균. 첫째에게 아무것도 주지 않는 곳도 0원으로 함께 센다.
+    const verified = region.districts.filter((d) => d.status === 'verified');
     if (verified.length > 0) {
       const sum = verified.reduce(
         (acc, d) => acc + d.items.reduce((s2, item) => s2 + amountFor(item, order), 0),
@@ -239,7 +280,7 @@ export function checkBirthGrants(input: BirthGrantsInput): CalcOutcome<BirthGran
       districtEstimate = Math.round(sum / verified.length / 10000) * 10000;
     }
 
-    const district = seoul.districts.find((d) => d.code === input.sigungu);
+    const district = region.districts.find((d) => d.code === input.sigungu);
     if (district) {
       districtName = district.name;
       districtStatus = district.status;
@@ -255,7 +296,7 @@ export function checkBirthGrants(input: BirthGrantsInput): CalcOutcome<BirthGran
       if (district.status === 'verified' && district.items.length > 0 && !district.items.some((i) => amountFor(i, order) > 0)) {
         extraNotes.push({
           scope: district.name,
-          text: `${district.name}의 자체 지원은 이 출산 순위에는 해당되지 않아요. 셋째부터 지원하는 구가 많습니다.`,
+          text: `${district.name}의 자체 지원은 이 출산 순위에는 해당되지 않아요. 셋째부터 지원하는 곳이 많습니다.`,
         });
       }
     }
@@ -335,14 +376,17 @@ export function checkBirthGrants(input: BirthGrantsInput): CalcOutcome<BirthGran
     '금액과 요건은 지자체 예산에 따라 해가 바뀌면 달라질 수 있어요. 신청 전에 주민센터나 링크로 한 번 더 확인해 주세요.',
   ];
 
-  if (input.sido === 'seoul' && districtStatus === 'unverified') {
+  if (sidoRuleId && districtStatus === 'unverified') {
     warnings.push(
-      `${districtName ?? '선택하신 자치구'}의 자체 지원은 공식 출처로 확인하지 못해 합계에 넣지 않았어요. 실제로는 더 받으실 수 있으니 정부24 지역별 조회로 확인해 주세요.`,
+      `${districtName ?? '선택하신 시·군·구'}의 자체 지원은 공식 출처로 확인하지 못해 합계에 넣지 않았어요. 실제로는 더 받으실 수 있으니 정부24 지역별 조회로 확인해 주세요.`,
     );
   }
-  if (input.sido !== 'seoul') {
+  if (!sidoRuleId) {
+    const names = listSupportedSido(birthDateIso)
+      .map((s2) => s2.name)
+      .join(', ');
     warnings.push(
-      '지금은 서울 지역 지원만 정리돼 있어요. 다른 지역은 정부24 행복출산 지역별 조회에서 확인해 주세요.',
+      `지금은 ${names} 지원만 정리돼 있어요. 다른 지역은 정부24 행복출산 지역별 조회에서 확인해 주세요.`,
     );
   }
   const passed = grants.filter((g) => g.deadline?.status === 'passed');
@@ -358,6 +402,7 @@ export function checkBirthGrants(input: BirthGrantsInput): CalcOutcome<BirthGran
       totalAmount,
       firstYearAmount,
       urgent,
+      sidoName,
       districtStatus,
       districtName,
       districtLookupUrl,
@@ -380,8 +425,13 @@ export function formatDDay(deadline: GrantDeadline): string {
 
 export { formatKRW };
 
-/** 지역 선택 UI에 쓸 목록. 룰 파일에서 그대로 뽑는다. */
-export function listSeoulDistricts(asOf: string): { code: string; name: string; status: string }[] {
-  const seoul = loadRule<SeoulRule>('birth-grants-seoul', asOf).rule.values;
-  return seoul.districts.map((d) => ({ code: d.code, name: d.name, status: d.status }));
+/** 지역 선택 UI에 쓸 시·군·구 목록. 룰 파일에서 그대로 뽑는다. */
+export function listSigungu(
+  sido: string | undefined,
+  asOf: string,
+): { code: string; name: string; status: string }[] {
+  const ruleId = sido ? SIDO_RULES[sido as SidoCode] : undefined;
+  if (!ruleId) return [];
+  const region = loadRule<SidoRule>(ruleId, asOf).rule.values;
+  return region.districts.map((d) => ({ code: d.code, name: d.name, status: d.status }));
 }

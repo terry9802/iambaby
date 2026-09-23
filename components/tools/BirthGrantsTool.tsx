@@ -4,7 +4,8 @@ import { useCallback, useMemo, useState } from 'react';
 import {
   checkBirthGrants,
   formatDDay,
-  listSeoulDistricts,
+  listSigungu,
+  listSupportedSido,
   type BirthGrantsInput,
   type BirthOrder,
   type ResolvedGrant,
@@ -99,6 +100,8 @@ function GrantCard({ grant }: { grant: ResolvedGrant }) {
 }
 
 export function BirthGrantsTool({ tool, fallbackToday }: { tool: Tool; fallbackToday: string }) {
+  // 지역 목록은 룰 파일이 정한다. 지역을 늘려도 이 화면은 손대지 않는다.
+  const SUPPORTED_SIDO = useMemo(() => listSupportedSido(fallbackToday), [fallbackToday]);
   const { profile, hydrated } = useProfile();
   const [edits, setEdits] = useState<Partial<BirthGrantsInput>>({});
 
@@ -157,8 +160,8 @@ export function BirthGrantsTool({ tool, fallbackToday }: { tool: Tool; fallbackT
   });
 
   const districts = useMemo(
-    () => listSeoulDistricts(input.childBirthDate ?? fallbackToday),
-    [input.childBirthDate, fallbackToday],
+    () => listSigungu(input.sido, input.childBirthDate ?? fallbackToday),
+    [input.sido, input.childBirthDate, fallbackToday],
   );
 
   const outcome = useMemo(() => checkBirthGrants(input), [input]);
@@ -282,19 +285,22 @@ export function BirthGrantsTool({ tool, fallbackToday }: { tool: Tool; fallbackT
           />
           <SegmentedField<string>
             label="사는 지역"
-            hint="지금은 서울만 정리돼 있어요. 다른 지역은 정부24 링크로 안내해 드립니다."
+            hint={`지금은 ${SUPPORTED_SIDO.map((s) => s.name).join(', ')}가 정리돼 있어요. 다른 지역은 정부24 링크로 안내해 드립니다.`}
             value={input.sido}
             autofilled={autofilled.has('sido')}
             onChange={(sido) => set({ sido, sigungu: undefined })}
             options={[
-              { value: 'seoul', label: '서울' },
+              ...SUPPORTED_SIDO.map((s) => ({
+                value: s.code as string,
+                label: s.name.replace(/(특별시|광역시|도)$/, ''),
+              })),
               { value: 'other', label: '그 밖의 지역' },
             ]}
           />
-          {input.sido === 'seoul' && (
+          {districts.length > 0 && (
             <SelectField<string>
-              label="자치구"
-              placeholder="구를 골라 주세요"
+              label="시 · 군 · 구"
+              placeholder="사는 곳을 골라 주세요"
               value={input.sigungu}
               autofilled={autofilled.has('sigungu')}
               onChange={(sigungu) => set({ sigungu })}
@@ -304,10 +310,14 @@ export function BirthGrantsTool({ tool, fallbackToday }: { tool: Tool; fallbackT
               }))}
             />
           )}
-          {input.sido === 'seoul' && outcome.ok && outcome.result.value.districtStatus === 'unverified' && (
+          {districts.length > 0 && outcome.ok && outcome.result.value.districtStatus === 'unverified' && (
             <MoneyField
-              label="구청에서 알려준 금액"
-              hint={`전화로 확인하셨으면 넣어주세요. 합계에 함께 더해 드립니다. 확인된 구들의 평균은 ${formatKRW(outcome.result.value.districtEstimate)} 정도예요.`}
+              label="시·군·구청에서 알려준 금액"
+              hint={`전화로 확인하셨으면 넣어주세요. 합계에 함께 더해 드립니다.${
+                outcome.result.value.districtEstimate > 0
+                  ? ` 확인된 곳들의 평균은 ${formatKRW(outcome.result.value.districtEstimate)} 정도예요.`
+                  : ''
+              }`}
               value={input.districtAmount}
               placeholder={String(outcome.result.value.districtEstimate)}
               onChange={(districtAmount) => set({ districtAmount })}

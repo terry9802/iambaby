@@ -3,6 +3,7 @@ import parentalLeaveCouple2026 from '@/rules/2026/parental-leave-couple.json';
 import maternityLeave2026 from '@/rules/2026/maternity-leave.json';
 import birthGrantsNational2026 from '@/rules/2026/birth-grants-national.json';
 import birthGrantsSeoul2026 from '@/rules/2026/birth-grants-seoul.json';
+import birthGrantsGyeonggi2026 from '@/rules/2026/birth-grants-gyeonggi.json';
 import socialDues2026 from '@/rules/2026/social-dues.json';
 import marriageTaxCredit2026 from '@/rules/2026/marriage-tax-credit.json';
 import newlywedJeonseLoan2026 from '@/rules/2026/newlywed-jeonse-loan.json';
@@ -25,6 +26,7 @@ const REGISTRY = {
   'maternity-leave': [maternityLeave2026],
   'birth-grants-national': [birthGrantsNational2026],
   'birth-grants-seoul': [birthGrantsSeoul2026],
+  'birth-grants-gyeonggi': [birthGrantsGyeonggi2026],
   'social-dues': [socialDues2026],
   'marriage-tax-credit': [marriageTaxCredit2026],
   'newlywed-jeonse-loan': [newlywedJeonseLoan2026],
