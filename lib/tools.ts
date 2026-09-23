@@ -89,6 +89,10 @@ export const EVENTS: LifeEvent[] = [
         body: '조례에 적힌 요율은 최대치고, 실제 금액은 중개사와 협의해서 정합니다. 깎아달라고 해도 됩니다.',
       },
       {
+        title: '경매는 낙찰가가 다가 아닙니다.',
+        body: '감정가의 75%에 받았다고 해도 세금, 명도비, 밀린 관리비를 더하면 이야기가 달라집니다. 그리고 잔금을 한 달 안에 내야 해요. 못 내면 보증금을 잃습니다.',
+      },
+      {
         title: '처음 사는 집이면 2,000,000원을 깎아줍니다.',
         body: '본인과 배우자 모두 집을 가진 적이 없고 취득가액이 1,200,000,000원 이하일 때입니다. 다만 3년 안에 팔거나 세를 주면 다시 뱉어내야 해요.',
       },
@@ -336,6 +340,17 @@ export const TOOLS: Tool[] = [
     profileFields: ['children', 'residence'],
     ruleFile: 'birth-grants-national',
     timing: '출생신고 직후 (60일 이내)',
+  },
+  {
+    slug: 'auction-cost',
+    event: 'housing',
+    type: 'checker',
+    title: '경매 낙찰 총비용 계산기',
+    question: '경매로 받으면 진짜 얼마에 산 건가요?',
+    lead: '낙찰가에 세금·명도비·체납 관리비를 더해 실제로 드는 돈을 세고, 입찰 전에 확인해야 할 것을 짚어드립니다.',
+    profileFields: [],
+    ruleFile: 'auction',
+    timing: '입찰표 쓰기 전에',
   },
   {
     slug: 'purchase-cost',
