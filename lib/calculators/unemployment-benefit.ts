@@ -45,6 +45,8 @@ export type UnemploymentValue = {
   cappedByFloor: boolean;
   cappedByCap: boolean;
   floorExceedsCap: boolean;
+  /** 이 해의 상한액이 아직 고시 전이라 사람이 확인해야 하는가 */
+  dailyCapNeedsCheck: boolean;
   mayNotQualify: boolean;
 };
 
@@ -126,10 +128,19 @@ export function calcUnemploymentBenefit(
   ];
 
   const warnings: string[] = [
-    `**상한액은 확인이 필요합니다.** 화면에 보이는 ${formatKRW(rule.dailyCap)}은 이전에 고시된 금액이라 올해 값과 다를 수 있어요. 직접 고쳐서 계산해 보시거나 ${rule.consult.label}(${rule.consult.number})에 확인해 주세요.`,
     `실업급여는 퇴직 다음 날부터 ${rule.applyWithinMonths}개월이 지나면 남은 일수가 있어도 받을 수 없습니다. 퇴사하면 바로 신청하세요.`,
     `고용보험에 ${rule.requiredInsuredDays}일(약 7개월) 이상 가입돼 있어야 받을 수 있습니다.`,
   ];
+
+  /*
+    상한액이 고시된 해에는 경고를 띄우지 않는다. 늘 "확인이 필요합니다"가 붙어 있으면
+    정말 확인이 필요한 해에도 그 말이 안 읽힌다.
+  */
+  if (rule.dailyCapNeedsCheck) {
+    warnings.unshift(
+      `**상한액은 확인이 필요합니다.** 화면에 보이는 ${formatKRW(rule.dailyCap)}은 지난해 고시된 금액이라 이 해의 값과 다를 수 있어요. 직접 고쳐서 계산해 보시거나 ${rule.consult.label}(${rule.consult.number})에 확인해 주세요.`,
+    );
+  }
 
   const mayNotQualify = input.voluntary === true;
   if (mayNotQualify) {
@@ -157,6 +168,7 @@ export function calcUnemploymentBenefit(
       cappedByFloor: dailyBenefit === dailyFloor && rawDaily < dailyFloor,
       cappedByCap: rawDaily > dailyCap && !floorExceedsCap,
       floorExceedsCap,
+      dailyCapNeedsCheck: rule.dailyCapNeedsCheck,
       mayNotQualify,
     },
     steps,

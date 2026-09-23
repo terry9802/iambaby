@@ -56,6 +56,10 @@ export function UnemploymentBenefitTool({ tool }: { tool: Tool }) {
     cap: input.dailyCapOverride,
   });
 
+  /* 상한액 안내 문구는 그해 룰이 정하게 둔다. 화면에 숫자를 박아두면 개정 때마다 어긋난다. */
+  const ruleCap = outcome.ok ? outcome.result.value.dailyCap : 0;
+  const capNeedsCheck = outcome.ok ? outcome.result.value.dailyCapNeedsCheck : false;
+
   const shareText = outcome.ok
     ? `실업급여를 하루 ${formatKRW(outcome.result.value.dailyBenefit)}씩 ${outcome.result.value.benefitDays}일 받아요. 다 합치면 ${formatManwon(outcome.result.value.total)}입니다.`
     : undefined;
@@ -138,10 +142,14 @@ export function UnemploymentBenefitTool({ tool }: { tool: Tool }) {
             onChange={(voluntary) => set({ voluntary })}
           />
           <MoneyField
-            label="1일 상한액 (확인 필요)"
-            hint="2019년 고시 기준 66,000원을 기본값으로 넣어뒀어요. 올해 값이 다르면 여기서 고쳐 계산하시면 됩니다."
-            value={input.dailyCapOverride ?? (outcome.ok ? outcome.result.value.dailyCap : undefined)}
-            placeholder="66,000"
+            label={capNeedsCheck ? '1일 상한액 (확인 필요)' : '1일 상한액'}
+            hint={
+              capNeedsCheck
+                ? `지난해 고시된 ${formatKRW(ruleCap)}을 그대로 넣어뒀어요. 이 해의 값이 정해졌으면 여기서 고쳐 계산하시면 됩니다.`
+                : `고시된 ${formatKRW(ruleCap)}입니다. 기초일액 상한의 60%예요. 다른 값으로 계산해 보고 싶으면 고치셔도 됩니다.`
+            }
+            value={input.dailyCapOverride ?? ruleCap}
+            placeholder={ruleCap.toLocaleString('ko-KR')}
             onChange={(dailyCapOverride) => set({ dailyCapOverride })}
           />
         </FieldGroup>

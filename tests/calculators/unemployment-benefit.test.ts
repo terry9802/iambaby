@@ -9,6 +9,7 @@ describe('실업급여 계산기', () => {
       monthlyWage: 300 * MAN,
       ageGroup: 'under50',
       insuredYears: 3,
+      asOf: '2026-06-01',
     });
     if (!out.ok) throw new Error('계산 실패');
     expect(out.result.value.benefitDays).toBe(180);
@@ -34,18 +35,29 @@ describe('실업급여 계산기', () => {
   });
 
   it('하한: 최저임금일액의 80%보다 적게 나오지 않는다', () => {
-    const out = calcUnemploymentBenefit({ monthlyWage: 150 * MAN, insuredYears: 3 });
+    const out = calcUnemploymentBenefit({ monthlyWage: 150 * MAN, insuredYears: 3, asOf: '2026-06-01' });
     if (!out.ok) throw new Error('계산 실패');
     // 2026년 최저임금 10,320원 × 8시간 × 80%
     expect(out.result.value.dailyFloor).toBe(66048);
     expect(out.result.value.dailyBenefit).toBe(66048);
   });
 
-  it('올해는 하한액이 상한액보다 높아, 그 사실을 알려준다', () => {
-    const out = calcUnemploymentBenefit({ monthlyWage: 600 * MAN, insuredYears: 3 });
+  it('2026년 상한액은 시행령 개정분 68,100원이다', () => {
+    // 2025-12-16 국무회의 의결로 66,000 → 68,100. 예전 값으로 되돌아가면 과소 산출된다.
+    const out = calcUnemploymentBenefit({ monthlyWage: 600 * MAN, insuredYears: 3, asOf: '2026-06-01' });
     if (!out.ok) throw new Error('계산 실패');
+    expect(out.result.value.dailyCap).toBe(68100);
+    expect(out.result.value.floorExceedsCap).toBe(false);
+    expect(out.result.value.dailyBenefit).toBe(68100);
+  });
+
+  it('하한액이 상한액을 넘는 해에는 하한액을 적용하고 그 사실을 알려준다', () => {
+    // 2027년 최저임금 10,700원 → 하한 68,480원. 상한(68,100원)은 아직 개정 전이라 역전된다.
+    const out = calcUnemploymentBenefit({ monthlyWage: 600 * MAN, insuredYears: 3, asOf: '2027-03-01' });
+    if (!out.ok) throw new Error('계산 실패');
+    expect(out.result.value.dailyFloor).toBe(68480);
     expect(out.result.value.floorExceedsCap).toBe(true);
-    expect(out.result.value.dailyBenefit).toBe(66048);
+    expect(out.result.value.dailyBenefit).toBe(68480);
     expect(out.result.warnings.some((w) => w.includes('하한액'))).toBe(true);
   });
 
@@ -54,6 +66,7 @@ describe('실업급여 계산기', () => {
       monthlyWage: 600 * MAN,
       insuredYears: 3,
       dailyCapOverride: 80000,
+      asOf: '2026-06-01',
     });
     if (!out.ok) throw new Error('계산 실패');
     expect(out.result.value.dailyCap).toBe(80000);
@@ -73,11 +86,20 @@ describe('실업급여 계산기', () => {
     expect(calcUnemploymentBenefit({ monthlyWage: 0 }).ok).toBe(false);
   });
 
-  it('상한액은 확인이 필요하다는 것과 12개월 기한을 경고한다', () => {
-    const out = calcUnemploymentBenefit({ monthlyWage: 300 * MAN });
+  it('상한액이 고시된 해에는 "확인이 필요"를 띄우지 않는다', () => {
+    // 늘 붙어 있으면 정말 확인이 필요한 해에도 그 말이 안 읽힌다.
+    const out = calcUnemploymentBenefit({ monthlyWage: 300 * MAN, asOf: '2026-06-01' });
     if (!out.ok) throw new Error('계산 실패');
-    expect(out.result.warnings.some((w) => w.includes('확인이 필요'))).toBe(true);
+    expect(out.result.value.dailyCapNeedsCheck).toBe(false);
+    expect(out.result.warnings.some((w) => w.includes('확인이 필요'))).toBe(false);
     expect(out.result.warnings.some((w) => w.includes('12개월'))).toBe(true);
+  });
+
+  it('상한액이 아직 개정 전인 해에는 확인이 필요하다고 알린다', () => {
+    const out = calcUnemploymentBenefit({ monthlyWage: 300 * MAN, asOf: '2027-03-01' });
+    if (!out.ok) throw new Error('계산 실패');
+    expect(out.result.value.dailyCapNeedsCheck).toBe(true);
+    expect(out.result.warnings.some((w) => w.includes('확인이 필요'))).toBe(true);
   });
 
   it('근거는 고용보험법 조문이다', () => {

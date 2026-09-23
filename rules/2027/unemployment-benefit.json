@@ -2,23 +2,23 @@
   "meta": {
     "ruleId": "unemployment-benefit",
     "title": "실업급여 (구직급여)",
-    "effectiveFrom": "2026-01-01",
-    "effectiveTo": "2026-12-31",
+    "effectiveFrom": "2027-01-01",
+    "effectiveTo": null,
     "source": "고용보험법 제45조·제46조, 같은 법 시행령 제68조 제1항, 같은 법 별표 1(구직급여의 소정급여일수)",
-    "sourceUrl": "https://easylaw.go.kr/CSP/CnpClsMain.laf?popMenu=ov&csmSeq=722&ccfNo=2&cciNo=3&cnpClsNo=2",
+    "sourceUrl": "https://www.moel.go.kr/news/enews/report/enewsView.do?news_seq=19659",
     "verifiedAt": "2026-09-23",
-    "verifiedBy": "법제처 찾기쉬운 생활법령정보 「구직급여 수급액」, 2025-12-16 국무회의 의결 고용보험법 시행령 일부개정령",
-    "note": "상한액은 2019년 7월 이후 1일 66,000원에 묶여 있었는데, 2026년 최저임금 인상으로 하한액(66,048원)이 상한액을 넘어서게 되자 2025년 12월 16일 국무회의에서 시행령을 고쳐 68,100원으로 올렸다. 기초일액 상한 113,500원의 60%다. 2026년 1월 1일 이후 이직자부터 적용된다. 하한액은 최저임금일액의 80%라 최저임금이 오르면 함께 오른다."
+    "verifiedBy": "고용노동부 2027년 적용 최저임금 고시 (2026-07-14 최저임금위원회 의결, 시간급 10,700원)",
+    "note": "최저임금이 10,700원으로 확정돼 하한액이 68,480원이 된다. 상한액은 아직 2026년 값(68,100원) 그대로라 또 역전이 생긴다. 2026년에도 12월 국무회의에서 시행령을 고쳐 올렸으니 이번에도 12월쯤 정해질 것으로 보고, 그때까지는 확인이 필요한 값으로 표시한다. 구직급여를 주 7일이 아니라 주 6일로 지급하는 개편안이 논의되고 있으나 확정된 것이 아니라 반영하지 않았다."
   },
   "values": {
     "wageReplacementRate": 0.6,
     "dailyCap": 68100,
-    "dailyCapNeedsCheck": false,
+    "dailyCapNeedsCheck": true,
     "minimumWage": {
-      "hourly": 10320,
+      "hourly": 10700,
       "dailyHours": 8,
       "floorRate": 0.8,
-      "source": "2026년 적용 최저임금 고시 (시간급 10,320원)"
+      "source": "2027년 적용 최저임금 고시 (시간급 10,700원)"
     },
     "requiredInsuredDays": 180,
     "applyWithinMonths": 12,
