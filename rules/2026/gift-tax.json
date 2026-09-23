@@ -1,0 +1,70 @@
+{
+  "meta": {
+    "ruleId": "gift-tax",
+    "title": "증여세",
+    "effectiveFrom": "2024-01-01",
+    "effectiveTo": null,
+    "source": "상속세 및 증여세법 제53조(증여재산 공제), 제53조의2(혼인·출산 증여재산 공제), 제56조(증여세 세율), 제68조(신고기한), 제69조(신고세액 공제)",
+    "sourceUrl": "https://www.nts.go.kr/nts/cm/cntnts/cntntsView.do?mi=6533&cntntsId=7960",
+    "verifiedAt": "2026-09-23",
+    "verifiedBy": "국세청 「증여세 항목별 설명」의 증여재산공제 한도액 표와 세율표, 국세청 「증여세 세액계산 흐름도」, 국세청 「증여세 신고납부기한」, 상속세 및 증여세법 제53조의2·제69조 조문",
+    "note": "공제 한도는 사람마다가 아니라 관계마다 10년을 합쳐서 본다. 아버지에게 5,000만원을 받았으면 어머니에게는 더 받을 공제가 없다. 둘 다 직계존속이기 때문이다. 혼인·출산 공제는 이것과 별개로 1억원이 더 나오지만, 혼인과 출산을 합쳐 평생 1억원이 한도다. 세대생략 할증(손주에게 주는 경우 30~40%)과 창업자금·가업승계 특례세율은 경우가 복잡해 넣지 않았다."
+  },
+  "values": {
+    "relationships": [
+      {
+        "code": "spouse",
+        "label": "배우자",
+        "deduction": 600000000,
+        "note": "법적으로 혼인한 배우자만 해당됩니다. 사실혼은 안 됩니다."
+      },
+      {
+        "code": "linealAscendant",
+        "label": "부모 · 조부모 (직계존속)",
+        "deduction": 50000000,
+        "minorDeduction": 20000000,
+        "note": "아버지와 어머니를 따로 세지 않고 직계존속 전체를 묶어 10년에 50,000,000원입니다. 받는 사람이 미성년자면 20,000,000원입니다."
+      },
+      {
+        "code": "linealDescendant",
+        "label": "자녀 · 손자녀 (직계비속)",
+        "deduction": 50000000,
+        "note": "자녀에게서 받는 경우입니다."
+      },
+      {
+        "code": "otherRelative",
+        "label": "그 밖의 친족",
+        "deduction": 10000000,
+        "note": "6촌 이내 혈족, 4촌 이내 인척입니다. 형제자매도 여기에 들어갑니다."
+      },
+      {
+        "code": "other",
+        "label": "친족이 아닌 사람",
+        "deduction": 0,
+        "note": "친구나 남남 사이에는 공제가 없습니다. 받은 금액 전부가 과세 대상입니다."
+      }
+    ],
+    "marriageBirthDeduction": {
+      "limit": 100000000,
+      "onlyFrom": "linealAscendant",
+      "windowNote": "혼인신고일 전후 2년 이내, 또는 자녀의 출생일·입양신고일부터 2년 이내에 받은 것이어야 합니다.",
+      "note": "혼인과 출산을 합쳐 평생 100,000,000원이 한도입니다. 결혼할 때 1억원을 다 썼으면 아이를 낳아도 더 나오지 않습니다."
+    },
+    "taxBrackets": [
+      { "upTo": 100000000, "rate": 0.1, "progressiveDeduction": 0 },
+      { "upTo": 500000000, "rate": 0.2, "progressiveDeduction": 10000000 },
+      { "upTo": 1000000000, "rate": 0.3, "progressiveDeduction": 60000000 },
+      { "upTo": 3000000000, "rate": 0.4, "progressiveDeduction": 160000000 },
+      { "upTo": null, "rate": 0.5, "progressiveDeduction": 460000000 }
+    ],
+    "filingCreditRate": 0.03,
+    "filingDeadlineMonths": 3,
+    "filingDeadlineNote": "증여받은 날이 속하는 달의 말일부터 3개월 이내에 신고해야 합니다. 예를 들어 1월 15일에 받았으면 4월 30일까지입니다.",
+    "lookbackYears": 10,
+    "consult": {
+      "label": "국세청 세미래 상담센터",
+      "number": "126",
+      "note": "재산 종류나 가족 관계가 복잡하면 여기가 가장 정확합니다."
+    }
+  }
+}

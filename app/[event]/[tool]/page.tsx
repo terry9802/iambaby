@@ -14,6 +14,7 @@ import { JobChangeTool } from '@/components/tools/JobChangeTool';
 import { SeverancePayTool } from '@/components/tools/SeverancePayTool';
 import { UnemploymentBenefitTool } from '@/components/tools/UnemploymentBenefitTool';
 import { RestBenefitsTool } from '@/components/tools/RestBenefitsTool';
+import { GiftTaxTool } from '@/components/tools/GiftTaxTool';
 
 export function generateStaticParams() {
   return TOOLS.map((t) => ({ event: t.event, tool: t.slug }));
@@ -59,6 +60,8 @@ export default async function ToolPage({
       return <BirthGrantsTool tool={found} fallbackToday={fallbackToday} />;
     case 'rest-benefits':
       return <RestBenefitsTool tool={found} fallbackToday={fallbackToday} />;
+    case 'gift-tax':
+      return <GiftTaxTool tool={found} fallbackToday={fallbackToday} />;
     case 'leave-timeline':
       return <LeaveTimelineTool tool={found} fallbackToday={fallbackToday} />;
     case 'social-dues':

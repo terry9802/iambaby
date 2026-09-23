@@ -125,9 +125,27 @@ export const EVENTS: LifeEvent[] = [
   {
     key: 'inheritance',
     title: '상속 · 증여',
-    lead: '물려받으면 세금을 얼마나 내야 하나요',
-    status: 'soon',
+    lead: '부모님이 보태주시는 돈, 세금이 얼마나 붙나요',
+    status: 'live',
     icon: 'inheritance',
+    tips: [
+      {
+        title: '공제는 사람마다가 아니라 관계마다입니다.',
+        body: '아버지에게 50,000,000원을 받았으면 어머니에게는 더 받을 공제가 없습니다. 둘 다 직계존속이라 한도를 함께 씁니다. 10년을 합쳐서 봐요.',
+      },
+      {
+        title: '결혼이나 출산 전후 2년 안이면 100,000,000원이 더 나옵니다.',
+        body: '부모·조부모에게 받는 경우에만 됩니다. 혼인신고일 전후 2년, 아이 출생신고일부터 2년이 기간이에요. 결혼과 출산을 합쳐 평생 100,000,000원이 한도입니다.',
+      },
+      {
+        title: '세금이 0원이어도 신고는 하는 게 낫습니다.',
+        body: '신고해 두면 그 돈이 어디서 났는지 나중에 설명할 필요가 없습니다. 집을 살 때 자금출처를 묻는 경우가 많아요.',
+      },
+      {
+        title: '기한은 받은 날부터가 아닙니다.',
+        body: '증여받은 날이 속하는 달의 말일부터 3개월입니다. 1월 15일에 받았으면 4월 30일까지예요. 기한 안에 신고하면 세금의 3%를 깎아줍니다.',
+      },
+    ],
   },
   {
     key: 'socialdues',
@@ -300,6 +318,17 @@ export const TOOLS: Tool[] = [
     profileFields: ['children', 'residence'],
     ruleFile: 'birth-grants-national',
     timing: '출생신고 직후 (60일 이내)',
+  },
+  {
+    slug: 'gift-tax',
+    event: 'inheritance',
+    type: 'calculator',
+    title: '증여세 계산기',
+    question: '부모님이 주시는 돈, 세금이 얼마나 붙나요?',
+    lead: '받는 금액과 관계를 넣으면 낼 세금과 신고 마감일이 바로 나옵니다. 얼마까지 세금 없이 받을 수 있는지도 함께 보여드려요.',
+    profileFields: [],
+    ruleFile: 'gift-tax',
+    timing: '돈을 받기 전에',
   },
   {
     slug: 'rest-benefits',
