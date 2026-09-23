@@ -63,7 +63,9 @@ export function MarriageTaxCreditTool({
 
   const shareText = outcome.ok
     ? outcome.result.value.eligible
-      ? `혼인신고만 하면 부부가 ${formatManwon(outcome.result.value.total)}을 돌려받아요. 이 제도는 ${outcome.result.value.daysLeft}일 뒤에 끝납니다.`
+      ? outcome.result.value.sunsetPassed
+        ? `혼인신고를 해두셨다면 부부가 ${formatManwon(outcome.result.value.total)}을 돌려받아요. 연말정산 때 챙기세요.`
+        : `혼인신고만 하면 부부가 ${formatManwon(outcome.result.value.total)}을 돌려받아요. 이 제도는 ${outcome.result.value.daysLeft}일 뒤에 끝납니다.`
       : '결혼세액공제, 내가 받을 수 있는지 30초면 확인돼요.'
     : undefined;
 
@@ -83,7 +85,18 @@ export function MarriageTaxCreditTool({
         )
       }
     >
-      {outcome.result.value.daysLeft >= 0 && (
+      {/*
+        마감이 지나면 남은 날을 빼는 대신 끝났다고 말한다. 아무 말도 안 하면
+        이미 신고해 둔 분이 "아직 신청할 수 있나" 하고 헷갈린다.
+      */}
+      {outcome.result.value.sunsetPassed ? (
+        <ResultAside>
+          이 제도는{' '}
+          <strong className="font-semibold text-ink">{formatDate(outcome.result.value.deadline)}</strong>{' '}
+          혼인신고분으로 끝났습니다. 그 전에 신고하셨다면 {outcome.result.value.claimYear}년 귀속{' '}
+          {outcome.result.value.claimAt} 때 받으시면 돼요.
+        </ResultAside>
+      ) : (
         <ResultAside>
           이 제도는 <strong className="font-semibold text-ink">{formatDate(outcome.result.value.deadline)}</strong>에
           끝납니다. 오늘부터{' '}

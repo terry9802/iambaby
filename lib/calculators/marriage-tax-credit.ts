@@ -35,8 +35,10 @@ export type MarriageTaxCreditValue = {
   mine: number;
   spouse: number;
   eligible: boolean;
-  /** 제도 종료일까지 남은 날 */
+  /** 제도 종료일까지 남은 날. 이미 지났으면 음수다. */
   daysLeft: number;
+  /** 오늘이 종료일을 지났는가. 지났으면 "앞당기세요"가 거짓말이 된다. */
+  sunsetPassed: boolean;
   deadline: string;
   claimYear: number;
   claimAt: string;
@@ -71,6 +73,7 @@ export function calcMarriageTaxCredit(
 
   const deadline = parseDate(rule.applicableTo);
   const daysLeft = diffDays(today, deadline);
+  const sunsetPassed = daysLeft < 0;
   const claimYear = Number(registrationDate.slice(0, 4));
 
   const steps: CalcStep[] = [
@@ -126,14 +129,26 @@ export function calcMarriageTaxCredit(
     `${rule.applicableTo}까지 혼인신고한 경우에만 적용되는 한시 제도예요.`,
   ];
 
-  if (inWindow && daysLeft >= 0 && daysLeft <= 365) {
-    warnings.push(
-      `제도가 끝나기까지 ${daysLeft}일 남았어요. 혼인신고를 미루고 계셨다면 ${formatDate(deadline)} 안에 하시는 게 부부 합쳐 ${formatKRW(rule.creditPerPerson * 2)} 차이입니다.`,
+  /*
+    남은 날이 얼마 없을수록 앞에 세운다. 뒤에 묻히면 못 보고 지나간다.
+    100일은 혼인신고를 앞당길지 말지 실제로 고민하게 되는 거리다.
+  */
+  if (inWindow && !sunsetPassed && daysLeft <= 365) {
+    warnings.unshift(
+      daysLeft <= 100
+        ? `**${daysLeft}일 남았습니다.** ${formatDate(deadline)}까지 혼인신고를 해야 받습니다. 하루만 늦어도 부부 합쳐 ${formatKRW(rule.creditPerPerson * 2)}이 사라져요.`
+        : `제도가 끝나기까지 ${daysLeft}일 남았어요. 혼인신고를 미루고 계셨다면 ${formatDate(deadline)} 안에 하시는 게 부부 합쳐 ${formatKRW(rule.creditPerPerson * 2)} 차이입니다.`,
     );
   }
+  /*
+    종료일 전이라면 "앞당기세요"가 실행 가능한 말이지만, 지나고 나면 되돌릴 수 없는
+    날짜를 두고 하는 말이라 거짓말이 된다. 그때는 끝났다고 말해야 한다.
+  */
   if (!inWindow && registrationDate > rule.applicableTo) {
-    warnings.push(
-      `${formatDate(deadline)}까지 혼인신고를 하면 받을 수 있어요. 날짜를 앞당길 수 있다면 부부 합쳐 ${formatKRW(rule.creditPerPerson * 2)}입니다.`,
+    warnings.unshift(
+      sunsetPassed
+        ? `**이 공제는 ${formatDate(deadline)} 혼인신고분으로 끝났습니다.** 그 뒤에 신고한 분은 받을 수 없어요. 대신 새로 생기는 혼인지원금이 있는지 아래 안내를 봐주세요.`
+        : `${formatDate(deadline)}까지 혼인신고를 하면 받을 수 있어요. 날짜를 앞당길 수 있다면 부부 합쳐 ${formatKRW(rule.creditPerPerson * 2)}입니다.`,
     );
   }
   warnings.push(`신청은 ${claimYear}년 귀속 ${rule.claimAt} 때 ${rule.proofDocument}를 내면 됩니다.`);
@@ -145,6 +160,7 @@ export function calcMarriageTaxCredit(
       spouse,
       eligible: total > 0,
       daysLeft,
+      sunsetPassed,
       deadline: rule.applicableTo,
       claimYear,
       claimAt: rule.claimAt,

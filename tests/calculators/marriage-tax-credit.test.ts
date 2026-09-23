@@ -80,4 +80,32 @@ describe('결혼세액공제 계산기', () => {
     if (!out.ok) throw new Error('계산 실패');
     expect(out.result.basis[0].source).toContain('조세특례제한법 제92조');
   });
+
+  it('마감 전에는 앞당기라고 하고, 지나면 끝났다고 한다', () => {
+    // 되돌릴 수 없는 날짜를 두고 "앞당기세요"라고 하면 거짓말이 된다.
+    const before = calcMarriageTaxCredit({
+      registrationDate: '2027-03-01',
+      today: '2026-11-01',
+    });
+    if (!before.ok) throw new Error('계산 실패');
+    expect(before.result.value.sunsetPassed).toBe(false);
+    expect(before.result.warnings[0]).toContain('앞당길 수 있다면');
+
+    const after = calcMarriageTaxCredit({
+      registrationDate: '2027-03-01',
+      today: '2027-04-01',
+    });
+    if (!after.ok) throw new Error('계산 실패');
+    expect(after.result.value.sunsetPassed).toBe(true);
+    expect(after.result.value.total).toBe(0);
+    expect(after.result.warnings[0]).toContain('끝났습니다');
+    expect(after.result.warnings.some((w) => w.includes('앞당길'))).toBe(false);
+  });
+
+  it('마감이 100일 안으로 들어오면 남은 날을 맨 앞에 세운다', () => {
+    const out = calcMarriageTaxCredit({ registrationDate: '2026-12-01', today: '2026-11-01' });
+    if (!out.ok) throw new Error('계산 실패');
+    expect(out.result.value.daysLeft).toBe(60);
+    expect(out.result.warnings[0]).toContain('60일 남았습니다');
+  });
 });
