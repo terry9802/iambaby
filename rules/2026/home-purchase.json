@@ -1,0 +1,85 @@
+{
+  "meta": {
+    "ruleId": "home-purchase",
+    "title": "집 살 때 드는 세금과 수수료",
+    "effectiveFrom": "2026-01-01",
+    "effectiveTo": null,
+    "source": "지방세법 제11조(부동산 취득세율)·제13조의2(주택 중과)·제151조(지방교육세), 농어촌특별세법 제5조, 지방세특례제한법 제36조의3(생애최초 주택 취득세 감면), 공인중개사법 제32조 및 서울특별시 주택중개보수 등에 관한 조례",
+    "sourceUrl": "https://easylaw.go.kr/CSP/CnpClsMain.laf?popMenu=ov&csmSeq=666&ccfNo=2&cciNo=2&cnpClsNo=4",
+    "verifiedAt": "2026-09-23",
+    "verifiedBy": "법제처 찾기쉬운 생활법령정보 「매매를 한 경우 세금 납부하기」, 세종특별자치시 「취득세 안내」 세율표, 서초구청 주택 취득세율표, 금천구청 「생애최초 주택에 대한 취득세 감면」, 서울부동산정보광장 중개보수 요율표",
+    "note": "중개보수 요율은 시·도 조례로 정한다. 여기 있는 것은 서울특별시 조례 기준이고 대부분의 시·도가 같은 구간을 쓰지만, 다른 지역은 해당 시·도 조례를 확인해야 한다. 그래서 화면에서 고칠 수 있게 두었다. 조정대상지역은 정부가 수시로 바꾸므로 목록을 넣지 않고 사용자에게 묻는다. 법무사 보수와 인지세·국민주택채권은 사람마다 달라 넣지 않았다."
+  },
+  "values": {
+    "acquisitionTax": {
+      "baseNote": "6억원 이하 1%, 6억 초과 9억 이하는 (취득가액 × 2 ÷ 3억원 − 3) × 1/100, 9억 초과 3%. 소수점 넷째자리까지 계산한다.",
+      "lowerBound": 600000000,
+      "upperBound": 900000000,
+      "lowRate": 0.01,
+      "highRate": 0.03,
+      "heavyRates": [
+        {
+          "houses": 2,
+          "regulated": true,
+          "rate": 0.08,
+          "label": "조정대상지역 2주택",
+          "note": "일시적 2주택은 중과에서 빠집니다. 종전 주택을 기한 안에 팔면 1주택 세율로 다시 계산해 줍니다."
+        },
+        { "houses": 2, "regulated": false, "rate": null, "label": "비조정대상지역 2주택", "note": "중과가 없어 1주택과 같은 1~3%입니다." },
+        { "houses": 3, "regulated": true, "rate": 0.12, "label": "조정대상지역 3주택" },
+        { "houses": 3, "regulated": false, "rate": 0.08, "label": "비조정대상지역 3주택" },
+        { "houses": 4, "regulated": true, "rate": 0.12, "label": "4주택 이상 · 법인" },
+        { "houses": 4, "regulated": false, "rate": 0.12, "label": "4주택 이상 · 법인" }
+      ]
+    },
+    "localEducationTax": {
+      "normalNote": "취득당시가액 × (취득세율 × 50%) × 20%. 취득세가 1%면 0.1%, 3%면 0.3%가 됩니다.",
+      "heavyRate": 0.004,
+      "heavyNote": "중과세율(8%·12%)이 붙으면 0.4%로 고정됩니다."
+    },
+    "ruralTax": {
+      "exemptAreaSqm": 85,
+      "exemptNote": "전용면적 85㎡ 이하 주택은 농어촌특별세가 붙지 않습니다(서민주택).",
+      "normalRate": 0.002,
+      "byHeavyRate": [
+        { "acquisitionRate": 0.08, "rate": 0.006 },
+        { "acquisitionRate": 0.12, "rate": 0.01 }
+      ]
+    },
+    "firstHomeRelief": {
+      "limit": 2000000,
+      "priceCap": 1200000000,
+      "smallLimit": 3000000,
+      "smallPriceCap": 600000000,
+      "smallAreaSqm": 60,
+      "effectiveTo": "2028-12-31",
+      "conditions": [
+        "본인과 배우자 모두 지금까지 주택을 가진 적이 없어야 합니다",
+        "취득가액이 1,200,000,000원 이하여야 합니다. 소득 기준은 없습니다",
+        "전용면적 60㎡ 이하이면서 취득가액 600,000,000원 이하인 주택(아파트 제외)은 한도가 3,000,000원입니다"
+      ],
+      "clawback": "취득일부터 3년 안에 팔거나 증여하거나 임대로 돌리면 감면받은 세금을 다시 냅니다. 예전에 있던 상시거주 요건은 없어졌습니다.",
+      "note": "감면 한도는 취득세 기준입니다. 취득세가 줄면 거기 딸린 지방교육세도 함께 줄어듭니다."
+    },
+    "brokerFee": {
+      "region": "서울특별시",
+      "regionNote": "중개보수 요율은 시·도 조례로 정합니다. 아래는 서울특별시 조례 기준이고, 대부분의 시·도가 같은 구간을 씁니다.",
+      "isCeiling": true,
+      "ceilingNote": "이것은 상한입니다. 실제 보수는 이 안에서 중개사와 협의해 정합니다. 깎아달라고 해도 됩니다.",
+      "vatNote": "중개사가 일반과세자면 여기에 부가가치세 10%가 더 붙습니다.",
+      "tiers": [
+        { "upTo": 50000000, "rate": 0.006, "cap": 250000 },
+        { "upTo": 200000000, "rate": 0.005, "cap": 800000 },
+        { "upTo": 900000000, "rate": 0.004, "cap": null },
+        { "upTo": 1200000000, "rate": 0.005, "cap": null },
+        { "upTo": 1500000000, "rate": 0.006, "cap": null },
+        { "upTo": null, "rate": 0.007, "cap": null }
+      ]
+    },
+    "consult": {
+      "label": "관할 시·군·구청 세무과",
+      "number": "110",
+      "note": "정부민원안내콜센터 110에서 관할 부서로 연결해 줍니다. 조정대상지역 여부와 내 주택 수는 여기가 정확합니다."
+    }
+  }
+}

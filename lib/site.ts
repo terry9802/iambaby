@@ -35,6 +35,7 @@ const OG_CARDS: Record<string, string> = {
   socialdues: '남의 경조사 계산기',
   rest: '잘 쉬는 법 — 쉼 지원 조회',
   inheritance: '상속 · 증여 계산기',
+  housing: '내 집 마련 계산기',
   guide: '읽을거리',
 };
 

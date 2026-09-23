@@ -72,9 +72,27 @@ export const EVENTS: LifeEvent[] = [
   {
     key: 'housing',
     title: '내 집 마련',
-    lead: '전세랑 매매 중에 뭐가 나은지 계산해 주세요',
-    status: 'soon',
+    lead: '집값 말고 세금이랑 수수료는 얼마나 더 드나요',
+    status: 'live',
     icon: 'housing',
+    tips: [
+      {
+        title: '집값만 보고 예산을 짜면 잔금 날 모자랍니다.',
+        body: '500,000,000원짜리 집이면 취득세·지방교육세·중개보수로 7,700,000원쯤이 더 나갑니다. 계약금 내기 전에 이 돈이 어디서 나올지 정해 두세요.',
+      },
+      {
+        title: '전용 85㎡가 경계선입니다.',
+        body: '85㎡를 넘으면 농어촌특별세 0.2%가 더 붙습니다. 흔히 말하는 국민평형 84㎡는 딱 면제 대상이에요. 1㎡ 차이로 금액이 갈립니다.',
+      },
+      {
+        title: '중개보수는 상한일 뿐입니다.',
+        body: '조례에 적힌 요율은 최대치고, 실제 금액은 중개사와 협의해서 정합니다. 깎아달라고 해도 됩니다.',
+      },
+      {
+        title: '처음 사는 집이면 2,000,000원을 깎아줍니다.',
+        body: '본인과 배우자 모두 집을 가진 적이 없고 취득가액이 1,200,000,000원 이하일 때입니다. 다만 3년 안에 팔거나 세를 주면 다시 뱉어내야 해요.',
+      },
+    ],
   },
   {
     key: 'jobchange',
@@ -318,6 +336,17 @@ export const TOOLS: Tool[] = [
     profileFields: ['children', 'residence'],
     ruleFile: 'birth-grants-national',
     timing: '출생신고 직후 (60일 이내)',
+  },
+  {
+    slug: 'purchase-cost',
+    event: 'housing',
+    type: 'calculator',
+    title: '집 살 때 드는 돈 계산기',
+    question: '집값 말고 세금이랑 수수료는 얼마나 더 드나요?',
+    lead: '취득세·지방교육세·농어촌특별세·중개보수를 모아 집값 외에 더 있어야 하는 돈을 알려드립니다.',
+    profileFields: [],
+    ruleFile: 'home-purchase',
+    timing: '계약금 넣기 전에',
   },
   {
     slug: 'gift-tax',

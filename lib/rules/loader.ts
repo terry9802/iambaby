@@ -15,6 +15,7 @@ import pendingReforms2026 from '@/rules/2026/pending-reforms.json';
 import restBenefits2026 from '@/rules/2026/rest-benefits.json';
 import giftTax2026 from '@/rules/2026/gift-tax.json';
 import deadlines2026 from '@/rules/2026/deadlines.json';
+import homePurchase2026 from '@/rules/2026/home-purchase.json';
 import type { RuleFile, RuleMeta } from './types';
 import { parseDate, toISODate } from '@/lib/format';
 
@@ -39,6 +40,7 @@ const REGISTRY = {
   'rest-benefits': [restBenefits2026],
   'gift-tax': [giftTax2026],
   deadlines: [deadlines2026],
+  'home-purchase': [homePurchase2026],
 } as const satisfies Record<string, readonly { meta: RuleMeta; values: unknown }[]>;
 
 export type RuleId = keyof typeof REGISTRY;
