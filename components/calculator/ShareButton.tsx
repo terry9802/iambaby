@@ -15,11 +15,22 @@ export function ShareButton({
   query,
   title,
   text,
+  heading = '이 결과 그대로 공유하기',
+  blurb = '아래 문구와 함께, 지금 넣은 숫자가 담긴 주소를 보냅니다.',
+  /**
+   * 주소에 내가 넣은 숫자가 담기는 화면에서만 켠다. 마감 안내처럼 누구에게나
+   * 같은 주소가 나가는 곳에서는 끈다. 거기서는 널리 퍼뜨리는 게 목적이라,
+   * 조심하라는 말이 오히려 공유를 막는다.
+   */
+  privacyNote = true,
 }: {
   query: string;
   title: string;
   /** 금액·기간이 들어간 한 문장. 없으면 주소만 보낸다. */
   text?: string;
+  heading?: string;
+  blurb?: string;
+  privacyNote?: boolean;
 }) {
   const [state, setState] = useState<'idle' | 'copied' | 'failed'>('idle');
 
@@ -51,13 +62,13 @@ export function ShareButton({
     <section className="rounded-[12px] border border-line bg-surface px-4 py-3.5">
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-0.5">
-          <h2 className="text-[13.5px] font-semibold text-ink">이 결과 그대로 공유하기</h2>
+          <h2 className="text-[13.5px] font-semibold text-ink">{heading}</h2>
           <p className="text-[12px] leading-relaxed text-ink-faint">
             {state === 'copied'
               ? '문구와 주소를 복사했어요. 붙여넣기 하시면 됩니다.'
               : state === 'failed'
                 ? '복사가 안 됐어요. 브라우저 주소창의 주소를 직접 복사해 주세요.'
-                : '아래 문구와 함께, 지금 넣은 숫자가 담긴 주소를 보냅니다.'}
+                : blurb}
           </p>
         </div>
         <button
@@ -76,10 +87,12 @@ export function ShareButton({
         </p>
       )}
 
-      <p className="mt-2.5 border-t border-line pt-2.5 text-[11.5px] leading-relaxed text-ink-faint">
-        문구와 주소 안에 입력하신 금액이 들어 있어요. 링크를 받은 사람은 그 숫자를 볼 수 있으니,
-        아무나 볼 수 있는 곳에는 올리지 말아 주세요.
-      </p>
+      {privacyNote && (
+        <p className="mt-2.5 border-t border-line pt-2.5 text-[11.5px] leading-relaxed text-ink-faint">
+          문구와 주소 안에 입력하신 금액이 들어 있어요. 링크를 받은 사람은 그 숫자를 볼 수 있으니,
+          아무나 볼 수 있는 곳에는 올리지 말아 주세요.
+        </p>
+      )}
     </section>
   );
 }

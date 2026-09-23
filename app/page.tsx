@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { ARTICLES } from '@/content/index';
 import { ProfileBanner } from '@/components/profile/ProfileBanner';
 import { HomeTabs } from '@/components/home/HomeTabs';
+import { DeadlineStrip } from '@/components/home/DeadlineStrip';
 import { AdSlot } from '@/components/analytics/AdSense';
 import { SiteJsonLd } from '@/components/seo/JsonLd';
 
@@ -55,6 +56,8 @@ export default function HomePage() {
           숫자만 던지지 않고 어떻게 나온 숫자인지, 어느 조문에 근거한 건지 함께 보여드려요.
         </p>
       </header>
+
+      <DeadlineStrip />
 
       <ProfileBanner />
 

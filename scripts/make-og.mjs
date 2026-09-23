@@ -8,6 +8,7 @@
   실행:  node scripts/make-og.mjs
 */
 import { chromium } from 'playwright-core';
+import { createRequire } from 'node:module';
 import { mkdtemp, writeFile, readFile, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -22,6 +23,26 @@ async function fontCss() {
   const css = await readFile(path.join(ROOT, 'app', 'pretendard.css'), 'utf8');
   return css.replaceAll('/fonts/pretendard/', `file://${path.join(ROOT, 'public', 'fonts', 'pretendard')}/`);
 }
+
+/*
+  곧 마감되는 지원은 카드를 따로 굽는다. 일반 카드가 "무슨 계산기인지"를 말한다면
+  이 카드는 "언제까지인지"를 말해야 한다. 남은 날(D-7)이 아니라 마감 날짜를 박는다.
+  미리보기는 카카오톡·슬랙이 한참 캐시해 두기 때문에, 하루만 지나도 틀리는 숫자를
+  그림에 넣으면 안 된다.
+*/
+const require_ = createRequire(import.meta.url);
+const DEADLINES = require_('../rules/2026/deadlines.json').values.items;
+
+const DEADLINE_CARDS = DEADLINES.map((d) => {
+  const due = new Date(`${d.dueAt}T00:00:00`);
+  return {
+    name: `deadline-${d.slug}`,
+    kicker: `${due.getMonth() + 1}월 ${due.getDate()}일 마감`,
+    headline: `${d.name}\n${(d.amount / 10000).toLocaleString('ko-KR')}만원`,
+    tags: [d.amountLabel, d.region, '신청 안 하면 그냥 사라집니다'],
+    urgent: true,
+  };
+});
 
 const CARDS = [
   {
@@ -95,6 +116,10 @@ body{width:1200px;height:630px;background:#eceeed;font-family:'Pretendard Variab
 .brand .blank{display:inline-block;background:currentColor;border-radius:1px;width:.45em;height:.13em;margin:0 .03em .02em}
 .kicker{margin-top:26px;align-self:flex-start;font-size:20px;font-weight:700;color:#fff;
   background:#cb2c26;border-radius:999px;padding:8px 18px}
+.card.urgent{background:#fceceb}
+.card.urgent .kicker{font-size:24px;padding:10px 22px}
+.card.urgent h1{font-size:56px}
+.card.urgent .tags li{background:#fff;border-color:#f0cfcd}
 h1{margin-top:20px;font-size:50px;font-weight:700;line-height:1.28;letter-spacing:-.025em;color:#16181a;
   display:flex;flex-direction:column}
 .tags{display:flex;flex-wrap:wrap;gap:9px;list-style:none;margin-top:20px}
@@ -105,7 +130,7 @@ h1{margin-top:20px;font-size:50px;font-weight:700;line-height:1.28;letter-spacin
 .foot p{font-size:17px;color:#585f5d}
 .foot b{font-size:17px;font-weight:700;color:#cb2c26;display:block;margin-top:2px}
 </style>
-<div class="card">
+<div class="card${card.urgent ? ' urgent' : ''}">
   <div class="brand"><em>iam</em><span class="blank"></span><em>baby</em></div>
   <div class="kicker">${card.kicker}</div>
   <h1>${lines}</h1>
@@ -124,7 +149,7 @@ await mkdir(OUT, { recursive: true });
 const browser = await chromium.launch({ executablePath: EXEC });
 const page = await browser.newPage({ viewport: { width: 1200, height: 630 } });
 
-for (const card of CARDS) {
+for (const card of [...CARDS, ...DEADLINE_CARDS]) {
   const file = path.join(dir, `${card.name}.html`);
   await writeFile(file, html(card, css), 'utf8');
   await page.goto(`file://${file}`);

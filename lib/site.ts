@@ -84,6 +84,18 @@ export function ogMeta({
 }
 
 export function ogImage(key?: string) {
+  /*
+    마감 캠페인 카드는 사업이 생길 때마다 늘어난다. 여기 목록에 하나씩 적어두면
+    빼먹기 쉬우므로 접두사로 알아본다. 그림 파일 이름과 키가 같다.
+  */
+  if (key?.startsWith('deadline-')) {
+    return {
+      url: `/og/${key}.png`,
+      width: 1200,
+      height: 630,
+      alt: `${SITE_NAME} — 곧 마감되는 지원금 안내`,
+    };
+  }
   const name = key && key in OG_CARDS ? key : 'default';
   // 이 글은 화면을 못 보는 사람이 읽는 자리다. 내부에서 쓰는 키를 그대로 내보내지 않는다.
   const what = OG_CARDS[name] ?? '처음 겪는 일 앞에서 필요한 계산';
