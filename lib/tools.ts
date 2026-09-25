@@ -342,6 +342,17 @@ export const TOOLS: Tool[] = [
     timing: '출생신고 직후 (60일 이내)',
   },
   {
+    slug: 'market-check',
+    event: 'housing',
+    type: 'checker',
+    title: '실거래가 조회기',
+    question: '이 동네는 실제로 얼마에 거래되나요?',
+    lead: '국토교통부에 신고된 실제 거래를 지역·평수별로 모아 보여드립니다. 적정가는 알려드리지 않고, 거래된 사실만 보여드려요.',
+    profileFields: [],
+    ruleFile: 'region-codes',
+    timing: '임장 가기 전에',
+  },
+  {
     slug: 'auction-cost',
     event: 'housing',
     type: 'checker',

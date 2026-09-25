@@ -17,6 +17,9 @@ import { RestBenefitsTool } from '@/components/tools/RestBenefitsTool';
 import { GiftTaxTool } from '@/components/tools/GiftTaxTool';
 import { HomePurchaseTool } from '@/components/tools/HomePurchaseTool';
 import { AuctionTool } from '@/components/tools/AuctionTool';
+import { MarketCheckTool } from '@/components/tools/MarketCheckTool';
+import { COVERAGE_NOTE, listSido, listSigunguOf } from '@/lib/market/regions';
+import { MARKET_CHECKLIST } from '@/lib/market/checklist';
 
 export function generateStaticParams() {
   return TOOLS.map((t) => ({ event: t.event, tool: t.slug }));
@@ -68,6 +71,18 @@ export default async function ToolPage({
       return <HomePurchaseTool tool={found} fallbackToday={fallbackToday} />;
     case 'auction-cost':
       return <AuctionTool tool={found} fallbackToday={fallbackToday} />;
+    case 'market-check': {
+      const sido = listSido();
+      return (
+        <MarketCheckTool
+          tool={found}
+          sido={sido}
+          sigunguBySido={Object.fromEntries(sido.map((s) => [s.code, listSigunguOf(s.code)]))}
+          coverageNote={COVERAGE_NOTE}
+          checklist={MARKET_CHECKLIST}
+        />
+      );
+    }
     case 'leave-timeline':
       return <LeaveTimelineTool tool={found} fallbackToday={fallbackToday} />;
     case 'social-dues':
