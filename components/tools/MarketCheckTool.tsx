@@ -52,6 +52,7 @@ type Result = {
   total: number;
   byBand: Band[];
   medianUnitPrice: number;
+  mapKey: string | null;
   rent: {
     jeonse: { count: number; medianDeposit: number; medianUnitPrice: number };
     wolse: { count: number; medianDeposit: number; medianMonthlyRent: number };
@@ -288,6 +289,7 @@ export function MarketCheckTool({
               {view === 'map' ? (
                 <div className="h-[420px]">
                   <KakaoMap
+                    appKey={result.mapKey}
                     points={result.complexes as MapPoint[]}
                     selectedId={picked}
                     onSelect={setPicked}

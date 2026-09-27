@@ -51,10 +51,13 @@ function shortMoney(won: number): string {
 }
 
 export function KakaoMap({
+  appKey,
   points,
   selectedId,
   onSelect,
 }: {
+  /** 서버가 내려준 카카오 JavaScript 키. 없으면 지도를 띄울 수 없다. */
+  appKey: string | null;
   points: MapPoint[];
   selectedId: string | null;
   onSelect: (id: string) => void;
@@ -62,7 +65,7 @@ export function KakaoMap({
   const boxRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<KakaoMapInstance | null>(null);
   const overlaysRef = useRef<KakaoOverlay[]>([]);
-  const jsKey = process.env.NEXT_PUBLIC_KAKAO_JS_KEY;
+  const jsKey = appKey;
   // 키가 없으면 기다릴 것도 없다. 처음부터 막힌 상태로 시작한다.
   const [state, setState] = useState<'loading' | 'ready' | 'blocked'>(
     jsKey ? 'loading' : 'blocked',
@@ -166,9 +169,11 @@ export function KakaoMap({
     return (
       <div className="flex h-full items-center justify-center bg-sunk px-6 py-10">
         <p className="text-center text-[13px] leading-relaxed text-ink-soft">
-          지도를 불러오지 못했어요.
+          {jsKey
+            ? '지도를 불러오지 못했어요. 이 주소가 카카오에 등록돼 있지 않거나 잠시 연결이 끊긴 경우예요.'
+            : '지도 기능이 아직 준비 중이에요.'}
           <br />
-          아래 목록으로는 같은 내용을 보실 수 있습니다.
+          목록 보기로는 같은 내용을 보실 수 있습니다.
         </p>
       </div>
     );

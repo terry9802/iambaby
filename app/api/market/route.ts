@@ -112,6 +112,22 @@ export async function GET(request: Request) {
         }
       : null,
     band: band ?? 'all',
+    /*
+      지도 키를 여기 실어 보낸다.
+
+      원래는 NEXT_PUBLIC_ 이름을 붙여 브라우저 번들에 박았는데, 그 방식은
+      빌드할 때 값이 굳는다. 환경변수를 고쳐도 다시 배포해야 반영되고, 이름을
+      한 글자만 틀리면 아무 말 없이 빈 값이 된다. 실제로 그래서 지도가 안 떴다.
+
+      서버가 내려주면 그 두 문제가 사라진다. 이 키는 어차피 브라우저에
+      드러나는 값이고, 카카오가 등록된 도메인에서만 열어 주는 것으로 막는다.
+      이름은 흔히 쓰는 것을 모두 받아 준다.
+    */
+    mapKey:
+      process.env.KAKAO_JS_KEY ??
+      process.env.NEXT_PUBLIC_KAKAO_JS_KEY ??
+      process.env.KAKAO_JAVASCRIPT_KEY ??
+      null,
     complexes: complexes,
     // 이름을 찾았을 때만 단지별 내역을 보낸다. 통째로 내보낼 자료가 아니다.
     complex: complex
