@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { calcCardSplit, deductionOf, cardDeductionRule } from '@/lib/calculators/card-split';
+import {
+  calcCardSplit,
+  cardDeductionRule,
+  cardSplitVerdict,
+  deductionOf,
+} from '@/lib/calculators/card-split';
 
 const MAN = 10000;
 const ASOF = '2026-09-01';
@@ -211,5 +216,48 @@ describe('손익분기 마일 단가', () => {
     expect(out.result.warnings[0]).toContain('다 몰아줘도 문턱을 못 넘깁니다');
     // 공제가 0원이면 신용카드를 써도 잃는 게 없다.
     expect(out.result.value.a.check).toBe(0);
+  });
+});
+
+describe('한 줄 판정', () => {
+  function verdictFor(input: Parameters<typeof calcCardSplit>[0]) {
+    const out = calcCardSplit(input);
+    if (!out.ok) throw new Error('계산 실패');
+    return cardSplitVerdict(out.result.value);
+  }
+
+  it('한 사람 카드만 쓰면 그 사람 이름을 말한다', () => {
+    const v = verdictFor({
+      yearlySpend: 3600 * MAN, aSalary: 4500 * MAN, bSalary: 4500 * MAN,
+      milesPer1000: 1, wonPerMile: 20, asOf: ASOF,
+    });
+    expect(v.action).toContain('한 장에 몰아서');
+    // 한도를 채운 뒤로는 체크카드를 써도 세금이 안 줄어서 전부 신용이 답이다.
+    expect(v.action).toContain('전부 신용카드로');
+    expect(v.why).toContain('한도');
+  });
+
+  it('공제를 못 받는 집에는 세금을 잊으라고 말한다', () => {
+    const v = verdictFor({
+      yearlySpend: 3600 * MAN, aSalary: 16000 * MAN, bSalary: 16000 * MAN,
+      milesPer1000: 1, wonPerMile: 20, asOf: ASOF,
+    });
+    expect(v.why).toContain('올해는 공제가 없어요');
+  });
+
+  it('마일리지 카드가 아니면 체크카드로 몰고 갈림길을 말하지 않는다', () => {
+    const v = verdictFor({
+      yearlySpend: 1600 * MAN, aSalary: 4000 * MAN, milesPer1000: 0, asOf: ASOF,
+    });
+    expect(v.action).toContain('전부 체크카드로');
+    expect(v.why).not.toContain('1마일');
+  });
+
+  it('마일 단가가 갈림길 근처면 손익분기를 말한다', () => {
+    const v = verdictFor({
+      yearlySpend: 3600 * MAN, aSalary: 2800 * MAN, bSalary: 2800 * MAN,
+      milesPer1000: 1, wonPerMile: 20, asOf: ASOF,
+    });
+    expect(v.why).toContain('1마일');
   });
 });

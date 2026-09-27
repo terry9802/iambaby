@@ -1,5 +1,6 @@
 import { isStale } from '@/lib/rules/loader';
 import type { RuleMeta } from '@/lib/rules/types';
+import { InlineText } from '@/components/ui/InlineText';
 
 export function StaleBadge() {
   return (
@@ -42,8 +43,12 @@ export function BasisFooter({ basis }: { basis: RuleMeta[] }) {
               {meta.effectiveTo ? ` ~ ${meta.effectiveTo}` : ' 부터'} · 마지막 확인 {meta.verifiedAt}
               {meta.verifiedBy ? ` (${meta.verifiedBy})` : ''}
             </p>
+            {/* 다른 화면의 문구는 전부 **굵게** 표기를 쓴다. 여기만 날것으로
+                내보내면 별표가 그대로 보인다. 같은 표기를 쓰게 맞춘다. */}
             {meta.note && (
-              <p className="text-[12.5px] leading-relaxed text-ink-soft">{meta.note}</p>
+              <p className="text-[12.5px] leading-relaxed text-ink-soft">
+                <InlineText text={meta.note} />
+              </p>
             )}
           </li>
         ))}

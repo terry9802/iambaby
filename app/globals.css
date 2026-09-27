@@ -36,6 +36,21 @@
   --color-partner: #33608f;
   --color-partner-soft: #eaf1f7;
 
+  /*
+    카드 배분 막대에 쓰는 네 조각.
+    사람은 색상(빨강/파랑)으로, 카드 종류는 밝기로 나눈다. 두 축을 겹쳐야
+    "누가" 와 "어떤 카드로" 가 막대 하나에서 같이 읽힌다.
+
+    눈대중으로 고르지 않았다. 색각 이상(적록·청황) 환산 후 인접 쌍의 색차,
+    채도 하한, 명도 대역을 검사기로 돌려 전부 통과한 값이다. 연한 두 색은
+    흰 배경 대비가 3:1에 못 미치므로 막대 안에 글씨를 넣지 않고, 아래
+    범례에 색칩과 금액을 따로 적는다.
+  */
+  --color-split-credit-a: #cb2c26;
+  --color-split-check-a: #f0857a;
+  --color-split-credit-b: #0f63a8;
+  --color-split-check-b: #2f9ce4;
+
   --color-good: #17714f;
   --color-good-soft: #e3f2eb;
 

@@ -458,3 +458,44 @@ export function calcCardSplit(input: CardSplitInput): CalcOutcome<CardSplitValue
 export function cardDeductionRule(asOf?: string): CardDeductionRule {
   return loadRule<CardDeductionRule>('card-deduction', asOf ?? toISODate(new Date())).rule.values;
 }
+
+/**
+ * 계산 결과를 한 줄로 줄인다. 대시보드 맨 위에 놓을 문장이다.
+ *
+ * 숫자 표는 아래에 다 있으니, 이 줄은 "그래서 뭘 하라는 건데"에만 답해야 한다.
+ * 누구 카드를 쓰고, 신용과 체크 중 무엇을 쓰라는 것인지 두 가지만 담는다.
+ */
+export function cardSplitVerdict(v: CardSplitValue): { action: string; why: string } {
+  const users = [v.a, v.b].filter((p) => p.spend > 0);
+  const total = v.a.spend + v.b.spend;
+
+  if (users.length === 0 || total <= 0) {
+    return { action: '쓸 금액을 넣어주세요.', why: '한 해에 카드로 쓸 생활비를 넣으면 계산합니다.' };
+  }
+
+  /* 누구 명의를 쓰는가. 한 사람에게 몰렸는지, 둘로 갈렸는지. */
+  const whose =
+    users.length === 1
+      ? `${users[0].label} 카드 한 장에 몰아서`
+      : `${v.a.label}·${v.b.label} 카드에 나눠 담고`;
+
+  /* 무엇으로 쓰는가. 한쪽이 5% 미만이면 "전부"라고 말해도 거짓이 아니다. */
+  const credit = v.a.credit + v.b.credit;
+  const check = v.a.check + v.b.check;
+  const mix =
+    check / total < 0.05
+      ? '전부 신용카드로 쓰세요'
+      : credit / total < 0.05
+        ? '전부 체크카드로 쓰세요'
+        : '아래 금액대로 신용·체크를 섞어 쓰세요';
+
+  const why = v.limitReached
+    ? '공제 한도를 이미 채워서, 그 위로는 체크카드를 써도 세금이 줄지 않아요.'
+    : v.breakEvenWonPerMile === null
+      ? v.belowThreshold.length > 0 && credit / total >= 0.95
+        ? '문턱을 못 넘겨 올해는 공제가 없어요. 세금은 잊고 혜택 좋은 카드를 쓰시면 됩니다.'
+        : '마일리지를 빼면 공제율이 높은 체크카드가 유리해요.'
+      : `1마일을 ${formatKRW(Math.round(v.breakEvenWonPerMile))}보다 비싸게 쓸 수 있느냐가 갈림길이에요.`;
+
+  return { action: `${whose} ${mix}.`, why };
+}
