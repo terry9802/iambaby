@@ -194,4 +194,22 @@ describe('손익분기 마일 단가', () => {
     if (!out.ok) throw new Error('계산 실패');
     expect(out.result.value.breakEvenWonPerMile).toBeNull();
   });
+
+  it('아무도 문턱을 못 넘으면 손익분기가 없고, 혜택 좋은 카드를 쓰라고 말한다', () => {
+    // 소득 1.6억 둘, 카드로 쓸 돈은 3,600만. 문턱이 4,000만이라 몰아줘도 못 넘는다.
+    const out = calcCardSplit({
+      yearlySpend: 3600 * MAN,
+      aSalary: 16000 * MAN,
+      bSalary: 16000 * MAN,
+      milesPer1000: 1,
+      wonPerMile: 20,
+      asOf: ASOF,
+    });
+    if (!out.ok) throw new Error('계산 실패');
+    // 포기할 공제가 없으니 경계선도 없다. 있다고 말하면 거짓말이 된다.
+    expect(out.result.value.breakEvenWonPerMile).toBeNull();
+    expect(out.result.warnings[0]).toContain('다 몰아줘도 문턱을 못 넘깁니다');
+    // 공제가 0원이면 신용카드를 써도 잃는 게 없다.
+    expect(out.result.value.a.check).toBe(0);
+  });
 });

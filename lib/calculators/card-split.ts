@@ -289,9 +289,16 @@ export function calcCardSplit(input: CardSplitInput): CalcOutcome<CardSplitValue
   const creditRate = rule.rates.find((r) => r.key === 'credit')?.rate ?? 0.15;
   const checkRate = rule.rates.find((r) => r.key === 'check')?.rate ?? 0.3;
   const spender = a.spend >= b.spend ? a : b;
+  /*
+    단, 그 경계는 공제가 실제로 움직일 때만 있다. 주로 쓰는 사람이 문턱을
+    못 넘어서 공제가 0원이면 체크카드로 바꿔도 줄어들 세금이 없다. 그때는
+    포기할 게 없으니 마일 단가가 얼마든 신용카드가 이득이고, 경계선 자체가
+    없다. 없는 경계를 "58원은 넘겨야 한다"고 말하면 거짓말이 된다.
+  */
+  const marginIsLive = spender.deduction > 0;
   const lostPerWon = (checkRate - creditRate) * spender.marginalRate * (1 + rule.localTaxRate);
   const breakEvenWonPerMile =
-    milesPer1000 > 0 ? (lostPerWon * 1000) / milesPer1000 : null;
+    milesPer1000 > 0 && marginIsLive ? (lostPerWon * 1000) / milesPer1000 : null;
   const limitReached = a.cappedBy > 0 || b.cappedBy > 0;
 
   const belowThreshold: string[] = [];
@@ -412,8 +419,16 @@ export function calcCardSplit(input: CardSplitInput): CalcOutcome<CardSplitValue
     );
   }
   if (belowThreshold.length > 0) {
+    /*
+      한쪽에 다 몰아줘도 문턱에 못 미치는 경우가 있다. 소득이 높고 카드로
+      쓰는 돈은 적은 집이 그렇다. 그때 "몰아주세요"는 될 수 없는 걸 하라는
+      말이라서, 공제를 포기하고 카드 혜택만 챙기라고 말해야 맞다.
+    */
+    const unreachable = spend < Math.min(a.threshold, bSalary > 0 ? b.threshold : a.threshold);
     warnings.unshift(
-      `**${belowThreshold.join(', ')}은(는) 문턱을 못 넘깁니다.** 그 사람 카드로 쓴 돈은 공제가 0원이에요. 문턱을 넘길 만큼 몰아주거나, 아예 다른 사람 카드를 쓰는 게 낫습니다.`,
+      unreachable
+        ? `**한 사람에게 다 몰아줘도 문턱을 못 넘깁니다.** 낮은 쪽 문턱이 ${formatKRW(Math.min(a.threshold, bSalary > 0 ? b.threshold : a.threshold))}인데 한 해에 쓸 돈이 ${formatKRW(spend)}이에요. 올해는 카드 소득공제를 받을 수 없으니, 세금은 신경 쓰지 말고 마일리지나 할인이 가장 좋은 카드를 쓰시면 됩니다.`
+        : `**${belowThreshold.join(', ')}은(는) 문턱을 못 넘깁니다.** 그 사람 카드로 쓴 돈은 공제가 0원이에요. 문턱을 넘길 만큼 몰아주거나, 아예 다른 사람 카드를 쓰는 게 낫습니다.`,
     );
   }
 
