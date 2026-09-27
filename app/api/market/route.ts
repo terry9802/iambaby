@@ -9,6 +9,7 @@ import {
   type Deal,
 } from '@/lib/market/rtms';
 import { findSigungu } from '@/lib/market/regions';
+import { geocodeAll } from '@/lib/market/geocode';
 
 /**
  * 실거래가 조회 창구.
@@ -32,6 +33,10 @@ export async function GET(request: Request) {
   const complex = (sp.get('complex') ?? '').trim();
   /* 지도는 단지 단위로 묶은 값을 쓴다. 거래를 낱개로 찍으면 같은 자리에 겹친다. */
   const wantComplexes = sp.get('groupBy') === 'complex';
+  /* 좌표는 지도를 그릴 때만 구한다. 목록만 볼 때는 카카오를 부를 이유가 없다. */
+  const wantGeo = sp.get('geo') === '1';
+  /* 마커가 수백 개를 넘으면 지도가 읽히지 않는다. 거래가 많은 곳부터 자른다. */
+  const limit = Math.min(400, Math.max(1, Number(sp.get('limit') ?? 200)));
   const band = sp.get('band');
 
   const region = findSigungu(lawd);
@@ -70,6 +75,19 @@ export async function GET(request: Request) {
     ? deals.filter((d) => norm(d.name).includes(norm(complex)))
     : [];
 
+  let complexes: (ReturnType<typeof summarizeByComplex>[number] & {
+    lat?: number;
+    lng?: number;
+  })[] | null = wantComplexes ? summarizeByComplex(deals).slice(0, limit) : null;
+
+  if (complexes && wantGeo) {
+    const points = await geocodeAll(region.name, complexes);
+    complexes = complexes.map((c) => {
+      const p = points.get(c.id);
+      return p ? { ...c, lat: p.lat, lng: p.lng } : c;
+    });
+  }
+
   const body = {
     region: { code: region.code, name: region.name, sido: region.sidoName },
     dataset,
@@ -94,7 +112,7 @@ export async function GET(request: Request) {
         }
       : null,
     band: band ?? 'all',
-    complexes: wantComplexes ? summarizeByComplex(deals) : null,
+    complexes: complexes,
     // 이름을 찾았을 때만 단지별 내역을 보낸다. 통째로 내보낼 자료가 아니다.
     complex: complex
       ? {
