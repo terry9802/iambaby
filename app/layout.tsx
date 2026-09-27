@@ -36,6 +36,13 @@ export const metadata: Metadata = {
     description:
       '몰라도 괜찮아요. 뭘 모르는지 몰라도 괜찮아요. 복잡한 세상에서 우린 아직 애기인거죠.',
   }),
+  icons: {
+    icon: [
+      { url: '/icon/app-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon/app-96.png', sizes: '96x96', type: 'image/png' },
+    ],
+    apple: [{ url: '/icon/app-180.png', sizes: '180x180', type: 'image/png' }],
+  },
   robots: { index: true, follow: true },
   verification: process.env.NEXT_PUBLIC_GSC_VERIFICATION
     ? { google: process.env.NEXT_PUBLIC_GSC_VERIFICATION }
