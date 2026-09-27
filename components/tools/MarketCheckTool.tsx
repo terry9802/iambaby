@@ -5,6 +5,7 @@ import { formatKRW } from '@/lib/format';
 import type { Tool } from '@/lib/tools';
 import { BackButton } from '@/components/ui/BackButton';
 import { FieldGroup, SegmentedField, SelectField } from '@/components/ui/fields';
+import { KakaoMap, type MapPoint } from '@/components/market/KakaoMap';
 
 type Band = {
   key: string;
@@ -26,6 +27,22 @@ type Deal = {
   date: string;
   unitPrice: number;
 };
+type Complex = {
+  id: string;
+  name: string;
+  dong: string;
+  jibun: string;
+  buildYear: number | null;
+  count: number;
+  medianAmount: number;
+  medianUnitPrice: number;
+  minAmount: number;
+  maxAmount: number;
+  areas: number[];
+  latestDate: string;
+  lat?: number;
+  lng?: number;
+};
 type Result = {
   region: { code: string; name: string; sido: string };
   dataset: string;
@@ -39,6 +56,7 @@ type Result = {
     jeonse: { count: number; medianDeposit: number; medianUnitPrice: number };
     wolse: { count: number; medianDeposit: number; medianMonthlyRent: number };
   } | null;
+  complexes: Complex[] | null;
   complex: {
     query: string;
     count: number;
@@ -47,6 +65,14 @@ type Result = {
     recent: Deal[];
   } | null;
 };
+
+const BANDS = [
+  { value: 'all', label: '전체' },
+  { value: 'under60', label: '60㎡ 미만' },
+  { value: '60to85', label: '60~85㎡' },
+  { value: '85to135', label: '85~135㎡' },
+  { value: 'over135', label: '135㎡↑' },
+];
 
 const DATASETS = [
   { value: 'aptTrade', label: '아파트 매매' },
@@ -75,6 +101,9 @@ export function MarketCheckTool({
   const [dataset, setDataset] = useState('aptTrade');
   const [months, setMonths] = useState('6');
   const [complex, setComplex] = useState('');
+  const [band, setBand] = useState('60to85');
+  const [view, setView] = useState<'map' | 'list'>('map');
+  const [picked, setPicked] = useState<string | null>(null);
   const [state, setState] = useState<'idle' | 'loading' | 'done' | 'failed'>('idle');
   const [result, setResult] = useState<Result | null>(null);
   const [error, setError] = useState('');
@@ -85,7 +114,9 @@ export function MarketCheckTool({
     setState('loading');
     setError('');
     try {
-      const q = new URLSearchParams({ lawd, dataset, months });
+      const q = new URLSearchParams({ lawd, dataset, months, band, groupBy: 'complex' });
+      // 지도를 볼 때만 좌표를 구한다. 목록만 볼 거면 카카오를 부를 이유가 없다.
+      if (view === 'map') q.set('geo', '1');
       if (complex.trim()) q.set('complex', complex.trim());
       const res = await fetch(`/api/market?${q}`);
       const body = await res.json();
@@ -95,12 +126,13 @@ export function MarketCheckTool({
         return;
       }
       setResult(body);
+      setPicked(null);
       setState('done');
     } catch {
       setError('조회에 실패했어요. 잠시 뒤에 다시 시도해 주세요.');
       setState('failed');
     }
-  }, [lawd, dataset, months, complex]);
+  }, [lawd, dataset, months, complex, band, view]);
 
   const isRent = result?.dataset === 'aptRent';
 
@@ -166,6 +198,16 @@ export function MarketCheckTool({
             options={DATASETS}
           />
           <SegmentedField<string>
+            label="전용면적"
+            hint="평형을 맞춰야 단지끼리 견줄 수 있는 숫자가 됩니다. 84㎡가 흔히 말하는 국민평형이에요."
+            value={band}
+            onChange={(next) => {
+              setBand(next);
+              setState('idle');
+            }}
+            options={BANDS}
+          />
+          <SegmentedField<string>
             label="기간"
             hint="거래가 적은 동네는 기간을 늘려야 표본이 쌓입니다."
             value={months}
@@ -220,6 +262,105 @@ export function MarketCheckTool({
 
       {state === 'done' && result && (
         <>
+          {/* 지도가 먼저다. 어느 동네에 뭐가 있는지는 표보다 그림이 빠르다. */}
+          {result.complexes && result.complexes.some((c) => c.lat !== undefined) && (
+            <section className="overflow-hidden rounded-[12px] border border-line bg-surface">
+              <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
+                <p className="text-[13px] font-semibold text-ink">
+                  단지 {result.complexes.filter((c) => c.lat !== undefined).length}곳
+                </p>
+                <div className="flex gap-1">
+                  {(['map', 'list'] as const).map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => setView(v)}
+                      className={`rounded-[6px] px-2.5 py-1 text-[12.5px] font-semibold ${
+                        view === v ? 'bg-brand text-white' : 'bg-sunk text-ink-soft'
+                      }`}
+                    >
+                      {v === 'map' ? '지도' : '목록'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {view === 'map' ? (
+                <div className="h-[420px]">
+                  <KakaoMap
+                    points={result.complexes as MapPoint[]}
+                    selectedId={picked}
+                    onSelect={setPicked}
+                  />
+                </div>
+              ) : (
+                <ul className="max-h-[420px] overflow-y-auto">
+                  {result.complexes.map((c) => (
+                    <li key={c.id}>
+                      <button
+                        type="button"
+                        onClick={() => setPicked(c.id === picked ? null : c.id)}
+                        className={`flex w-full items-baseline justify-between gap-3 border-b border-line px-4 py-3 text-left last:border-b-0 ${
+                          c.id === picked ? 'bg-brand-soft' : ''
+                        }`}
+                      >
+                        <span className="min-w-0">
+                          <span className="block truncate text-[13.5px] font-semibold text-ink">
+                            {c.name}
+                          </span>
+                          <span className="tnum block text-[12px] text-ink-faint">
+                            {c.dong} · {c.count}건
+                            {c.buildYear !== null && ` · ${c.buildYear}년식`}
+                          </span>
+                        </span>
+                        <span className="tnum shrink-0 text-[14px] font-bold text-ink">
+                          {formatKRW(c.medianAmount)}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {/* 마커를 누르면 그 단지만 여기에 펼쳐진다. */}
+              {picked && (() => {
+                const c = result.complexes?.find((x) => x.id === picked);
+                if (!c) return null;
+                const gap = result.medianUnitPrice
+                  ? (c.medianUnitPrice / result.medianUnitPrice - 1) * 100
+                  : 0;
+                return (
+                  <div className="border-t border-line bg-sunk px-4 py-4">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <p className="text-[15px] font-bold text-ink">{c.name}</p>
+                      <p className="tnum text-[12px] text-ink-faint">{c.count}건</p>
+                    </div>
+                    <p className="tnum mt-1 text-[20px] font-bold text-brand">
+                      {formatKRW(c.medianAmount)}
+                    </p>
+                    <p className="tnum mt-1 text-[12.5px] text-ink-soft">
+                      {c.dong}
+                      {c.buildYear !== null && ` · ${c.buildYear}년식`} · ㎡당{' '}
+                      {formatKRW(c.medianUnitPrice)}
+                    </p>
+                    <p className="tnum mt-1 text-[12.5px] text-ink-soft">
+                      최저 {formatKRW(c.minAmount)} ~ 최고 {formatKRW(c.maxAmount)} · 최근{' '}
+                      {c.latestDate}
+                    </p>
+                    <p className="mt-2.5 rounded-[8px] bg-surface px-3 py-2.5 text-[12.5px] leading-relaxed text-ink">
+                      {result.region.name} 전체 ㎡당 중앙값보다{' '}
+                      <strong className="tnum font-bold">
+                        {Math.abs(gap).toFixed(1)}%
+                      </strong>{' '}
+                      {gap >= 0 ? '높습니다' : '낮습니다'}. 연식·역세권·학군이 다르면 차이가 나는
+                      게 당연해서, 이 숫자만으로 좋고 나쁨을 가를 수는 없어요.
+                    </p>
+                  </div>
+                );
+              })()}
+            </section>
+          )}
+
           <section className="rounded-[12px] border border-line bg-surface px-4 py-5">
             <p className="text-[13px] font-semibold text-ink-soft">
               {result.region.sido} {result.region.name} · 최근 {result.months}개월
