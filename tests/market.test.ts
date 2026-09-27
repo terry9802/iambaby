@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import regionCodes from '@/rules/2026/region-codes.json';
-import { AREA_BANDS, bandOf, median, summarizeByBand, type Deal } from '@/lib/market/summary';
+import {
+  AREA_BANDS,
+  bandOf,
+  filterByBand,
+  median,
+  summarizeByBand,
+  summarizeByComplex,
+  type Deal,
+} from '@/lib/market/summary';
 
 const deal = (area: number, amount: number, name = '가나아파트'): Deal => ({
   name,
@@ -79,5 +87,64 @@ describe('지역코드', () => {
   it('어떻게 확인했는지가 룰 파일에 적혀 있다', () => {
     expect(regionCodes.meta.verifiedBy).toContain('API');
     expect(regionCodes.meta.verifiedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+});
+
+describe('단지별 묶기', () => {
+  const d = (name: string, dong: string, area: number, amount: number, date = '2026-07-01') => ({
+    name,
+    area,
+    floor: 5,
+    buildYear: 2010,
+    dong,
+    jibun: '1',
+    amount,
+    monthlyRent: 0,
+    date,
+    unitPrice: Math.round(amount / area),
+  });
+
+  it('같은 이름이어도 동네가 다르면 다른 단지로 센다', () => {
+    // 래미안·자이처럼 같은 브랜드가 여러 동네에 있다. 이름만으로 묶으면 엉뚱하게 섞인다.
+    const out = summarizeByComplex([
+      d('래미안', '잠실동', 84, 20e8),
+      d('래미안', '가락동', 84, 10e8),
+    ]);
+    expect(out.length).toBe(2);
+    expect(out.map((c) => c.dong).sort()).toEqual(['가락동', '잠실동']);
+  });
+
+  it('단지 값은 평균이 아니라 중앙값이다', () => {
+    const out = summarizeByComplex([
+      d('가나', '잠실동', 84, 20e8),
+      d('가나', '잠실동', 84, 21e8),
+      d('가나', '잠실동', 84, 90e8),
+    ]);
+    expect(out[0].count).toBe(3);
+    expect(out[0].medianAmount).toBe(21e8);
+    expect(out[0].maxAmount).toBe(90e8);
+  });
+
+  it('거래가 많은 단지가 앞에 온다', () => {
+    const out = summarizeByComplex([
+      d('적은곳', '잠실동', 84, 20e8),
+      d('많은곳', '잠실동', 84, 20e8),
+      d('많은곳', '잠실동', 84, 21e8),
+    ]);
+    expect(out[0].name).toBe('많은곳');
+  });
+
+  it('평형 필터가 전용면적대로 거른다', () => {
+    const deals = [d('가', '잠실동', 59, 10e8), d('나', '잠실동', 84, 20e8)];
+    expect(filterByBand(deals, '60to85').length).toBe(1);
+    expect(filterByBand(deals, '60to85')[0].area).toBe(84);
+    expect(filterByBand(deals, 'all').length).toBe(2);
+    expect(filterByBand(deals, null).length).toBe(2);
+  });
+
+  it('지번을 들고 있어야 나중에 좌표를 붙일 수 있다', () => {
+    const out = summarizeByComplex([d('가나', '잠실동', 84, 20e8)]);
+    expect(out[0].jibun).toBe('1');
+    expect(out[0].dong).toBe('잠실동');
   });
 });

@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import {
   fetchDeals,
+  filterByBand,
   median,
   summarizeByBand,
+  summarizeByComplex,
   type Dataset,
   type Deal,
 } from '@/lib/market/rtms';
@@ -28,6 +30,9 @@ export async function GET(request: Request) {
   const dataset = (sp.get('dataset') ?? 'aptTrade') as Dataset;
   const months = Math.min(MAX_MONTHS, Math.max(1, Number(sp.get('months') ?? 6)));
   const complex = (sp.get('complex') ?? '').trim();
+  /* 지도는 단지 단위로 묶은 값을 쓴다. 거래를 낱개로 찍으면 같은 자리에 겹친다. */
+  const wantComplexes = sp.get('groupBy') === 'complex';
+  const band = sp.get('band');
 
   const region = findSigungu(lawd);
   if (!region) {
@@ -53,7 +58,11 @@ export async function GET(request: Request) {
   const isRent = dataset === 'aptRent';
   const jeonse = raw.filter((d) => d.monthlyRent === 0);
   const wolse = raw.filter((d) => d.monthlyRent > 0);
-  const deals = isRent ? jeonse : raw;
+  /*
+    평형을 안 맞추면 지도의 숫자가 견줄 수 없는 값이 된다. "헬리오시티 24억"은
+    59㎡와 84㎡가 섞인 값이라 그 자체로는 아무 뜻이 없다.
+  */
+  const deals = filterByBand(isRent ? jeonse : raw, band);
 
   // 단지 이름은 띄어쓰기가 제각각이라 공백을 지우고 견준다.
   const norm = (s: string) => s.replace(/\s+/g, '');
@@ -84,6 +93,8 @@ export async function GET(request: Request) {
           },
         }
       : null,
+    band: band ?? 'all',
+    complexes: wantComplexes ? summarizeByComplex(deals) : null,
     // 이름을 찾았을 때만 단지별 내역을 보낸다. 통째로 내보낼 자료가 아니다.
     complex: complex
       ? {

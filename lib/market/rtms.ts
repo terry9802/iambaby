@@ -94,6 +94,7 @@ function parseDeals(dataset: Dataset, xml: string): Deal[] {
       floor: Number(tagOf(item, 'floor')) || null,
       buildYear: Number(tagOf(item, 'buildYear')) || null,
       dong: tagOf(item, 'umdNm'),
+      jibun: tagOf(item, 'jibun'),
       amount,
       monthlyRent: dataset === 'aptRent' ? manwonToWon(tagOf(item, 'monthlyRent')) : 0,
       date: `${y}-${mo}-${d}`,
@@ -133,6 +134,15 @@ export async function fetchDeals(
   return { deals, monthsCovered: covered, missingMonths: missing };
 }
 
-export { median, summarizeByBand, bandOf, AREA_BANDS, type BandSummary } from './summary';
+export {
+  median,
+  summarizeByBand,
+  summarizeByComplex,
+  filterByBand,
+  bandOf,
+  AREA_BANDS,
+  type BandSummary,
+  type ComplexSummary,
+} from './summary';
 export type { Deal } from './summary';
 export { ENDPOINTS };

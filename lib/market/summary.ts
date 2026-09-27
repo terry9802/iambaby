@@ -12,6 +12,8 @@ export type Deal = {
   floor: number | null;
   buildYear: number | null;
   dong: string;
+  /** 지번. 주소를 좌표로 바꿀 때 쓴다. */
+  jibun?: string;
   /** 매매가 또는 보증금 (원) */
   amount: number;
   /** 월세 (원). 전세나 매매면 0 */
@@ -69,3 +71,63 @@ export function summarizeByBand(deals: Deal[]): BandSummary[] {
   }).filter((b) => b.count > 0);
 }
 
+
+export type ComplexSummary = {
+  /** 단지 식별자. 같은 이름의 다른 단지를 가르기 위해 실거래가 API가 주는 값을 그대로 쓴다. */
+  id: string;
+  name: string;
+  dong: string;
+  jibun: string;
+  buildYear: number | null;
+  count: number;
+  medianAmount: number;
+  medianUnitPrice: number;
+  minAmount: number;
+  maxAmount: number;
+  /** 거래된 전용면적들. 지도에서 평형 필터를 걸 때 쓴다. */
+  areas: number[];
+  latestDate: string;
+};
+
+/**
+ * 거래를 단지 단위로 묶는다. 지도의 마커 하나가 이 덩어리 하나다.
+ *
+ * 거래 하나하나를 점으로 찍으면 같은 자리에 수십 개가 겹쳐 아무것도 안 보인다.
+ * 그렇다고 평균을 쓰면 가족 간 거래 한 건이 단지 전체를 끌어올리므로 중앙값을 쓴다.
+ */
+export function summarizeByComplex(deals: Deal[]): ComplexSummary[] {
+  const groups = new Map<string, Deal[]>();
+  for (const d of deals) {
+    // 같은 이름이라도 동네가 다르면 다른 단지다. 이름만으로 묶으면 엉뚱한 곳이 섞인다.
+    const id = `${d.dong}|${d.name}`;
+    const list = groups.get(id);
+    if (list) list.push(d);
+    else groups.set(id, [d]);
+  }
+
+  return [...groups.entries()]
+    .map(([id, list]) => {
+      const amounts = list.map((d) => d.amount);
+      return {
+        id,
+        name: list[0].name,
+        dong: list[0].dong,
+        jibun: list[0].jibun ?? '',
+        buildYear: list[0].buildYear,
+        count: list.length,
+        medianAmount: median(amounts),
+        medianUnitPrice: median(list.map((d) => d.unitPrice)),
+        minAmount: Math.min(...amounts),
+        maxAmount: Math.max(...amounts),
+        areas: [...new Set(list.map((d) => Math.round(d.area)))].sort((a, b) => a - b),
+        latestDate: list.reduce((a, b) => (a > b.date ? a : b.date), ''),
+      };
+    })
+    .sort((a, b) => b.count - a.count);
+}
+
+/** 전용면적대로 거래를 거른다. 지도 숫자가 견줄 수 있는 값이 되려면 평형을 맞춰야 한다. */
+export function filterByBand(deals: Deal[], bandKey: string | null): Deal[] {
+  if (!bandKey || bandKey === 'all') return deals;
+  return deals.filter((d) => bandOf(d.area).key === bandKey);
+}
