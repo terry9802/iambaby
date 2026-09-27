@@ -18,6 +18,7 @@ import { GiftTaxTool } from '@/components/tools/GiftTaxTool';
 import { HomePurchaseTool } from '@/components/tools/HomePurchaseTool';
 import { AuctionTool } from '@/components/tools/AuctionTool';
 import { MarketCheckTool } from '@/components/tools/MarketCheckTool';
+import { CardSplitTool } from '@/components/tools/CardSplitTool';
 import { COVERAGE_NOTE, listSido, listSigunguOf } from '@/lib/market/regions';
 import { MARKET_CHECKLIST } from '@/lib/market/checklist';
 
@@ -67,6 +68,8 @@ export default async function ToolPage({
       return <RestBenefitsTool tool={found} fallbackToday={fallbackToday} />;
     case 'gift-tax':
       return <GiftTaxTool tool={found} fallbackToday={fallbackToday} />;
+    case 'card-split':
+      return <CardSplitTool tool={found} fallbackToday={fallbackToday} />;
     case 'purchase-cost':
       return <HomePurchaseTool tool={found} fallbackToday={fallbackToday} />;
     case 'auction-cost':

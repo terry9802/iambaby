@@ -2,6 +2,7 @@ import type { IconName } from '@/components/ui/Icon';
 import type { Profile } from '@/lib/profile/schema';
 
 export type EventKey =
+  | 'household'
   | 'childcare'
   | 'marriage'
   | 'housing'
@@ -23,6 +24,31 @@ export type LifeEvent = {
 };
 
 export const EVENTS: LifeEvent[] = [
+  {
+    key: 'household',
+    title: '똑똑한 가계부',
+    lead: '같은 돈을 써도 누구 카드로 쓰느냐에 따라 남는 게 다릅니다',
+    status: 'live',
+    icon: 'wallet',
+    tips: [
+      {
+        title: '문턱을 넘기 전까지는 공제가 0원입니다.',
+        body: '총급여의 25%를 넘게 써야 그 초과분부터 공제가 시작됩니다. 연봉 5,000만원이면 1,250만원까지는 아무리 써도 공제가 없어요.',
+      },
+      {
+        title: '최저사용금액은 신용카드부터 깎습니다.',
+        body: '그래서 신용카드로 문턱까지 채우고 그 위를 체크카드로 쓰면, 공제는 최대로 받으면서 신용카드 혜택도 챙깁니다. 순서가 정해져 있어 생기는 빈틈이에요.',
+      },
+      {
+        title: '부부라도 카드 사용액은 합쳐지지 않습니다.',
+        body: '맞벌이는 각자 명의 카드를 각자 소득에서만 공제받습니다. 배우자 연간 소득금액이 1,000,000원 이하일 때만 합칠 수 있어요.',
+      },
+      {
+        title: '공제가 안 되는 지출이 생각보다 많습니다.',
+        body: '보험료, 교육비, 세금·공과금, 아파트 관리비, 통신비, 상품권은 빠집니다. 이런 게 많으면 문턱 넘기가 어려워요.',
+      },
+    ],
+  },
   {
     key: 'childcare',
     title: '출산 · 육아',
@@ -362,6 +388,17 @@ export const TOOLS: Tool[] = [
     profileFields: [],
     ruleFile: 'auction',
     timing: '입찰표 쓰기 전에',
+  },
+  {
+    slug: 'card-split',
+    event: 'household',
+    type: 'optimizer',
+    title: '카드 배분 계산기',
+    question: '누구 카드로 얼마를 써야 제일 이득인가요?',
+    lead: '두 사람 연봉과 한 해 생활비를 넣으면 누가 신용카드로 얼마를, 체크카드로 얼마를 써야 하는지 나옵니다. 마일리지까지 견줘 실제로 남는 돈을 알려드려요.',
+    profileFields: ['income'],
+    ruleFile: 'card-deduction',
+    timing: '연초에 한 번, 연말에 한 번',
   },
   {
     slug: 'purchase-cost',

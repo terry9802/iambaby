@@ -14,6 +14,7 @@ export type IconName =
   | 'inheritance'
   | 'socialdues'
   | 'rest'
+  | 'wallet'
   | 'share'
   | 'check'
   | 'close'
@@ -22,6 +23,14 @@ export type IconName =
   | 'phone';
 
 const PATHS: Record<IconName, React.ReactNode> = {
+  // 카드 두 장 — 어느 카드로 쓸지 고르는 일
+  wallet: (
+    <>
+      <rect x="2.5" y="7.5" width="14" height="10" rx="2" />
+      <path d="M2.5 11h14" />
+      <path d="M7 6.5V5.5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-1" />
+    </>
+  ),
   // 김이 오르는 잔 — 쉬는 시간
   rest: (
     <>

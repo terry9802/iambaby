@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "ruleId": "card-deduction",
+    "title": "신용카드등 사용금액 소득공제",
+    "effectiveFrom": "2026-01-01",
+    "effectiveTo": null,
+    "source": "조세특례제한법 제126조의2(신용카드 등 사용금액에 대한 소득공제), 같은 법 시행령 제121조의2",
+    "sourceUrl": "https://easylaw.go.kr/CSP/CnpClsMain.laf?popMenu=ov&csmSeq=585&ccfNo=3&cciNo=5&cnpClsNo=1",
+    "verifiedAt": "2026-09-27",
+    "verifiedBy": "법제처 찾기쉬운 생활법령정보 「신용카드등의 소득공제」의 공제율·한도 표와 최저사용금액 차감 순서",
+    "note": "이 계산의 핵심은 최저사용금액(총급여의 25%)을 **공제율이 낮은 신용카드분부터 차감**한다는 것이다. 그래서 신용카드로 문턱까지 채우고 그 위를 체크카드로 쓰면 공제는 그대로 두고 신용카드 혜택만 더 얻는다. 부부는 카드 사용액이 합산되지 않는다. 각자 명의 카드는 각자 근로소득에서만 공제받는다(맞벌이 기준). 소비증가분 추가공제는 전년도 사용액을 알아야 해서 넣지 않았다."
+  },
+  "values": {
+    "thresholdRate": 0.25,
+    "thresholdNote": "총급여액의 25%를 넘게 써야 그 초과분부터 공제가 시작됩니다.",
+    "deductionOrder": ["credit", "check", "market"],
+    "deductionOrderNote": "최저사용금액은 공제율이 낮은 신용카드분부터 차감합니다. 납세자에게 유리한 순서예요.",
+    "rates": [
+      { "key": "credit", "label": "신용카드", "rate": 0.15 },
+      { "key": "check", "label": "체크카드 · 현금영수증", "rate": 0.3 },
+      { "key": "culture", "label": "도서 · 공연 · 영화 등", "rate": 0.3, "salaryCap": 70000000 },
+      { "key": "market", "label": "전통시장", "rate": 0.4 },
+      { "key": "transit", "label": "대중교통", "rate": 0.4 }
+    ],
+    "baseLimits": [
+      {
+        "salaryUpTo": 70000000,
+        "limit": 3000000,
+        "byChildren": [
+          { "children": 1, "limit": 3500000 },
+          { "children": 2, "limit": 4000000 }
+        ]
+      },
+      {
+        "salaryUpTo": null,
+        "limit": 2500000,
+        "byChildren": [
+          { "children": 1, "limit": 2750000 },
+          { "children": 2, "limit": 3000000 }
+        ]
+      }
+    ],
+    "extraLimits": [
+      {
+        "salaryUpTo": 70000000,
+        "limit": 3000000,
+        "note": "전통시장·대중교통·도서공연 등을 합쳐 3,000,000원까지 더 공제됩니다."
+      },
+      {
+        "salaryUpTo": null,
+        "limit": 2000000,
+        "note": "전통시장·대중교통을 합쳐 2,000,000원까지 더 공제됩니다."
+      }
+    ],
+    "localTaxRate": 0.1,
+    "localTaxNote": "소득세를 줄이면 거기에 붙는 지방소득세 10%도 함께 줄어듭니다.",
+    "spouseRule": "맞벌이 부부는 카드 사용액이 합산되지 않습니다. 각자 명의 카드는 각자 소득에서만 공제받아요. 배우자의 연간 소득금액이 1,000,000원 이하일 때만 배우자 카드 사용액을 합쳐서 공제받을 수 있습니다.",
+    "excludedNote": "보험료, 교육비, 세금·공과금, 아파트 관리비, 통신비, 상품권 구입, 자동차 구입(중고차는 10%만 인정)은 공제 대상이 아닙니다. 이런 지출이 많으면 문턱을 넘기가 생각보다 어려워요.",
+    "consult": {
+      "label": "국세청 세미래 상담센터",
+      "number": "126",
+      "note": "내 공제 대상 금액은 연말정산 간소화 서비스가 가장 정확합니다."
+    }
+  }
+}
