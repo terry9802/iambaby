@@ -7,7 +7,7 @@ import { useProfile } from '@/lib/profile/context';
 import { buildShareQuery, pickDefined, qNum, qStr, readShareQuery } from '@/lib/share';
 import type { Tool } from '@/lib/tools';
 import { CalcShell } from '@/components/calculator/CalcShell';
-import { FieldGroup, MoneyField, NumberField } from '@/components/ui/fields';
+import { FieldGroup, MoneyField, NumberField, ToggleField } from '@/components/ui/fields';
 import { CardSplitDashboard, CardSplitStickyBar } from './CardSplitDashboard';
 
 const MAN = 10000;
@@ -27,6 +27,7 @@ export function CardSplitTool({ tool, fallbackToday }: { tool: Tool; fallbackTod
       milesPer1000: qNum(sp, 'mp'),
       wonPerMile: qNum(sp, 'mv'),
       annualFee: qNum(sp, 'fee'),
+      married: qStr(sp, 'wed') === '1' ? true : qStr(sp, 'wed') === '0' ? false : undefined,
     });
   }, [hydrated]);
 
@@ -38,6 +39,7 @@ export function CardSplitTool({ tool, fallbackToday }: { tool: Tool; fallbackTod
       milesPer1000: 1,
       wonPerMile: 20,
       annualFee: 0,
+      married: false,
       asOf: fallbackToday,
       ...fromLink,
       ...edits,
@@ -60,6 +62,7 @@ export function CardSplitTool({ tool, fallbackToday }: { tool: Tool; fallbackTod
     mp: input.milesPer1000,
     mv: input.wonPerMile,
     fee: input.annualFee,
+    wed: input.married ? '1' : '0',
   });
 
   const shareText = outcome.ok
@@ -169,9 +172,15 @@ export function CardSplitTool({ tool, fallbackToday }: { tool: Tool; fallbackTod
               placeholder="35000000"
               onChange={(aSalary) => set({ aSalary })}
             />
+            <ToggleField
+              label="혼인신고를 마쳤습니다"
+              hint="카드 사용액이 합쳐지는지는 이 칸과 아래 총급여가 같이 정합니다. 사실혼·예비부부는 아직 해당되지 않아요."
+              checked={input.married ?? false}
+              onChange={(married) => set({ married })}
+            />
             <MoneyField
               label="배우자(예비 배우자) 연간 총급여"
-              hint="혼자시면 0을 넣으세요. 맞벌이는 카드 사용액이 합산되지 않아 각자 따로 계산됩니다."
+              hint="혼자시면 0을 넣고 위 칸을 꺼 두세요. 혼인신고를 했고 이 금액이 5,000,000원 이하면 두 분 카드 사용액이 합쳐집니다."
               value={input.bSalary}
               placeholder="32000000"
               onChange={(bSalary) => set({ bSalary })}

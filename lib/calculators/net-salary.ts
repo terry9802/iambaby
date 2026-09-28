@@ -73,7 +73,7 @@ export function earnedIncomeDeduction(gross: number, rule: PayrollRule): number 
   return Math.min(Math.max(0, deduction), rule.earnedIncomeDeductionCap);
 }
 
-function earnedIncomeTaxCredit(taxBeforeCredit: number, gross: number, rule: PayrollRule): number {
+export function earnedIncomeTaxCredit(taxBeforeCredit: number, gross: number, rule: PayrollRule): number {
   const c = rule.earnedIncomeTaxCredit;
   const raw =
     taxBeforeCredit <= c.threshold

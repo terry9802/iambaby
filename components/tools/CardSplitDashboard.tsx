@@ -26,16 +26,18 @@ type Segment = {
 };
 
 function segmentsOf(v: CardSplitValue): Segment[] {
+  /* 합산되면 명의가 의미를 잃는다. 이름을 붙이면 그 카드만 써야 하는 줄 안다. */
+  const aName = v.combined ? '' : `${v.a.label} `;
   return [
     {
       key: 'ac',
-      label: `${v.a.label} 신용카드`,
+      label: `${aName}신용카드`,
       amount: v.a.credit,
       fill: 'var(--color-split-credit-a)',
     },
     {
       key: 'ak',
-      label: `${v.a.label} 체크카드`,
+      label: `${aName}체크카드`,
       amount: v.a.check,
       fill: 'var(--color-split-check-a)',
     },
@@ -104,9 +106,17 @@ export function CardSplitDashboard({ v }: { v: CardSplitValue }) {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <p className="text-[13px] font-medium text-ink-soft">이대로 쓰면 한 해에</p>
+        <p className="text-[13px] font-medium text-ink-soft">
+          이 계산대로 쓰면 한 해에 돌아오는 돈
+        </p>
         <p className="tnum text-[26px] font-bold leading-[1.25] tracking-[-0.02em] text-brand">
           {formatKRW(Math.round(v.netBenefit))}
+        </p>
+        {/* 이 숫자가 무슨 돈인지 여기서 못 박지 않으면 "뭐가 줄었다는 건지" 모른다. */}
+        <p className="mt-1 text-[12.5px] leading-relaxed text-ink-soft">
+          연말정산으로 돌려받는 세금
+          {v.mileValue > 0 && '과 쌓이는 마일리지 값어치'}를 더한 금액이에요.
+          {v.annualFee > 0 && ' 연회비는 빼고 계산했습니다.'}
         </p>
       </div>
 
@@ -157,14 +167,39 @@ export function CardSplitDashboard({ v }: { v: CardSplitValue }) {
         {v.annualFee > 0 && <Tile label="연회비" value={`−${formatKRW(v.annualFee)}`} />}
       </div>
 
-      {/* 이미 그 방법을 쓰고 있으면 "0원 더 남습니다"가 되어 아무 말도 아니다. */}
+      {/*
+        "그래서 이득이 얼마냐"는 견줄 기준이 있어야 답이 되는 질문이다.
+        아무 생각 없이 긁었을 때 얼마고 이 계산대로면 얼마인지를 나란히 놓는다.
+        이미 그 방법이 정답이면 차이가 0이라 할 말이 없으므로 통째로 감춘다.
+      */}
       {Math.abs(v.vsAllOnOne) >= 10000 && (
-        <p className="border-t border-line pt-3 text-[13px] leading-relaxed text-ink-soft">
-          한 사람 신용카드로만 썼을 때보다{' '}
-          <strong className="tnum font-semibold text-ink">
-            {formatKRW(Math.abs(Math.round(v.vsAllOnOne)))}
-          </strong>{' '}
-          {v.vsAllOnOne >= 0 ? '더 남습니다' : '적습니다'}.
+        <div className="border-t border-line pt-3">
+          <p className="text-[12.5px] font-medium text-ink-soft">견줘 보면</p>
+          <dl className="mt-2 flex flex-col gap-1.5 text-[13px]">
+            <div className="flex items-baseline justify-between gap-3">
+              <dt className="text-ink-soft">아무 카드나 한 장에 다 긁으면</dt>
+              <dd className="tnum text-ink">
+                {formatKRW(Math.round(v.allOnOneValue - v.annualFee))}
+              </dd>
+            </div>
+            <div className="flex items-baseline justify-between gap-3">
+              <dt className="text-ink-soft">이 계산대로 나눠 쓰면</dt>
+              <dd className="tnum font-semibold text-ink">{formatKRW(Math.round(v.netBenefit))}</dd>
+            </div>
+            <div className="flex items-baseline justify-between gap-3 border-t border-line pt-1.5">
+              <dt className="font-semibold text-ink">이 계산이 벌어준 돈</dt>
+              <dd className="tnum font-bold text-brand">
+                {v.vsAllOnOne >= 0 ? '+' : '−'}
+                {formatKRW(Math.abs(Math.round(v.vsAllOnOne)))}
+              </dd>
+            </div>
+          </dl>
+        </div>
+      )}
+
+      {v.spouseNote && (
+        <p className="rounded-[8px] bg-sunk px-3.5 py-3 text-[12.5px] leading-relaxed text-ink-soft">
+          <strong className="font-semibold text-ink">결혼하면 달라지나요.</strong> {v.spouseNote}
         </p>
       )}
     </div>
@@ -202,10 +237,15 @@ export function CardSplitStickyBar({
   useEffect(() => {
     const el = sentinelRef.current;
     if (!el || headerH === 0) return;
-    const io = new IntersectionObserver(([entry]) => setPinned(!entry.isIntersecting), {
-      rootMargin: `-${headerH}px 0px 0px 0px`,
-      threshold: 0,
-    });
+    /*
+      표식이 안 보인다고 다 같은 상황이 아니다. 위로 지나가서 안 보이는 것과,
+      아직 한참 아래라 안 보이는 것이 있다. 앞의 것만 붙여야 한다. 뒤의 것까지
+      붙이면 페이지를 열자마자 요약 줄이 대시보드를 덮는다.
+    */
+    const io = new IntersectionObserver(
+      ([entry]) => setPinned(!entry.isIntersecting && entry.boundingClientRect.top < headerH),
+      { rootMargin: `-${headerH}px 0px 0px 0px`, threshold: 0 },
+    );
     io.observe(el);
     return () => io.disconnect();
   }, [sentinelRef, headerH]);

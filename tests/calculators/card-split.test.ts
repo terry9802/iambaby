@@ -130,10 +130,85 @@ describe('카드 배분 최적화', () => {
     expect(without.result.value.netBenefit - withFee.result.value.netBenefit).toBe(10 * MAN);
   });
 
-  it('부부는 카드 사용액이 합산되지 않는다는 걸 알린다', () => {
+  it('합산 여부는 혼인신고가 아니라 배우자 소득으로 갈린다고 알린다', () => {
     const out = calcCardSplit({ yearlySpend: 3000 * MAN, aSalary: 4000 * MAN, asOf: ASOF });
     if (!out.ok) throw new Error('계산 실패');
-    expect(out.result.warnings.some((w) => w.includes('합산되지 않습니다'))).toBe(true);
+    expect(out.result.warnings.some((w) => w.includes('배우자의 소득으로 갈립니다'))).toBe(true);
+  });
+
+  it('맞벌이면 결혼해도 결과가 같다', () => {
+    const base = { yearlySpend: 3600 * MAN, aSalary: 4000 * MAN, bSalary: 3600 * MAN, asOf: ASOF };
+    const single = calcCardSplit({ ...base, married: false });
+    const wed = calcCardSplit({ ...base, married: true });
+    if (!single.ok || !wed.ok) throw new Error('계산 실패');
+    expect(wed.result.value.combined).toBe(false);
+    // 카드 사용액이 합쳐지지 않으므로 숫자가 한 톨도 달라지지 않아야 한다.
+    expect(wed.result.value.netBenefit).toBe(single.result.value.netBenefit);
+    expect(wed.result.value.a.credit).toBe(single.result.value.a.credit);
+    // 대신 왜 안 바뀌는지를 말해 준다. 말 없이 그대로면 계산이 틀린 줄 안다.
+    expect(wed.result.value.spouseNote).toContain('결혼 여부는 이 답을 바꾸지 않습니다');
+  });
+
+  it('배우자가 기본공제 대상이면 카드 사용액이 한 사람 공제로 합쳐진다', () => {
+    // 총급여 400만원은 기본공제 선(500만원) 아래다.
+    const apart = calcCardSplit({
+      yearlySpend: 3000 * MAN, aSalary: 6000 * MAN, bSalary: 400 * MAN,
+      married: false, asOf: ASOF,
+    });
+    const together = calcCardSplit({
+      yearlySpend: 3000 * MAN, aSalary: 6000 * MAN, bSalary: 400 * MAN,
+      married: true, asOf: ASOF,
+    });
+    if (!apart.ok || !together.ok) throw new Error('계산 실패');
+    expect(together.result.value.combined).toBe(true);
+    expect(apart.result.value.combined).toBe(false);
+    /*
+      합쳐져도 돌려받는 돈은 같다. 안 합쳐질 때도 계산기가 알아서 소득 많은 쪽
+      카드에 몰아 주기 때문이다. 합산이 주는 건 돈이 아니라 자유다. 배우자 카드로
+      긁어도 공제가 따라오므로 명의를 고민할 필요가 없어진다. 그 사실을 말해 준다.
+    */
+    expect(together.result.value.netBenefit).toBeCloseTo(apart.result.value.netBenefit, 0);
+    expect(together.result.value.spouseNote).toContain('합쳐집니다');
+    expect(together.result.value.spouseNote).toContain('혜택이 가장 좋은');
+    // 아직 결혼 전이라면, 혼인신고가 답을 바꾼다는 사실을 미리 알려 준다.
+    expect(apart.result.value.spouseNote).toContain('혼인신고를 하면 답이 달라집니다');
+  });
+
+  it('세금을 안 내는 사람 카드로는 쓰라고 하지 않는다', () => {
+    /*
+      총급여 400만원이면 과세표준이 0이라 소득세가 한 푼도 없다. 세율표는 6%를
+      돌려주지만 그 6%를 믿으면 "소득 적은 쪽 카드로 쓰세요"라는 엉뚱한 답이 된다.
+      돌려받을 세금이 없는 사람에게 공제를 몰아 줘 봐야 아무것도 안 돌아온다.
+    */
+    const out = calcCardSplit({
+      yearlySpend: 3000 * MAN, aSalary: 6000 * MAN, bSalary: 400 * MAN,
+      married: false, asOf: ASOF,
+    });
+    if (!out.ok) throw new Error('계산 실패');
+    expect(out.result.value.b.spend).toBe(0);
+    expect(out.result.value.b.marginalRate).toBe(0);
+  });
+
+  it('배우자 소득이 0인 외벌이 부부도 합쳐진다', () => {
+    const out = calcCardSplit({
+      yearlySpend: 3000 * MAN, aSalary: 6000 * MAN, bSalary: 0,
+      married: true, asOf: ASOF,
+    });
+    if (!out.ok) throw new Error('계산 실패');
+    expect(out.result.value.combined).toBe(true);
+    expect(out.result.value.earnerLabel).toBe('나');
+  });
+
+  it('소득이 적은 쪽이 첫 번째 사람이어도 공제는 많이 버는 쪽이 받는다', () => {
+    const out = calcCardSplit({
+      yearlySpend: 3000 * MAN, aSalary: 300 * MAN, bSalary: 7000 * MAN,
+      aLabel: '나', bLabel: '남편', married: true, asOf: ASOF,
+    });
+    if (!out.ok) throw new Error('계산 실패');
+    expect(out.result.value.combined).toBe(true);
+    expect(out.result.value.earnerLabel).toBe('남편');
+    // 문턱은 7,000만원의 25%로 잡혀야 한다.
+    expect(out.result.value.a.threshold).toBe(1750 * MAN);
   });
 
   it('공제가 안 되는 지출이 있다는 걸 알린다', () => {
@@ -251,6 +326,15 @@ describe('한 줄 판정', () => {
     });
     expect(v.action).toContain('전부 체크카드로');
     expect(v.why).not.toContain('1마일');
+  });
+
+  it('합산되면 명의를 고민하지 말라고 말한다', () => {
+    const v = verdictFor({
+      yearlySpend: 3000 * MAN, aSalary: 6000 * MAN, bSalary: 0,
+      married: true, milesPer1000: 0, asOf: ASOF,
+    });
+    expect(v.action).toContain('명의는 상관없습니다');
+    expect(v.action).not.toContain('카드 한 장에 몰아서');
   });
 
   it('마일 단가가 갈림길 근처면 손익분기를 말한다', () => {

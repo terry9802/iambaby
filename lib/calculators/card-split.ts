@@ -1,3 +1,8 @@
+import {
+  earnedIncomeTaxCredit,
+  progressiveTax,
+  type PayrollRule as FullPayrollRule,
+} from '@/lib/calculators/net-salary';
 import { loadRule } from '@/lib/rules/loader';
 import { missing, ok, type CalcOutcome, type CalcStep } from '@/lib/rules/types';
 import { formatKRW, toISODate } from '@/lib/format';
@@ -36,17 +41,18 @@ export type CardDeductionRule = {
   localTaxRate: number;
   localTaxNote: string;
   spouseRule: string;
+  dependentSpouse: {
+    incomeLimit: number;
+    wageOnlySalaryLimit: number;
+    note: string;
+    combinedNote: string;
+  };
   excludedNote: string;
   consult: { label: string; number: string; note: string };
 };
 
-/** 근로소득 한계세율을 구하려면 과세표준이 필요하다. payroll 룰의 세율표를 그대로 쓴다. */
-type PayrollRule = {
-  earnedIncomeDeduction: { upTo: number | null; base: number; rate: number; over: number }[];
-  earnedIncomeDeductionCap: number;
-  personalDeduction: number;
-  taxBrackets: { upTo: number | null; rate: number }[];
-};
+/** 세금 계산은 급여 계산기가 쓰는 것과 같은 룰·같은 함수를 쓴다. 두 화면이 다른 답을 내면 안 된다. */
+type PayrollRule = FullPayrollRule;
 
 export type Person = {
   label: string;
@@ -67,6 +73,12 @@ export type CardSplitInput = {
   wonPerMile?: number;
   /** 신용카드 연회비 (두 장 합계) */
   annualFee?: number;
+  /**
+   * 혼인신고를 마쳤는가. 사실혼·예비부부는 해당되지 않는다.
+   * 이것만으로는 계산이 바뀌지 않는다. 배우자 소득이 기본공제 선 아래일 때
+   * 비로소 두 사람 카드 사용액이 한 사람 공제로 합쳐진다.
+   */
+  married?: boolean;
   asOf?: string;
 };
 
@@ -109,6 +121,18 @@ export type CardSplitValue = {
   breakEvenWonPerMile: number | null;
   /** 한도를 이미 채웠는가. 그 뒤로는 무조건 신용카드가 이득이다. */
   limitReached: boolean;
+  /**
+   * 두 사람 카드 사용액이 한 사람 공제로 합쳐지는가.
+   * 합쳐지면 누구 명의로 긁든 공제가 같아서, 명의를 고민할 이유가 사라진다.
+   */
+  combined: boolean;
+  /** 합산될 때 공제를 받는 쪽 */
+  earnerLabel: string;
+  /** "결혼하면 달라지나요"에 대한 답. 배우자가 없으면 null. */
+  spouseNote: string | null;
+  /** 견줄 기준값. 이 숫자가 있어야 "이득"이 무엇에 견준 말인지 말할 수 있다. */
+  allOnOneValue: number;
+  allCheckValue: number;
 };
 
 /** 총급여에서 근로소득공제와 본인 기본공제를 뺀 과세표준. 한계세율을 고르는 데 쓴다. */
@@ -120,13 +144,44 @@ function taxBaseOf(salary: number, p: PayrollRule): number {
   return Math.max(0, salary - earned - p.personalDeduction);
 }
 
-/** 과세표준이 속한 구간의 세율. 공제 1원이 실제로 줄여 주는 세금의 비율이다. */
-function marginalRateOf(salary: number, p: PayrollRule): number {
-  const base = taxBaseOf(salary, p);
-  const bracket =
-    p.taxBrackets.find((b) => b.upTo !== null && base <= b.upTo) ??
-    p.taxBrackets[p.taxBrackets.length - 1];
-  return bracket.rate;
+/**
+ * 소득공제를 받았을 때 실제로 줄어드는 소득세.
+ *
+ * 한계세율만 곱하면 틀린다. 총급여 400만원인 사람은 과세표준이 0이라 세금을
+ * 한 푼도 안 내는데, 세율표는 6%를 돌려준다. 그 6%를 믿으면 계산기가
+ * "소득 적은 배우자 카드로 쓰세요"라는 엉뚱한 답을 내놓는다. 실제로는 그 사람
+ * 카드로 아무리 써도 돌려받을 세금이 없다.
+ *
+ * 그래서 곱하지 않고 뺀다. 공제 전 세금과 공제 후 세금의 차이가 곧 아낀 돈이다.
+ * 근로소득세액공제까지 넣는 이유도 같다. 산출세액이 줄면 거기 붙는 세액공제도
+ * 같이 줄어서, 실제로 아끼는 돈은 한계세율이 말하는 것보다 적다.
+ */
+function incomeTaxOf(salary: number, deduction: number, p: PayrollRule): number {
+  const base = Math.max(0, taxBaseOf(salary, p) - Math.max(0, deduction));
+  const beforeCredit = progressiveTax(base, p.taxBrackets);
+  return Math.max(0, beforeCredit - earnedIncomeTaxCredit(beforeCredit, salary, p));
+}
+
+function taxSavedBy(
+  salary: number,
+  deduction: number,
+  p: PayrollRule,
+  localTaxRate: number,
+): number {
+  const saved = incomeTaxOf(salary, 0, p) - incomeTaxOf(salary, deduction, p);
+  return Math.max(0, saved) * (1 + localTaxRate);
+}
+
+/**
+ * 화면에 "세율 15%"라고 적고 손익분기를 뽑을 때 쓰는 값.
+ * 공제를 이미 받은 자리에서 1원을 더 공제받으면 몇 %가 줄어드는지다.
+ * 낼 세금이 없으면 0이다.
+ */
+function marginalRateAfter(salary: number, deduction: number, p: PayrollRule): number {
+  const step = 10000;
+  const here = incomeTaxOf(salary, deduction, p);
+  const lower = incomeTaxOf(salary, deduction + step, p);
+  return Math.max(0, (here - lower) / step);
 }
 
 function baseLimitOf(salary: number, rule: CardDeductionRule): number {
@@ -182,9 +237,6 @@ function bestSplit(
   payroll: PayrollRule,
   wonPerWonSpent: number,
 ): Plan {
-  const marginalRate = marginalRateOf(salary, payroll);
-  const taxPerDeduction = marginalRate * (1 + rule.localTaxRate);
-
   let best: Plan | null = null;
   // 후보를 촘촘히 훑는다. 경계가 문턱·한도 두 군데라 식으로 풀기보다 세는 쪽이 안전하다.
   const steps = 200;
@@ -192,7 +244,8 @@ function bestSplit(
     const credit = (spend * i) / steps;
     const check = spend - credit;
     const d = deductionOf(salary, credit, check, rule);
-    const taxSaved = d.deduction * taxPerDeduction;
+    const taxSaved = taxSavedBy(salary, d.deduction, payroll, rule.localTaxRate);
+    const marginalRate = marginalRateAfter(salary, d.deduction, payroll);
     const value = taxSaved + credit * wonPerWonSpent;
     if (!best || value > best.taxSaved + best.credit * wonPerWonSpent) {
       best = {
@@ -233,11 +286,55 @@ export function calcCardSplit(input: CardSplitInput): CalcOutcome<CardSplitValue
   const payrollLookup = loadRule<PayrollRule>('payroll', asOf);
   const payroll = payrollLookup.rule.values;
 
-  const aSalary = input.aSalary;
-  const bSalary = Math.max(0, input.bSalary ?? 0);
-  const aLabel = input.aLabel?.trim() || '나';
-  const bLabel = input.bLabel?.trim() || '배우자';
+  const rawASalary = input.aSalary;
+  const rawBSalary = Math.max(0, input.bSalary ?? 0);
+  const rawALabel = input.aLabel?.trim() || '나';
+  const rawBLabel = input.bLabel?.trim() || '배우자';
   const spend = input.yearlySpend;
+
+  /*
+    결혼 여부 자체는 이 공제를 바꾸지 않는다. 바꾸는 건 배우자의 소득이다.
+    배우자가 기본공제 대상(연간 소득금액 100만원 이하, 근로소득만 있으면 총급여
+    500만원 이하)이면 배우자 카드 사용액을 본인 공제에 합산할 수 있다.
+    그러면 두 사람이 세법상 한 사람처럼 계산되고, 누구 명의로 긁든 공제가 같아서
+    명의를 고민할 이유가 없어진다. 카드는 혜택 좋은 걸로 고르면 된다.
+
+    여기서는 두 분 다 근로소득만 있다고 보고 총급여 기준으로 가른다.
+    사실혼·예비부부는 해당되지 않는다. 혼인신고를 마쳐야 배우자다.
+  */
+  const dependentLimit = rule.dependentSpouse.wageOnlySalaryLimit;
+  const lowerIsB = rawBSalary <= rawASalary;
+  const lowerSalary = lowerIsB ? rawBSalary : rawASalary;
+  const married = input.married ?? false;
+  /*
+    배우자 총급여를 0으로 둔 칸은 "배우자가 없다"와 "배우자가 돈을 안 번다"
+    둘 다로 읽힌다. 결혼 여부 칸이 그 둘을 가른다. 외벌이 부부라면 배우자가
+    긁은 카드도 전부 버는 쪽 공제로 들어간다. 놓치면 손해가 큰 쪽이다.
+  */
+  const combined = married && lowerSalary <= dependentLimit;
+
+  /*
+    "결혼하든 안 하든 같은 결과냐"는 질문에 계산기가 직접 답해야 한다.
+    체크박스를 눌렀는데 숫자가 그대로면 사람은 계산이 고장 났다고 생각하고,
+    반대로 달라지는데 왜 달라지는지 안 적으면 믿지 못한다. 네 경우를 다 말한다.
+  */
+  const hasPartner = rawBSalary > 0 || married;
+  const spouseNote: string | null = !hasPartner
+    ? null
+    : combined
+      ? `두 분 카드 사용액이 ${combined && !lowerIsB ? rawBLabel : rawALabel} 님 공제로 합쳐집니다. ${rule.dependentSpouse.combinedNote}`
+      : married
+        ? `결혼 여부는 이 답을 바꾸지 않습니다. 두 분 다 총급여가 ${formatKRW(dependentLimit)}을 넘어서, 카드 사용액이 합쳐지지 않고 각자 소득에서 각자 공제받아요.`
+        : lowerSalary <= dependentLimit
+          ? `혼인신고를 하면 답이 달라집니다. ${lowerIsB ? rawBLabel : rawALabel} 님 총급여가 ${formatKRW(dependentLimit)} 이하라, 혼인신고 후에는 그분 카드 사용액까지 합쳐서 공제받을 수 있어요.`
+          : `혼인신고를 해도 이 답은 그대로입니다. 두 분 다 총급여가 ${formatKRW(dependentLimit)}을 넘으면 카드 사용액이 합쳐지지 않아요.`;
+
+  /* 합쳐지면 공제는 소득이 많은 쪽 한 사람 몫으로 계산한다. */
+  const aSalary = combined ? Math.max(rawASalary, rawBSalary) : rawASalary;
+  const bSalary = combined ? 0 : rawBSalary;
+  const earnerLabel = combined && !lowerIsB ? rawBLabel : rawALabel;
+  const aLabel = combined ? '우리 둘' : rawALabel;
+  const bLabel = rawBLabel;
 
   const milesPer1000 = Math.max(0, input.milesPer1000 ?? 0);
   const wonPerMile = Math.max(0, input.wonPerMile ?? 0);
@@ -275,11 +372,10 @@ export function calcCardSplit(input: CardSplitInput): CalcOutcome<CardSplitValue
   // 견줄 기준 둘. "그냥 한 사람 신용카드로" 와 "그냥 전부 체크카드로".
   const allOnOne = deductionOf(aSalary, spend, 0, rule);
   const allOnOneValue =
-    allOnOne.deduction * marginalRateOf(aSalary, payroll) * (1 + rule.localTaxRate) +
+    taxSavedBy(aSalary, allOnOne.deduction, payroll, rule.localTaxRate) +
     (spend / 1000) * milesPer1000 * wonPerMile;
   const allCheckA = deductionOf(aSalary, 0, spend, rule);
-  const allCheckValue =
-    allCheckA.deduction * marginalRateOf(aSalary, payroll) * (1 + rule.localTaxRate);
+  const allCheckValue = taxSavedBy(aSalary, allCheckA.deduction, payroll, rule.localTaxRate);
 
   /*
     신용카드를 1원 더 쓰면 공제가 0.15원 줄고, 그만큼 세금이 늘어난다.
@@ -394,9 +490,10 @@ export function calcCardSplit(input: CardSplitInput): CalcOutcome<CardSplitValue
   ];
 
   const assumptions = [
-    '두 분 다 근로소득자이고 각자 소득이 있다고 보고 계산했어요.',
+    '두 분 다 근로소득만 있다고 보고 계산했어요. 사업소득·금융소득이 있으면 합산 여부가 달라질 수 있습니다.',
     '넣으신 금액이 전부 공제 대상 지출이라고 봤습니다.',
     '기본공제 한도만 적용했어요. 전통시장·대중교통·도서공연 추가 한도는 넣지 않았습니다.',
+    '줄어드는 세금은 근로소득공제·본인 기본공제·근로소득세액공제까지 넣어 계산했어요. 부양가족이나 다른 공제는 넣지 않아서, 실제로는 이보다 적게 줄어들 수 있습니다.',
   ];
 
   const warnings: string[] = [
@@ -447,6 +544,11 @@ export function calcCardSplit(input: CardSplitInput): CalcOutcome<CardSplitValue
       belowThreshold,
       breakEvenWonPerMile,
       limitReached,
+      combined,
+      earnerLabel,
+      spouseNote,
+      allOnOneValue,
+      allCheckValue,
     },
     steps,
     assumptions,
@@ -470,12 +572,16 @@ export function cardSplitVerdict(v: CardSplitValue): { action: string; why: stri
   const total = v.a.spend + v.b.spend;
 
   if (users.length === 0 || total <= 0) {
-    return { action: '쓸 금액을 넣어주세요.', why: '한 해에 카드로 쓸 생활비를 넣으면 계산합니다.' };
+    return {
+      action: '쓸 금액을 넣어주세요.',
+      why: '한 해에 카드로 쓸 생활비를 넣으면 계산합니다.',
+    };
   }
 
   /* 누구 명의를 쓰는가. 한 사람에게 몰렸는지, 둘로 갈렸는지. */
-  const whose =
-    users.length === 1
+  const whose = v.combined
+    ? '명의는 상관없습니다.'
+    : users.length === 1
       ? `${users[0].label} 카드 한 장에 몰아서`
       : `${v.a.label}·${v.b.label} 카드에 나눠 담고`;
 
@@ -497,5 +603,6 @@ export function cardSplitVerdict(v: CardSplitValue): { action: string; why: stri
         : '마일리지를 빼면 공제율이 높은 체크카드가 유리해요.'
       : `1마일을 ${formatKRW(Math.round(v.breakEvenWonPerMile))}보다 비싸게 쓸 수 있느냐가 갈림길이에요.`;
 
+  /* 합산될 때 whose는 마침표로 끝나는 완결된 문장이라, 이어 붙이면 두 문장이 된다. */
   return { action: `${whose} ${mix}.`, why };
 }
