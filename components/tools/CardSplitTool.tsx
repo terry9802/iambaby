@@ -4,6 +4,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { calcCardSplit, type CardSplitInput } from '@/lib/calculators/card-split';
 import { formatKRW, formatManwon } from '@/lib/format';
 import { useProfile } from '@/lib/profile/context';
+import { Seeder, pendingExamples } from '@/lib/profile/seed';
 import { buildShareQuery, pickDefined, qNum, qStr, readShareQuery } from '@/lib/share';
 import type { Tool } from '@/lib/tools';
 import { CalcShell } from '@/components/calculator/CalcShell';
@@ -13,8 +14,39 @@ import { CardSplitDashboard, CardSplitStickyBar } from './CardSplitDashboard';
 const MAN = 10000;
 
 export function CardSplitTool({ tool, fallbackToday }: { tool: Tool; fallbackToday: string }) {
-  const { hydrated } = useProfile();
+  const { profile, hydrated } = useProfile();
   const [edits, setEdits] = useState<Partial<CardSplitInput>>({});
+
+  const seeded = useMemo(() => {
+    const seeder = new Seeder<CardSplitInput>();
+    const p = hydrated ? profile : {};
+    seeder.pick('aSalary', p.income?.annualSalary, {
+      value: 3500 * MAN,
+      label: '내 연봉 3,500만원',
+    });
+    /*
+      배우자 연봉은 기혼일 때만 프로필에서 가져온다. 미혼이라고 적어 두고
+      배우자 칸에 옛 값이 남아 있으면, 있지도 않은 배우자 소득으로 계산된다.
+    */
+    const marriedInProfile = p.maritalStatus === 'married';
+    seeder.pick('bSalary', marriedInProfile ? p.spouse?.annualSalary : undefined, {
+      value: marriedInProfile ? 3200 * MAN : 0,
+      label: '배우자 연봉 3,200만원',
+    });
+    seeder.set('married', p.maritalStatus ? marriedInProfile : undefined);
+    return {
+      input: seeder.build({
+        yearlySpend: 3600 * MAN,
+        milesPer1000: 1,
+        wonPerMile: 20,
+        annualFee: 0,
+        married: false,
+        asOf: fallbackToday,
+      }),
+      autofilled: seeder.autofilled,
+      examples: seeder.examples,
+    };
+  }, [profile, hydrated, fallbackToday]);
 
   const fromLink = useMemo(() => {
     const sp = readShareQuery(hydrated);
@@ -31,20 +63,10 @@ export function CardSplitTool({ tool, fallbackToday }: { tool: Tool; fallbackTod
     });
   }, [hydrated]);
 
+  // 공유받은 링크의 값 > 프로필 > 예시값 순으로 이기고, 사용자가 직접 고친 값이 가장 세다.
   const input = useMemo<CardSplitInput>(
-    () => ({
-      yearlySpend: 3600 * MAN,
-      aSalary: 3500 * MAN,
-      bSalary: 3200 * MAN,
-      milesPer1000: 1,
-      wonPerMile: 20,
-      annualFee: 0,
-      married: false,
-      asOf: fallbackToday,
-      ...fromLink,
-      ...edits,
-    }),
-    [fallbackToday, fromLink, edits],
+    () => ({ ...seeded.input, ...fromLink, ...edits }),
+    [seeded, fromLink, edits],
   );
   const set = useCallback(
     (patch: Partial<CardSplitInput>) => setEdits((prev) => ({ ...prev, ...patch })),
@@ -52,6 +74,10 @@ export function CardSplitTool({ tool, fallbackToday }: { tool: Tool; fallbackTod
   );
 
   const outcome = useMemo(() => calcCardSplit(input), [input]);
+  const examples = pendingExamples(seeded.examples, { ...fromLink, ...edits });
+  const autofilled = new Set(
+    [...seeded.autofilled].filter((field) => !(field in fromLink) && !(field in edits)),
+  );
 
   const shareQuery = buildShareQuery({
     spend: input.yearlySpend,
@@ -91,6 +117,7 @@ export function CardSplitTool({ tool, fallbackToday }: { tool: Tool; fallbackTod
         tool={tool}
         outcome={outcome}
         headline={headline}
+        exampleFields={examples}
         shareQuery={shareQuery}
         shareText={shareText}
         fromSharedLink={Object.keys(fromLink).length > 0}
@@ -170,12 +197,14 @@ export function CardSplitTool({ tool, fallbackToday }: { tool: Tool; fallbackTod
               hint="세금 떼기 전 연봉이에요. 문턱과 세율이 이 금액으로 정해집니다."
               value={input.aSalary}
               placeholder="35000000"
+              autofilled={autofilled.has('aSalary')}
               onChange={(aSalary) => set({ aSalary })}
             />
             <ToggleField
               label="혼인신고를 마쳤습니다"
               hint="카드 사용액이 합쳐지는지는 이 칸과 아래 총급여가 같이 정합니다. 사실혼·예비부부는 아직 해당되지 않아요."
               checked={input.married ?? false}
+              autofilled={autofilled.has('married')}
               onChange={(married) => set({ married })}
             />
             <MoneyField
@@ -183,6 +212,7 @@ export function CardSplitTool({ tool, fallbackToday }: { tool: Tool; fallbackTod
               hint="혼자시면 0을 넣고 위 칸을 꺼 두세요. 혼인신고를 했고 이 금액이 5,000,000원 이하면 두 분 카드 사용액이 합쳐집니다."
               value={input.bSalary}
               placeholder="32000000"
+              autofilled={autofilled.has('bSalary')}
               onChange={(bSalary) => set({ bSalary })}
             />
             <NumberField

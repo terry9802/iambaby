@@ -10,6 +10,7 @@ import {
 } from '@/lib/calculators/auction';
 import { formatKRW, formatManwon } from '@/lib/format';
 import { useProfile } from '@/lib/profile/context';
+import { Seeder } from '@/lib/profile/seed';
 import { buildShareQuery, pickDefined, qBool, qNum, readShareQuery } from '@/lib/share';
 import type { Tool } from '@/lib/tools';
 import { CalcShell } from '@/components/calculator/CalcShell';
@@ -17,9 +18,28 @@ import { ResultAside, ResultHeadline } from '@/components/calculator/ResultHeadl
 import { FieldGroup, MoneyField, NumberField, SegmentedField } from '@/components/ui/fields';
 
 export function AuctionTool({ tool, fallbackToday }: { tool: Tool; fallbackToday: string }) {
-  const { hydrated } = useProfile();
+  const { profile, hydrated } = useProfile();
   const [edits, setEdits] = useState<Partial<AuctionInput>>({});
   const [discount, setDiscount] = useState('0.2');
+
+  const seeded = useMemo(() => {
+    const seeder = new Seeder<AuctionInput>();
+    // 프로필에 적는 건 "지금 가진 집", 취득세를 가르는 건 "낙찰받고 난 뒤의 집"이다.
+    const owned = hydrated ? profile.housing?.ownedHomes : undefined;
+    seeder.set('housesAfter', owned === undefined ? undefined : owned + 1);
+    return {
+      input: seeder.build({
+        appraised: 600000000,
+        minimumPrice: 400000000,
+        bid: 450000000,
+        areaSqm: 84,
+        housesAfter: 1,
+        evictionCost: 5000000,
+        asOf: fallbackToday,
+      }),
+      autofilled: seeder.autofilled,
+    };
+  }, [profile, hydrated, fallbackToday]);
 
   const rule = useMemo(() => auctionRule(fallbackToday), [fallbackToday]);
   const checklist = useMemo(() => auctionChecklist(fallbackToday), [fallbackToday]);
@@ -38,23 +58,17 @@ export function AuctionTool({ tool, fallbackToday }: { tool: Tool; fallbackToday
     });
   }, [hydrated]);
 
+  // 공유받은 링크의 값 > 프로필 > 예시값 순으로 이기고, 사용자가 직접 고친 값이 가장 세다.
   const input = useMemo<AuctionInput>(
-    () => ({
-      appraised: 600000000,
-      minimumPrice: 400000000,
-      bid: 450000000,
-      areaSqm: 84,
-      housesAfter: 1,
-      evictionCost: 5000000,
-      asOf: fallbackToday,
-      ...fromLink,
-      ...edits,
-    }),
-    [fallbackToday, fromLink, edits],
+    () => ({ ...seeded.input, ...fromLink, ...edits }),
+    [seeded, fromLink, edits],
   );
   const set = useCallback(
     (patch: Partial<AuctionInput>) => setEdits((prev) => ({ ...prev, ...patch })),
     [],
+  );
+  const autofilled = new Set(
+    [...seeded.autofilled].filter((field) => !(field in fromLink) && !(field in edits)),
   );
 
   const outcome = useMemo(() => calcAuction(input), [input]);
@@ -92,7 +106,8 @@ export function AuctionTool({ tool, fallbackToday }: { tool: Tool; fallbackToday
           이 더 듭니다.
           {outcome.result.value.vsAppraised !== null && (
             <>
-              {' '}감정가의{' '}
+              {' '}
+              감정가의{' '}
               <strong className="tnum font-bold text-ink">
                 {(outcome.result.value.vsAppraised * 100).toFixed(1)}%
               </strong>
@@ -132,9 +147,7 @@ export function AuctionTool({ tool, fallbackToday }: { tool: Tool; fallbackToday
         <div className="flex flex-col gap-4">
           {/* 돈보다 먼저 봐야 하는 것. 여기서 물리면 계산이 의미가 없다. */}
           <section className="rounded-[12px] border border-alert/25 bg-alert-soft px-4 py-4">
-            <h2 className="text-[13.5px] font-semibold text-alert">
-              입찰 전에 이건 꼭 확인하세요
-            </h2>
+            <h2 className="text-[13.5px] font-semibold text-alert">입찰 전에 이건 꼭 확인하세요</h2>
             <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink">
               아래 중 하나라도 걸리면 낙찰가 외에 큰돈이 더 나갈 수 있습니다. 매각물건명세서와
               현황조사서를 읽으면 대부분 나와 있어요.
@@ -157,7 +170,9 @@ export function AuctionTool({ tool, fallbackToday }: { tool: Tool; fallbackToday
 
           {/* 유찰이 거듭되면 최저가가 어떻게 내려가는지 */}
           <section className="rounded-[12px] border border-line bg-surface px-4 py-4">
-            <h2 className="text-[13.5px] font-semibold text-ink">유찰되면 최저가가 이렇게 내려갑니다</h2>
+            <h2 className="text-[13.5px] font-semibold text-ink">
+              유찰되면 최저가가 이렇게 내려갑니다
+            </h2>
             <div className="mt-2.5">
               <SegmentedField<string>
                 label="이 법원의 저감률"
@@ -227,6 +242,7 @@ export function AuctionTool({ tool, fallbackToday }: { tool: Tool; fallbackToday
             min={1}
             max={9}
             unit="채"
+            autofilled={autofilled.has('housesAfter')}
             onChange={(housesAfter) => set({ housesAfter })}
           />
           <SegmentedField<string>

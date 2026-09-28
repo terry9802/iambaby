@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { calcHomePurchase, type HomePurchaseInput } from '@/lib/calculators/home-purchase';
 import { formatKRW, formatManwon } from '@/lib/format';
 import { useProfile } from '@/lib/profile/context';
+import { Seeder } from '@/lib/profile/seed';
 import { buildShareQuery, pickDefined, qBool, qNum, readShareQuery } from '@/lib/share';
 import type { Tool } from '@/lib/tools';
 import { CalcShell } from '@/components/calculator/CalcShell';
@@ -17,8 +18,29 @@ import {
 } from '@/components/ui/fields';
 
 export function HomePurchaseTool({ tool, fallbackToday }: { tool: Tool; fallbackToday: string }) {
-  const { hydrated } = useProfile();
+  const { profile, hydrated } = useProfile();
   const [edits, setEdits] = useState<Partial<HomePurchaseInput>>({});
+
+  const seeded = useMemo(() => {
+    const seeder = new Seeder<HomePurchaseInput>();
+    const owned = hydrated ? profile.housing?.ownedHomes : undefined;
+    /*
+      프로필에 적는 건 "지금 가진 집"이고 취득세를 가르는 건 "사고 난 뒤의 집"이다.
+      한 채를 더 사는 것이므로 하나를 더한다. 0채면 생애 첫 집일 가능성이 크지만,
+      첫 주택 감면은 소득·가격 요건이 따로 있어서 여기서 켜 주지는 않는다.
+    */
+    seeder.set('housesAfter', owned === undefined ? undefined : owned + 1);
+    return {
+      input: seeder.build({
+        price: 500000000,
+        housesAfter: 1,
+        regulated: false,
+        areaSqm: 84,
+        asOf: fallbackToday,
+      }),
+      autofilled: seeder.autofilled,
+    };
+  }, [profile, hydrated, fallbackToday]);
 
   const fromLink = useMemo(() => {
     const sp = readShareQuery(hydrated);
@@ -32,21 +54,17 @@ export function HomePurchaseTool({ tool, fallbackToday }: { tool: Tool; fallback
     });
   }, [hydrated]);
 
+  // 공유받은 링크의 값 > 프로필 > 예시값 순으로 이기고, 사용자가 직접 고친 값이 가장 세다.
   const input = useMemo<HomePurchaseInput>(
-    () => ({
-      price: 500000000,
-      housesAfter: 1,
-      regulated: false,
-      areaSqm: 84,
-      asOf: fallbackToday,
-      ...fromLink,
-      ...edits,
-    }),
-    [fallbackToday, fromLink, edits],
+    () => ({ ...seeded.input, ...fromLink, ...edits }),
+    [seeded, fromLink, edits],
   );
   const set = useCallback(
     (patch: Partial<HomePurchaseInput>) => setEdits((prev) => ({ ...prev, ...patch })),
     [],
+  );
+  const autofilled = new Set(
+    [...seeded.autofilled].filter((field) => !(field in fromLink) && !(field in edits)),
   );
 
   const outcome = useMemo(() => calcHomePurchase(input), [input]);
@@ -83,7 +101,10 @@ export function HomePurchaseTool({ tool, fallbackToday }: { tool: Tool; fallback
       }
     >
       <ResultAside>
-        세금 <strong className="tnum font-semibold text-ink">{formatKRW(outcome.result.value.taxTotal)}</strong>
+        세금{' '}
+        <strong className="tnum font-semibold text-ink">
+          {formatKRW(outcome.result.value.taxTotal)}
+        </strong>
         , 중개보수{' '}
         <strong className="tnum font-semibold text-ink">
           {formatKRW(outcome.result.value.brokerFee + outcome.result.value.brokerFeeVat)}
@@ -126,6 +147,7 @@ export function HomePurchaseTool({ tool, fallbackToday }: { tool: Tool; fallback
             min={1}
             max={9}
             unit="채"
+            autofilled={autofilled.has('housesAfter')}
             onChange={(housesAfter) => set({ housesAfter })}
           />
           <NumberField

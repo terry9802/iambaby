@@ -21,7 +21,10 @@ function FieldFrame({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="flex flex-wrap items-center gap-2 text-[13.5px] font-semibold text-ink">
+      <label
+        htmlFor={id}
+        className="flex flex-wrap items-center gap-2 text-[13.5px] font-semibold text-ink"
+      >
         {label}
         {required && (
           <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-medium text-brand-strong">
@@ -330,11 +333,13 @@ export function ToggleField({
   label,
   hint,
   checked,
+  autofilled,
   onChange,
 }: {
   label: string;
   hint?: string;
   checked: boolean;
+  autofilled?: boolean;
   onChange: (next: boolean) => void;
 }) {
   const id = useId();
@@ -348,7 +353,14 @@ export function ToggleField({
         className="mt-0.5 h-4 w-4 shrink-0 accent-[#00785a]"
       />
       <label htmlFor={id} className="cursor-pointer">
-        <span className="block text-[14px] font-semibold text-ink">{label}</span>
+        <span className="flex flex-wrap items-center gap-2 text-[14px] font-semibold text-ink">
+          {label}
+          {autofilled && (
+            <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-medium text-brand-strong">
+              프로필에서 가져옴
+            </span>
+          )}
+        </span>
         {hint && (
           <span className="mt-0.5 block text-[12.5px] leading-relaxed text-ink-faint">{hint}</span>
         )}

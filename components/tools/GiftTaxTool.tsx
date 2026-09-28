@@ -1,25 +1,59 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import {
-  calcGiftTax,
-  listGiftRelationships,
-  type GiftTaxInput,
-} from '@/lib/calculators/gift-tax';
-import { formatDate, formatKRW, formatManwon } from '@/lib/format';
+import { calcGiftTax, listGiftRelationships, type GiftTaxInput } from '@/lib/calculators/gift-tax';
+import { diffDays, formatDate, formatKRW, formatManwon, parseDate } from '@/lib/format';
 import { useProfile } from '@/lib/profile/context';
-import { resolveToday } from '@/lib/profile/seed';
+import { Seeder, resolveToday } from '@/lib/profile/seed';
 import { buildShareQuery, pickDefined, qBool, qNum, qStr, readShareQuery } from '@/lib/share';
 import type { Tool } from '@/lib/tools';
 import { CalcShell } from '@/components/calculator/CalcShell';
 import { ResultAside, ResultHeadline } from '@/components/calculator/ResultHeadline';
-import { DateField, FieldGroup, MoneyField, SelectField, ToggleField } from '@/components/ui/fields';
+import {
+  DateField,
+  FieldGroup,
+  MoneyField,
+  SelectField,
+  ToggleField,
+} from '@/components/ui/fields';
 
 export function GiftTaxTool({ tool, fallbackToday }: { tool: Tool; fallbackToday: string }) {
-  const { hydrated } = useProfile();
+  const { profile, hydrated } = useProfile();
   const [edits, setEdits] = useState<Partial<GiftTaxInput>>({});
 
   const relationships = useMemo(() => listGiftRelationships(fallbackToday), [fallbackToday]);
+
+  const seeded = useMemo(() => {
+    const seeder = new Seeder<GiftTaxInput>();
+    const p = hydrated ? profile : {};
+    const giftDate = resolveToday(hydrated, fallbackToday);
+
+    /*
+      혼인·출산 공제는 부모에게 받을 때 1억원이 더 빠지는 큰 항목인데,
+      혼인신고일이나 아이 생년월일 전후 2년이라는 창이 있다. 프로필에 날짜가
+      있으면 그 창 안인지 세어 줄 수 있다. 몰라서 못 쓰는 일이 없도록.
+
+      창 밖일 때 꺼 주지는 않는다. 프로필에 안 적은 결혼이나 출산이 있을 수 있고,
+      그때 껐다고 우기면 있는 공제를 빼앗는 꼴이 된다.
+    */
+    const WINDOW_DAYS = 365 * 2;
+    const dates = [p.marriageDate, ...(p.children ?? []).map((c) => c.birthDate)].filter(
+      (d): d is string => !!d,
+    );
+    const inWindow = dates.some(
+      (d) => Math.abs(diffDays(parseDate(d), parseDate(giftDate))) <= WINDOW_DAYS,
+    );
+    seeder.set('marriageBirth', inWindow ? true : undefined);
+
+    return {
+      input: seeder.build({
+        amount: 100000000,
+        relationship: 'linealAscendant',
+        giftDate,
+      }),
+      autofilled: seeder.autofilled,
+    };
+  }, [profile, hydrated, fallbackToday]);
 
   const fromLink = useMemo(() => {
     const sp = readShareQuery(hydrated);
@@ -34,19 +68,17 @@ export function GiftTaxTool({ tool, fallbackToday }: { tool: Tool; fallbackToday
     });
   }, [hydrated]);
 
+  // 공유받은 링크의 값 > 프로필 > 예시값 순으로 이기고, 사용자가 직접 고친 값이 가장 세다.
   const input = useMemo<GiftTaxInput>(
-    () => ({
-      amount: 100000000,
-      relationship: 'linealAscendant',
-      giftDate: resolveToday(hydrated, fallbackToday),
-      ...fromLink,
-      ...edits,
-    }),
-    [hydrated, fallbackToday, fromLink, edits],
+    () => ({ ...seeded.input, ...fromLink, ...edits }),
+    [seeded, fromLink, edits],
   );
   const set = useCallback(
     (patch: Partial<GiftTaxInput>) => setEdits((prev) => ({ ...prev, ...patch })),
     [],
+  );
+  const autofilled = new Set(
+    [...seeded.autofilled].filter((field) => !(field in fromLink) && !(field in edits)),
   );
 
   const outcome = useMemo(() => calcGiftTax(input), [input]);
@@ -78,7 +110,8 @@ export function GiftTaxTool({ tool, fallbackToday }: { tool: Tool; fallbackToday
             <strong className="tnum font-bold text-ink">
               {(outcome.result.value.effectiveRate * 100).toFixed(1)}%
             </strong>
-            예요. 기한 안에 신고해서 {formatKRW(outcome.result.value.filingCredit)}을 깎은 금액입니다.
+            예요. 기한 안에 신고해서 {formatKRW(outcome.result.value.filingCredit)}을 깎은
+            금액입니다.
           </>
         ) : (
           <>
@@ -177,6 +210,7 @@ export function GiftTaxTool({ tool, fallbackToday }: { tool: Tool; fallbackToday
                 label="결혼이나 출산 전후 2년 안이에요"
                 hint="혼인신고일 전후 2년, 또는 아이 출생·입양신고일부터 2년 안에 부모·조부모에게 받으면 100,000,000원을 더 공제받습니다."
                 checked={input.marriageBirth ?? false}
+                autofilled={autofilled.has('marriageBirth')}
                 onChange={(marriageBirth) => set({ marriageBirth })}
               />
               {input.marriageBirth && (

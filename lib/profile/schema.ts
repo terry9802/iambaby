@@ -6,10 +6,10 @@
  */
 
 export type EmploymentType =
-  | 'regular'      // 정규직
-  | 'contract'     // 계약직
-  | 'freelance'    // 프리랜서·개인사업자
-  | 'unemployed'   // 비취업
+  | 'regular' // 정규직
+  | 'contract' // 계약직
+  | 'freelance' // 프리랜서·개인사업자
+  | 'unemployed' // 비취업
   | 'unknown';
 
 export type Tenure = 'jeonse' | 'monthly' | 'owned' | 'family';
@@ -17,17 +17,29 @@ export type Tenure = 'jeonse' | 'monthly' | 'owned' | 'family';
 export type Profile = {
   birthYear?: number;
   maritalStatus?: 'single' | 'married';
+  /**
+   * 혼인신고일 (YYYY-MM-DD).
+   * 결혼세액공제도, 혼인 증여재산공제도 예식 날이 아니라 이 날로 따진다.
+   */
+  marriageDate?: string;
   spouse?: {
-    monthlyWage?: number;      // 배우자 통상임금(월)
+    monthlyWage?: number; // 배우자 통상임금(월)
+    /**
+     * 배우자 연간 총급여(세전).
+     * 통상임금 × 12로 갈음하지 않는다. 통상임금은 상여금·성과급을 빼고 센 금액이라
+     * 총급여보다 작고, 카드 공제의 문턱(총급여의 25%)과 기본공제 판정(총급여 500만원)은
+     * 총급여로 정해진다. 둘을 섞으면 답이 어긋난다.
+     */
+    annualSalary?: number;
     employmentType?: EmploymentType;
   };
-  children?: { birthDate: string }[];   // YYYY-MM-DD. 출산 예정일도 여기에 넣는다.
+  children?: { birthDate: string }[]; // YYYY-MM-DD. 출산 예정일도 여기에 넣는다.
   income?: {
     annualSalary?: number;
-    monthlyWage?: number;      // 통상임금(월)
+    monthlyWage?: number; // 통상임금(월)
   };
   employment?: {
-    joinDate?: string;         // YYYY-MM-DD
+    joinDate?: string; // YYYY-MM-DD
     employmentType?: EmploymentType;
   };
   housing?: {
@@ -40,8 +52,8 @@ export type Profile = {
   };
   /** 지자체 지원금 조회에 쓰는 거주지. 시/도 + 시군구 코드 */
   residence?: {
-    sido?: string;             // 'seoul'
-    sigungu?: string;          // 'gangnam'
+    sido?: string; // 'seoul'
+    sigungu?: string; // 'gangnam'
   };
   /** 한부모 여부 — 육아휴직 급여 특례에 쓰인다 */
   singleParent?: boolean;
@@ -86,13 +98,17 @@ export function sanitizeProfile(input: unknown): Profile {
     out.maritalStatus = raw.maritalStatus;
   }
   if (typeof raw.singleParent === 'boolean') out.singleParent = raw.singleParent;
+  const marriageDate = str(raw.marriageDate);
+  if (marriageDate && /^\d{4}-\d{2}-\d{2}$/.test(marriageDate)) out.marriageDate = marriageDate;
 
   const spouse = obj(raw.spouse);
   const spouseWage = num(spouse.monthlyWage);
+  const spouseAnnual = num(spouse.annualSalary);
   const spouseType = str(spouse.employmentType);
-  if (spouseWage !== undefined || spouseType) {
+  if (spouseWage !== undefined || spouseAnnual !== undefined || spouseType) {
     out.spouse = {
       ...(spouseWage !== undefined ? { monthlyWage: spouseWage } : {}),
+      ...(spouseAnnual !== undefined ? { annualSalary: spouseAnnual } : {}),
       ...(spouseType ? { employmentType: spouseType as EmploymentType } : {}),
     };
   }
@@ -161,6 +177,7 @@ export function profileCompletion(profile: Profile): { filled: number; total: nu
     profile.birthYear !== undefined,
     profile.maritalStatus !== undefined,
     profile.income?.monthlyWage !== undefined,
+    profile.income?.annualSalary !== undefined,
     profile.employment?.joinDate !== undefined,
     (profile.children?.length ?? 0) > 0,
     profile.residence?.sigungu !== undefined,

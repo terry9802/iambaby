@@ -7,7 +7,7 @@ import {
 } from '@/lib/calculators/marriage-tax-credit';
 import { formatDate, formatKRW, formatManwon } from '@/lib/format';
 import { useProfile } from '@/lib/profile/context';
-import { resolveToday } from '@/lib/profile/seed';
+import { Seeder, resolveToday } from '@/lib/profile/seed';
 import { buildShareQuery, pickDefined, qBool, qStr, readShareQuery } from '@/lib/share';
 import type { Tool } from '@/lib/tools';
 import { CalcShell } from '@/components/calculator/CalcShell';
@@ -23,8 +23,31 @@ export function MarriageTaxCreditTool({
   tool: Tool;
   fallbackToday: string;
 }) {
-  const { hydrated } = useProfile();
+  const { profile, hydrated } = useProfile();
   const [edits, setEdits] = useState<Partial<MarriageTaxCreditInput>>({});
+
+  const seeded = useMemo(() => {
+    const seeder = new Seeder<MarriageTaxCreditInput>();
+    const p = hydrated ? profile : {};
+    seeder.set('registrationDate', p.marriageDate);
+    /*
+      소득이 있어야 낼 세금이 있고, 낼 세금이 있어야 세액공제를 받는다.
+      프로필에 금액이 적혀 있으면 소득이 있다고 볼 수 있다. 다만 비어 있는 건
+      "소득이 없다"가 아니라 "안 적었다"이므로, 없다고 뒤집지는 않는다.
+    */
+    const hasMine = (p.income?.monthlyWage ?? p.income?.annualSalary ?? 0) > 0;
+    const hasSpouse = (p.spouse?.monthlyWage ?? p.spouse?.annualSalary ?? 0) > 0;
+    seeder.set('myIncome', hasMine ? true : undefined);
+    seeder.set('spouseIncome', hasSpouse ? true : undefined);
+    return {
+      input: seeder.build({
+        registrationDate: resolveToday(hydrated, fallbackToday),
+        myIncome: true,
+        spouseIncome: true,
+      }),
+      autofilled: seeder.autofilled,
+    };
+  }, [profile, hydrated, fallbackToday]);
 
   const fromLink = useMemo(() => {
     const sp = readShareQuery(hydrated);
@@ -37,19 +60,17 @@ export function MarriageTaxCreditTool({
     });
   }, [hydrated]);
 
+  // 공유받은 링크의 값 > 프로필 > 예시값 순으로 이기고, 사용자가 직접 고친 값이 가장 세다.
   const input = useMemo<MarriageTaxCreditInput>(
-    () => ({
-      registrationDate: resolveToday(hydrated, fallbackToday),
-      myIncome: true,
-      spouseIncome: true,
-      ...fromLink,
-      ...edits,
-    }),
-    [hydrated, fallbackToday, fromLink, edits],
+    () => ({ ...seeded.input, ...fromLink, ...edits }),
+    [seeded, fromLink, edits],
   );
   const set = useCallback(
     (patch: Partial<MarriageTaxCreditInput>) => setEdits((prev) => ({ ...prev, ...patch })),
     [],
+  );
+  const autofilled = new Set(
+    [...seeded.autofilled].filter((field) => !(field in fromLink) && !(field in edits)),
   );
 
   const outcome = useMemo(() => calcMarriageTaxCredit(input), [input]);
@@ -71,7 +92,11 @@ export function MarriageTaxCreditTool({
 
   const headline = outcome.ok ? (
     <ResultHeadline
-      label={outcome.result.value.eligible ? '부부가 함께 돌려받는 세금' : '이 조건으로는 해당되지 않아요'}
+      label={
+        outcome.result.value.eligible
+          ? '부부가 함께 돌려받는 세금'
+          : '이 조건으로는 해당되지 않아요'
+      }
       value={outcome.result.value.total}
       sub={
         outcome.result.value.eligible ? (
@@ -92,15 +117,21 @@ export function MarriageTaxCreditTool({
       {outcome.result.value.sunsetPassed ? (
         <ResultAside>
           이 제도는{' '}
-          <strong className="font-semibold text-ink">{formatDate(outcome.result.value.deadline)}</strong>{' '}
+          <strong className="font-semibold text-ink">
+            {formatDate(outcome.result.value.deadline)}
+          </strong>{' '}
           혼인신고분으로 끝났습니다. 그 전에 신고하셨다면 {outcome.result.value.claimYear}년 귀속{' '}
           {outcome.result.value.claimAt} 때 받으시면 돼요.
         </ResultAside>
       ) : (
         <ResultAside>
-          이 제도는 <strong className="font-semibold text-ink">{formatDate(outcome.result.value.deadline)}</strong>에
-          끝납니다. 오늘부터{' '}
-          <span className="tnum font-bold text-alert">{outcome.result.value.daysLeft}일</span> 남았어요.
+          이 제도는{' '}
+          <strong className="font-semibold text-ink">
+            {formatDate(outcome.result.value.deadline)}
+          </strong>
+          에 끝납니다. 오늘부터{' '}
+          <span className="tnum font-bold text-alert">{outcome.result.value.daysLeft}일</span>{' '}
+          남았어요.
         </ResultAside>
       )}
     </ResultHeadline>
@@ -121,6 +152,7 @@ export function MarriageTaxCreditTool({
             label="혼인신고 날짜"
             hint="결혼식 날이 아니라 구청·주민센터에 혼인신고서를 낸 날이에요. 아직 안 하셨으면 하려는 날짜를 넣어보세요."
             value={input.registrationDate}
+            autofilled={autofilled.has('registrationDate')}
             onChange={(registrationDate) => set({ registrationDate })}
           />
           <ToggleField

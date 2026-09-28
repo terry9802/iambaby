@@ -52,7 +52,10 @@ export function ProfileForm() {
 
   const current = draft ?? profile;
   // 시도를 고르면 그 시도의 시·군·구만 뜬다. 룰이 없는 지역이면 빈 목록이다.
-  const sigungu = useMemo(() => listSigungu(current.residence?.sido, TODAY), [current.residence?.sido]);
+  const sigungu = useMemo(
+    () => listSigungu(current.residence?.sido, TODAY),
+    [current.residence?.sido],
+  );
   const dirty = useMemo(
     () => draft !== null && JSON.stringify(draft) !== JSON.stringify(profile),
     [draft, profile],
@@ -99,14 +102,14 @@ export function ProfileForm() {
           )}
         </div>
         <p className="mt-1 text-[12.5px] leading-relaxed text-ink-soft">
-          <strong className="font-semibold text-ink">필수</strong> 표시가 붙은 것만 채우셔도 대부분의
-          계산기가 돌아가요. 나머지는 채우면 더 정확해지는 값입니다.
+          <strong className="font-semibold text-ink">필수</strong> 표시가 붙은 것만 채우셔도
+          대부분의 계산기가 돌아가요. 나머지는 채우면 더 정확해지는 값입니다.
         </p>
       </section>
 
       <Section
         title="꼭 필요한 것"
-        lead="이 세 가지가 계산기 대부분의 기준이 됩니다."
+        lead="계산기 대부분이 이 값들을 기준으로 돌아갑니다. 기혼이라고 고르시면 배우자 항목이 더 열려요."
       >
         <FieldGroup>
           <MoneyField
@@ -126,8 +129,8 @@ export function ProfileForm() {
               </span>
             </span>
             <p className="text-[12.5px] leading-relaxed text-ink-faint">
-              아직 안 태어났으면 출산 예정일을 적으시면 됩니다. 지원금 신청 기한과 6+6 특례가 전부 이
-              날짜 기준이에요.
+              아직 안 태어났으면 출산 예정일을 적으시면 됩니다. 지원금 신청 기한과 6+6 특례가 전부
+              이 날짜 기준이에요.
             </p>
             {children.length === 0 && (
               <p className="rounded-[8px] bg-sunk px-3 py-2.5 text-[12.5px] text-ink-soft">
@@ -159,7 +162,9 @@ export function ProfileForm() {
             <button
               type="button"
               className="self-start rounded-[8px] border border-line bg-surface px-3 py-2 text-[13px] font-medium text-brand-strong hover:border-line-strong"
-              onClick={() => edit({ children: [...children, { birthDate: toISODate(new Date()) }] })}
+              onClick={() =>
+                edit({ children: [...children, { birthDate: toISODate(new Date()) }] })
+              }
             >
               아이 추가
             </button>
@@ -178,6 +183,15 @@ export function ProfileForm() {
           />
 
           {married && (
+            <DateField
+              label="혼인신고일"
+              hint="예식 날이 아니라 구청에 신고한 날이에요. 결혼세액공제도 혼인 증여재산공제도 이 날로 따집니다. 아직 안 하셨으면 예정일을 넣으셔도 됩니다."
+              value={current.marriageDate}
+              onChange={(marriageDate) => edit({ marriageDate })}
+            />
+          )}
+
+          {married && (
             <MoneyField
               label="배우자 월 통상임금"
               required
@@ -187,13 +201,29 @@ export function ProfileForm() {
               onChange={(monthlyWage) => edit({ spouse: { ...current.spouse, monthlyWage } })}
             />
           )}
+
+          <MoneyField
+            label="연봉 (세전)"
+            required
+            hint="세금 떼기 전 1년치 총급여예요. 통상임금과 달리 상여금·성과급까지 들어갑니다. 카드 소득공제의 문턱과 한도가 이 금액으로 정해져요."
+            value={current.income?.annualSalary}
+            placeholder="42,000,000"
+            onChange={(annualSalary) => edit({ income: { ...current.income, annualSalary } })}
+          />
+
+          {married && (
+            <MoneyField
+              label="배우자 연봉 (세전)"
+              hint="카드 사용액을 누구 명의로 쓸지 고를 때 씁니다. 이 금액이 5,000,000원 이하면 두 분 카드 사용액을 합쳐서 공제받을 수 있어요."
+              value={current.spouse?.annualSalary}
+              placeholder="38,000,000"
+              onChange={(annualSalary) => edit({ spouse: { ...current.spouse, annualSalary } })}
+            />
+          )}
         </FieldGroup>
       </Section>
 
-      <Section
-        title="채우면 더 정확해져요"
-        lead="비워두셔도 계산은 됩니다. 아는 것만 적어주세요."
-      >
+      <Section title="채우면 더 정확해져요" lead="비워두셔도 계산은 됩니다. 아는 것만 적어주세요.">
         <FieldGroup>
           <ToggleField
             label="한부모예요"
@@ -207,7 +237,10 @@ export function ProfileForm() {
             value={current.residence?.sido}
             onChange={(sido) => edit({ residence: { sido, sigungu: undefined } })}
             options={[
-              ...SIDO.map((s) => ({ value: s.code as string, label: s.name.replace(/(특별시|광역시|도)$/, '') })),
+              ...SIDO.map((s) => ({
+                value: s.code as string,
+                label: s.name.replace(/(특별시|광역시|도)$/, ''),
+              })),
               { value: 'other', label: '그 밖의 지역' },
             ]}
           />
@@ -240,19 +273,12 @@ export function ProfileForm() {
               label: EMPLOYMENT_TYPE_LABEL[v],
             }))}
           />
-          <MoneyField
-            label="연봉 (세전)"
-            hint="앞으로 추가될 이직·퇴직 계산기에서 씁니다."
-            value={current.income?.annualSalary}
-            placeholder="42,000,000"
-            onChange={(annualSalary) => edit({ income: { ...current.income, annualSalary } })}
-          />
           <NumberField
             label="보유 주택 수"
             unit="채"
             min={0}
             max={9}
-            hint="앞으로 추가될 청약·대출 계산기에서 씁니다."
+            hint="지금 가지고 계신 집이 몇 채인지예요. 취득세율과 경매 낙찰 비용이 이 숫자로 갈립니다."
             value={current.housing?.ownedHomes}
             onChange={(ownedHomes) => edit({ housing: { ...current.housing, ownedHomes } })}
           />
@@ -262,9 +288,10 @@ export function ProfileForm() {
       <section className="rounded-[12px] border border-line bg-sunk px-4 py-4">
         <h2 className="text-[13px] font-semibold text-ink">이 값들은 어디에 저장되나요</h2>
         <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink-soft">
-          회원가입도 로그인도 없습니다. 적으신 값은 지금 쓰고 계신 <strong>이 브라우저 안에만</strong>{' '}
-          저장돼요. 서버로 보내는 코드가 아예 없어서 저희도 볼 수 없습니다. 대신 브라우저 기록을
-          지우면 함께 사라지고, 다른 기기나 다른 브라우저에서는 다시 채우셔야 합니다.
+          회원가입도 로그인도 없습니다. 적으신 값은 지금 쓰고 계신{' '}
+          <strong>이 브라우저 안에만</strong> 저장돼요. 서버로 보내는 코드가 아예 없어서 저희도 볼
+          수 없습니다. 대신 브라우저 기록을 지우면 함께 사라지고, 다른 기기나 다른 브라우저에서는
+          다시 채우셔야 합니다.
         </p>
         {confirmReset ? (
           <div className="mt-3 flex flex-wrap gap-2">
