@@ -287,6 +287,7 @@ export function RestBenefitsTool({ tool, fallbackToday }: { tool: Tool; fallback
             min={1930}
             max={2026}
             unit="년"
+            stepper={false}
             autofilled={seeded.autofilled.has('birthYear') && !('birthYear' in edits)}
             hint="지원 대부분이 나이로 갈립니다. 만 나이가 아니라 태어난 해로 봐요."
           />

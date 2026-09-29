@@ -5,8 +5,10 @@ import { listSigungu, listSupportedSido } from '@/lib/calculators/birth-grants';
 import { toISODate } from '@/lib/format';
 import { useProfile } from '@/lib/profile/context';
 import {
+  CHILD_PLAN_LABEL,
   EMPLOYMENT_TYPE_LABEL,
   profileCompletion,
+  type ChildPlan,
   type EmploymentType,
   type Profile,
 } from '@/lib/profile/schema';
@@ -81,6 +83,9 @@ export function ProfileForm() {
   const { filled, total } = profileCompletion(current);
   const children = current.children ?? [];
   const married = current.maritalStatus === 'married';
+  const expecting = current.childPlan === 'expecting';
+  // 아이가 없다고 하셨거나 아직 안 고르셨으면 날짜를 묻지 않는다.
+  const expectsChildDates = expecting || current.childPlan === 'has';
 
   return (
     <div className="flex flex-col gap-4 pb-24">
@@ -108,9 +113,59 @@ export function ProfileForm() {
       </section>
 
       <Section
-        title="꼭 필요한 것"
-        lead="계산기 대부분이 이 값들을 기준으로 돌아갑니다. 기혼이라고 고르시면 배우자 항목이 더 열려요."
+        title="먼저 알려주세요"
+        lead="이걸 고르셔야 아래에 사장님한테 해당하는 칸만 뜹니다. 해당 없는 건 묻지 않아요."
       >
+        <FieldGroup>
+          <SegmentedField<'single' | 'married'>
+            label="혼인 상태"
+            required
+            hint="기혼으로 바꾸면 배우자 항목이 열립니다. 미혼으로 되돌리면 적어두신 배우자 값은 지워져요."
+            value={current.maritalStatus}
+            onChange={(maritalStatus) =>
+              edit(
+                maritalStatus === 'single'
+                  ? // 미혼으로 되돌렸는데 배우자 값이 남아 있으면, 있지도 않은 배우자
+                    // 소득으로 계산된다. 유령 데이터를 남기느니 지운다.
+                    { maritalStatus, spouse: undefined, marriageDate: undefined }
+                  : { maritalStatus },
+              )
+            }
+            options={[
+              { value: 'single', label: '미혼' },
+              { value: 'married', label: '기혼' },
+            ]}
+          />
+
+          <SegmentedField<ChildPlan>
+            label="아이"
+            required
+            hint="없으시면 '없어요'를 고르시면 됩니다. 출산·육아 계산기는 그때 안 여쭤봐요."
+            value={current.childPlan}
+            onChange={(childPlan) =>
+              // '없어요'를 골랐는데 예전 날짜가 남아 있으면 앞뒤가 안 맞는다.
+              edit(childPlan === 'none' ? { childPlan, children: undefined } : { childPlan })
+            }
+            options={(Object.keys(CHILD_PLAN_LABEL) as ChildPlan[]).map((v) => ({
+              value: v,
+              label: CHILD_PLAN_LABEL[v],
+            }))}
+          />
+
+          <NumberField
+            label="태어난 해"
+            min={1930}
+            max={new Date().getFullYear()}
+            unit="년"
+            stepper={false}
+            hint="청년 문화예술패스처럼 나이로 갈리는 혜택에 씁니다."
+            value={current.birthYear}
+            onChange={(birthYear) => edit({ birthYear })}
+          />
+        </FieldGroup>
+      </Section>
+
+      <Section title="꼭 필요한 것" lead="계산기 대부분이 이 값들을 기준으로 돌아갑니다.">
         <FieldGroup>
           <MoneyField
             label="월 통상임금"
@@ -121,66 +176,58 @@ export function ProfileForm() {
             onChange={(monthlyWage) => edit({ income: { ...current.income, monthlyWage } })}
           />
 
-          <div className="flex flex-col gap-2">
-            <span className="flex flex-wrap items-center gap-2 text-[13.5px] font-semibold text-ink">
-              아이 생년월일
-              <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-medium text-brand-strong">
-                필수
+          {expectsChildDates && (
+            <div className="flex flex-col gap-2">
+              <span className="flex flex-wrap items-center gap-2 text-[13.5px] font-semibold text-ink">
+                {expecting ? '출산 예정일' : '아이 생년월일'}
+                <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-medium text-brand-strong">
+                  필수
+                </span>
               </span>
-            </span>
-            <p className="text-[12.5px] leading-relaxed text-ink-faint">
-              아직 안 태어났으면 출산 예정일을 적으시면 됩니다. 지원금 신청 기한과 6+6 특례가 전부
-              이 날짜 기준이에요.
-            </p>
-            {children.length === 0 && (
-              <p className="rounded-[8px] bg-sunk px-3 py-2.5 text-[12.5px] text-ink-soft">
-                아직 없어요. 아래 버튼으로 추가해 주세요.
+              <p className="text-[12.5px] leading-relaxed text-ink-faint">
+                {expecting
+                  ? '병원에서 알려준 예정일을 적으시면 됩니다. 지원금 신청 기한과 6+6 특례가 전부 이 날짜 기준이에요. 나중에 실제 생일로 고치시면 됩니다.'
+                  : '지원금 신청 기한과 6+6 특례가 전부 이 날짜 기준이에요.'}
               </p>
-            )}
-            {children.map((child, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <input
-                  type="date"
-                  aria-label={`${i + 1}째 아이 생년월일`}
-                  className="tnum min-w-0 flex-1 rounded-[8px] border border-line bg-surface px-3 py-2.5 text-[16px] text-ink focus:border-brand focus:outline-none"
-                  value={child.birthDate}
-                  onChange={(e) => {
-                    const next = [...children];
-                    next[i] = { birthDate: e.target.value };
-                    edit({ children: next });
-                  }}
-                />
+              {children.length === 0 && (
+                <p className="rounded-[8px] bg-sunk px-3 py-2.5 text-[12.5px] text-ink-soft">
+                  아직 안 적으셨어요. 아래 버튼으로 추가해 주세요.
+                </p>
+              )}
+              {children.map((child, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <input
+                    type="date"
+                    aria-label={expecting ? '출산 예정일' : `${i + 1}째 아이 생년월일`}
+                    className="tnum min-w-0 flex-1 rounded-[8px] border border-line bg-surface px-3 py-2.5 text-[16px] text-ink focus:border-brand focus:outline-none"
+                    value={child.birthDate}
+                    onChange={(e) => {
+                      const next = [...children];
+                      next[i] = { birthDate: e.target.value };
+                      edit({ children: next });
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="shrink-0 rounded-[8px] border border-line px-3 py-2.5 text-[13px] text-ink-soft hover:border-line-strong"
+                    onClick={() => edit({ children: children.filter((_, j) => j !== i) })}
+                  >
+                    삭제
+                  </button>
+                </div>
+              ))}
+              {/* 임신 중이면 예정일은 하나뿐이다. 칸을 더 열어 주면 헷갈린다. */}
+              {!(expecting && children.length >= 1) && (
                 <button
                   type="button"
-                  className="shrink-0 rounded-[8px] border border-line px-3 py-2.5 text-[13px] text-ink-soft hover:border-line-strong"
-                  onClick={() => edit({ children: children.filter((_, j) => j !== i) })}
+                  className="self-start rounded-[8px] border border-line bg-surface px-3 py-2 text-[13px] font-medium text-brand-strong hover:border-line-strong"
+                  onClick={() => edit({ children: [...children, { birthDate: '' }] })}
                 >
-                  삭제
+                  {expecting ? '예정일 적기' : '아이 추가'}
                 </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              className="self-start rounded-[8px] border border-line bg-surface px-3 py-2 text-[13px] font-medium text-brand-strong hover:border-line-strong"
-              onClick={() =>
-                edit({ children: [...children, { birthDate: toISODate(new Date()) }] })
-              }
-            >
-              아이 추가
-            </button>
-          </div>
-
-          <SegmentedField<'single' | 'married'>
-            label="혼인 상태"
-            required
-            hint="기혼이면 부부가 함께 쓰는 6+6 계산이 열립니다."
-            value={current.maritalStatus}
-            onChange={(maritalStatus) => edit({ maritalStatus })}
-            options={[
-              { value: 'single', label: '미혼' },
-              { value: 'married', label: '기혼' },
-            ]}
-          />
+              )}
+            </div>
+          )}
 
           {married && (
             <DateField

@@ -14,6 +14,17 @@ export type EmploymentType =
 
 export type Tenure = 'jeonse' | 'monthly' | 'owned' | 'family';
 
+export type ChildPlan =
+  | 'none' // 아이가 없고 계획도 아직
+  | 'expecting' // 임신 중 — 출산 예정일을 적는다
+  | 'has'; // 이미 태어난 아이가 있다
+
+export const CHILD_PLAN_LABEL: Record<ChildPlan, string> = {
+  none: '없어요',
+  expecting: '기다리는 중',
+  has: '있어요',
+};
+
 export type Profile = {
   birthYear?: number;
   maritalStatus?: 'single' | 'married';
@@ -33,6 +44,13 @@ export type Profile = {
     annualSalary?: number;
     employmentType?: EmploymentType;
   };
+  /**
+   * 아이가 없는지, 기다리는 중인지, 있는지.
+   *
+   * children이 빈 것만으로는 "아이가 없다"와 "아직 안 적었다"를 가를 수 없다.
+   * 그 둘을 못 가르면 아이 없는 사람에게 생년월일을 필수라고 조르게 된다.
+   */
+  childPlan?: ChildPlan;
   children?: { birthDate: string }[]; // YYYY-MM-DD. 출산 예정일도 여기에 넣는다.
   income?: {
     annualSalary?: number;
@@ -93,7 +111,14 @@ export function sanitizeProfile(input: unknown): Profile {
   const obj = (v: unknown): Record<string, unknown> =>
     v && typeof v === 'object' ? (v as Record<string, unknown>) : {};
 
-  if (num(raw.birthYear)) out.birthYear = raw.birthYear as number;
+  /*
+    네 자리를 다 치기 전에 화면이 저장하면 "199년생"이 남는다. 그 값으로
+    나이를 세면 청년 혜택이 엉뚱하게 갈린다. 있을 수 없는 해는 아예 안 받는다.
+  */
+  const birthYear = num(raw.birthYear);
+  if (birthYear !== undefined && birthYear >= 1900 && birthYear <= new Date().getFullYear()) {
+    out.birthYear = birthYear;
+  }
   if (raw.maritalStatus === 'single' || raw.maritalStatus === 'married') {
     out.maritalStatus = raw.maritalStatus;
   }
@@ -111,6 +136,10 @@ export function sanitizeProfile(input: unknown): Profile {
       ...(spouseAnnual !== undefined ? { annualSalary: spouseAnnual } : {}),
       ...(spouseType ? { employmentType: spouseType as EmploymentType } : {}),
     };
+  }
+
+  if (raw.childPlan === 'none' || raw.childPlan === 'expecting' || raw.childPlan === 'has') {
+    out.childPlan = raw.childPlan;
   }
 
   if (Array.isArray(raw.children)) {
@@ -171,17 +200,35 @@ export function sanitizeProfile(input: unknown): Profile {
   return out;
 }
 
-/** 프로필이 얼마나 채워졌는지. 홈에서 "3개만 더 채우면" 같은 안내에 쓴다. */
+/**
+ * 프로필이 얼마나 채워졌는지. 홈에서 "3개만 더 채우면" 같은 안내에 쓴다.
+ *
+ * 세는 항목이 사람마다 다르다. 미혼인 사람에게 배우자 임금을 세면 아무리 채워도
+ * 100%가 안 되고, 아이가 없는 사람에게 아이 생일을 세면 영영 못 채운다.
+ * 채울 수 없는 칸을 세는 진척도는 독촉일 뿐이라, 그 사람에게 해당하는 것만 센다.
+ */
 export function profileCompletion(profile: Profile): { filled: number; total: number } {
-  const checks = [
+  const checks: boolean[] = [
     profile.birthYear !== undefined,
     profile.maritalStatus !== undefined,
+    profile.childPlan !== undefined,
     profile.income?.monthlyWage !== undefined,
     profile.income?.annualSalary !== undefined,
     profile.employment?.joinDate !== undefined,
-    (profile.children?.length ?? 0) > 0,
-    profile.residence?.sigungu !== undefined,
-    profile.spouse?.monthlyWage !== undefined,
+    // 시·도를 고르는 것까지가 누구나 할 수 있는 일이다. 시·군·구 목록은
+    // 룰이 있는 지역에만 뜨므로, '그 밖의 지역'을 고른 사람은 고를 칸이 없다.
+    profile.residence?.sido !== undefined,
   ];
+
+  if (profile.childPlan === 'expecting' || profile.childPlan === 'has') {
+    checks.push((profile.children?.length ?? 0) > 0);
+  }
+
+  if (profile.maritalStatus === 'married') {
+    checks.push(profile.marriageDate !== undefined);
+    checks.push(profile.spouse?.monthlyWage !== undefined);
+    checks.push(profile.spouse?.annualSalary !== undefined);
+  }
+
   return { filled: checks.filter(Boolean).length, total: checks.length };
 }

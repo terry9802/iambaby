@@ -13,7 +13,13 @@ import { buildShareQuery, pickDefined, qBool, qNum, qStr, readShareQuery } from 
 import type { Tool } from '@/lib/tools';
 import { CalcShell } from '@/components/calculator/CalcShell';
 import { ResultAside, ResultHeadline } from '@/components/calculator/ResultHeadline';
-import { DateField, FieldGroup, MoneyField, NumberField, ToggleField } from '@/components/ui/fields';
+import {
+  DateField,
+  FieldGroup,
+  MoneyField,
+  NumberField,
+  ToggleField,
+} from '@/components/ui/fields';
 import { CoupleGantt } from '@/components/timeline/CoupleGantt';
 
 function ComboCard({
@@ -37,7 +43,9 @@ function ComboCard({
       aria-pressed={selected}
       className={
         'flex flex-col gap-1.5 rounded-[10px] border px-3.5 py-3 text-left transition-colors ' +
-        (selected ? 'border-brand bg-brand-soft' : 'border-line bg-surface hover:border-line-strong')
+        (selected
+          ? 'border-brand bg-brand-soft'
+          : 'border-line bg-surface hover:border-line-strong')
       }
     >
       <div className="flex items-center justify-between gap-2">
@@ -70,10 +78,12 @@ export function CoupleLeaveTool({ tool, fallbackToday }: { tool: Tool; fallbackT
       value: 3_500_000,
       label: '본인 통상임금 3,500,000원',
     });
-    seeder.pick('spouseWage', hydrated ? profile.spouse?.monthlyWage : undefined, {
-      value: 3_000_000,
-      label: '배우자 통상임금 3,000,000원',
-    });
+    // 미혼으로 되돌린 프로필에 남은 배우자 임금을 끌어오지 않는다.
+    seeder.pick(
+      'spouseWage',
+      hydrated && profile.maritalStatus !== 'single' ? profile.spouse?.monthlyWage : undefined,
+      { value: 3_000_000, label: '배우자 통상임금 3,000,000원' },
+    );
     const children = hydrated ? (profile.children ?? []) : [];
     seeder.pick('childBirthDate', children[children.length - 1]?.birthDate, {
       value: resolveToday(hydrated, fallbackToday),
@@ -122,7 +132,9 @@ export function CoupleLeaveTool({ tool, fallbackToday }: { tool: Tool; fallbackT
     [input, useBudget],
   );
 
-  const combos = outcome.ok ? [outcome.result.value.best, ...outcome.result.value.alternatives] : [];
+  const combos = outcome.ok
+    ? [outcome.result.value.best, ...outcome.result.value.alternatives]
+    : [];
   const shown = combos[Math.min(selected, combos.length - 1)];
   const examples = pendingExamples(seeded.examples, { ...fromLink, ...edits });
   const autofilled = new Set(
@@ -168,7 +180,8 @@ export function CoupleLeaveTool({ tool, fallbackToday }: { tool: Tool; fallbackT
         </strong>{' '}
         더 많아요.
         <span className="mt-1 block text-[12px] text-ink-faint">
-          가능한 조합 {outcome.result.value.evaluated.toLocaleString('ko-KR')}가지를 모두 계산했어요.
+          가능한 조합 {outcome.result.value.evaluated.toLocaleString('ko-KR')}가지를 모두
+          계산했어요.
         </span>
       </ResultAside>
     </ResultHeadline>

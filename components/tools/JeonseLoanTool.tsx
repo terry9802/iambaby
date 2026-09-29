@@ -55,13 +55,22 @@ export function JeonseLoanTool({ tool }: { tool: Tool }) {
       children: 0,
     };
     if (!hydrated) return base;
+    /*
+      부부합산 소득이라 배우자 몫을 더하는데, 두 가지를 조심해야 한다.
+
+      하나, 미혼이면 더하지 않는다. 기혼으로 채웠다가 미혼으로 되돌린 프로필에
+      옛 값이 남아 있으면 있지도 않은 배우자 소득이 합산된다.
+      둘, 배우자 몫은 총급여를 먼저 쓴다. 통상임금 × 12는 상여금이 빠진 금액이라
+      총급여보다 작다. 총급여를 안 적으셨을 때만 그걸로 갈음한다.
+    */
+    const spouseAnnual =
+      profile.maritalStatus === 'married'
+        ? (profile.spouse?.annualSalary ?? (profile.spouse?.monthlyWage ?? 0) * 12)
+        : 0;
     return {
       ...base,
       ...(profile.income?.annualSalary
-        ? {
-            householdIncome:
-              profile.income.annualSalary + (profile.spouse?.monthlyWage ?? 0) * 12,
-          }
+        ? { householdIncome: profile.income.annualSalary + spouseAnnual }
         : {}),
       ...(profile.children?.length ? { children: profile.children.length } : {}),
       ...(profile.housing?.ownedHomes !== undefined
@@ -70,10 +79,7 @@ export function JeonseLoanTool({ tool }: { tool: Tool }) {
     };
   }, [hydrated, profile]);
 
-  const input = useMemo(
-    () => ({ ...seeded, ...fromLink, ...edits }),
-    [seeded, fromLink, edits],
-  );
+  const input = useMemo(() => ({ ...seeded, ...fromLink, ...edits }), [seeded, fromLink, edits]);
   const set = useCallback(
     (patch: Partial<JeonseLoanInput>) => setEdits((prev) => ({ ...prev, ...patch })),
     [],

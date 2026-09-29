@@ -120,6 +120,7 @@ export function NumberField({
   max = 99,
   unit,
   autofilled,
+  stepper = true,
 }: {
   label: string;
   hint?: string;
@@ -129,6 +130,13 @@ export function NumberField({
   max?: number;
   unit?: string;
   autofilled?: boolean;
+  /**
+   * 하나씩 올리고 내리는 버튼을 붙일지.
+   * 주택 수나 마일리지처럼 한두 칸 움직이는 값에는 편하지만,
+   * 태어난 해처럼 네 자리인 값에서는 빈 칸에서 +를 누르면 1930이 뜬다.
+   * 그런 칸은 그냥 타이핑하는 게 빠르다.
+   */
+  stepper?: boolean;
 }) {
   const id = useId();
   const step = (delta: number) => {
@@ -138,14 +146,16 @@ export function NumberField({
   return (
     <FieldFrame id={id} label={label} hint={hint} autofilled={autofilled}>
       <div className="flex items-stretch gap-2">
-        <button
-          type="button"
-          aria-label={`${label} 줄이기`}
-          className="w-11 shrink-0 rounded-[8px] border border-line bg-surface text-[18px] text-ink-soft hover:border-line-strong"
-          onClick={() => step(-1)}
-        >
-          −
-        </button>
+        {stepper && (
+          <button
+            type="button"
+            aria-label={`${label} 줄이기`}
+            className="w-11 shrink-0 rounded-[8px] border border-line bg-surface text-[18px] text-ink-soft hover:border-line-strong"
+            onClick={() => step(-1)}
+          >
+            −
+          </button>
+        )}
         <div className="relative flex min-w-0 flex-1 items-stretch">
           <input
             id={id}
@@ -159,14 +169,16 @@ export function NumberField({
           />
           {unit && <Suffix>{unit}</Suffix>}
         </div>
-        <button
-          type="button"
-          aria-label={`${label} 늘리기`}
-          className="w-11 shrink-0 rounded-[8px] border border-line bg-surface text-[18px] text-ink-soft hover:border-line-strong"
-          onClick={() => step(1)}
-        >
-          +
-        </button>
+        {stepper && (
+          <button
+            type="button"
+            aria-label={`${label} 늘리기`}
+            className="w-11 shrink-0 rounded-[8px] border border-line bg-surface text-[18px] text-ink-soft hover:border-line-strong"
+            onClick={() => step(1)}
+          >
+            +
+          </button>
+        )}
       </div>
     </FieldFrame>
   );

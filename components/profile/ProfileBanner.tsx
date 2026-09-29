@@ -24,7 +24,7 @@ export function ProfileBanner() {
           </h2>
           <p className="text-[12.5px] leading-relaxed text-ink-soft">
             {empty
-              ? '통상임금과 아이 생일 같은 걸 한 번 적어두면, 모든 계산기가 알아서 채워집니다.'
+              ? '혼인 상태와 통상임금 같은 걸 한 번 적어두면, 모든 계산기가 알아서 채워집니다.'
               : '적어두신 값으로 계산기들이 자동으로 채워져요.'}
           </p>
         </div>
