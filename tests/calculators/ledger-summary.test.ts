@@ -22,7 +22,7 @@ function entry(partial: Partial<Entry> & { amount: number }): Entry {
 }
 
 describe('가계부 요약', () => {
-  it('문턱을 못 넘으면 공제가 0원이고, 신용카드를 써도 손해가 없다고 말한다', () => {
+  it('세금이 줄기 시작하는 금액에 못 미치면 혜택 좋은 신용카드를 권한다', () => {
     // 총급여 4,000만원 → 문턱 1,000만원. 아직 500만원만 썼다.
     const out = summarizeLedger({
       entries: [entry({ amount: 500 * MAN })],
@@ -32,7 +32,13 @@ describe('가계부 요약', () => {
     const me = out.holders[0];
     expect(me.deduction).toBe(0);
     expect(me.toThreshold).toBe(500 * MAN);
-    expect(me.advice).toContain('손해가 없습니다');
+    /*
+      이 구간에서 쓴 돈은 한 푼도 세금을 안 줄여 준다. 그러니 잃을 게 없고
+      포인트·마일리지가 붙는 카드가 그냥 이득이다. 여기서 체크카드를 권하면
+      공짜로 받을 혜택을 버리게 만드는 셈이다.
+    */
+    expect(me.nowUse).toBe('credit');
+    expect(me.nowWhy).toContain('세금이 줄기 시작해요');
   });
 
   it('문턱을 넘으면 그 위만 공제되고, 체크카드 쪽을 권한다', () => {
@@ -49,7 +55,8 @@ describe('가계부 요약', () => {
     // 문턱이 신용에서 전부 빠지고 체크 500만이 온전히 30%
     expect(me.deduction).toBe(150 * MAN);
     expect(me.toThreshold).toBe(0);
-    expect(me.advice).toContain('체크카드');
+    expect(me.nowUse).toBe('check');
+    expect(me.nowWhy).toContain('두 배');
   });
 
   it('최저사용금액은 공제율이 낮은 쪽부터 깎는다', () => {
@@ -126,7 +133,7 @@ describe('가계부 요약', () => {
     expect(out.holders).toHaveLength(1);
   });
 
-  it('기본 한도를 채우면 일반 지출은 더 써도 소용없다고 말한다', () => {
+  it('한도를 채우면 다시 혜택 좋은 신용카드를 권한다', () => {
     // 총급여 4,000만, 한도 300만. 체크카드로 2,000만을 쓰면 (2,000−1,000)×30% = 300만
     const out = summarizeLedger({
       entries: [entry({ amount: 2000 * MAN, method: 'check' })],
@@ -136,7 +143,9 @@ describe('가계부 요약', () => {
     const me = out.holders[0];
     expect(me.baseLimitReached).toBe(true);
     expect(me.baseDeduction).toBe(300 * MAN);
-    expect(me.advice).toContain('한도를 채우셨어요');
+    // 더 써도 안 줄어드니 이제부터는 혜택이 좋은 카드가 이득이다.
+    expect(me.nowUse).toBe('credit');
+    expect(me.nowWhy).toContain('한도를 이미 다 채우셨어요');
   });
 
   it('커플 데이트비와 개인 생활비를 따로 센다', () => {

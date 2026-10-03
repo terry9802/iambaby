@@ -55,6 +55,18 @@ export type HolderSummary = {
   /** 기본 한도를 채우려면 체크카드로 더 써야 하는 금액. 채웠으면 0 */
   toBaseLimit: number;
   baseLimitReached: boolean;
+  /**
+   * 지금 이 사람이 써야 할 카드.
+   *
+   * 이 도구에서 제일 중요한 한 가지다. 설명 속에 묻어 두면 안 읽힌다.
+   * 세 가지 중 하나다.
+   *  - 세금이 줄기 시작하는 금액에 아직 못 미침 → 어차피 안 줄어드니 혜택 좋은 신용카드
+   *  - 그 금액을 넘김 → 체크카드·현금영수증이 두 배로 줄여 준다
+   *  - 더 줄여 주는 한도까지 다 채움 → 다시 혜택 좋은 신용카드
+   */
+  nowUse: 'credit' | 'check';
+  /** 왜 그 카드인지 한 줄로 */
+  nowWhy: string;
   advice: string;
 };
 
@@ -169,14 +181,7 @@ function summarizeHolder(
   const checkRate = rule.rates.find((r) => r.key === 'check')?.rate ?? 0.3;
   const toBaseLimit = baseLimitReached ? 0 : (baseLimit - rawBase) / checkRate;
 
-  const advice = adviceFor({
-    label,
-    spent,
-    toThreshold,
-    baseLimitReached,
-    toBaseLimit,
-    salary,
-  });
+  const now = adviceFor({ spent, toThreshold, baseLimitReached, toBaseLimit });
 
   return {
     holder,
@@ -195,34 +200,60 @@ function summarizeHolder(
     toThreshold,
     toBaseLimit,
     baseLimitReached,
-    advice,
+    nowUse: now.use,
+    nowWhy: now.why,
+    advice: now.advice,
   };
 }
 
+/**
+ * 지금 어떤 카드를 써야 하는지, 그리고 왜 그런지.
+ *
+ * 말을 쉽게 쓴다. '문턱', '최저사용금액', '공제율' 같은 말은 법에서 쓰는 말이지
+ * 사람이 쓰는 말이 아니다. 쓰는 사람이 알아야 할 건 딱 두 가지다.
+ * 지금 어떤 카드를 꺼내야 하는가, 그리고 왜 그런가.
+ */
 function adviceFor(x: {
-  label: string;
   spent: number;
   toThreshold: number;
   baseLimitReached: boolean;
   toBaseLimit: number;
-  salary: number;
-}): string {
-  if (x.spent <= 0) return '아직 적으신 게 없어요.';
+}): { use: 'credit' | 'check'; why: string; advice: string } {
+  if (x.spent <= 0) {
+    return {
+      use: 'credit',
+      why: '아직 적으신 게 없어요. 한 줄 적어 보시면 바로 세어 드릴게요.',
+      advice: '아직 적으신 게 없어요.',
+    };
+  }
 
   if (x.toThreshold > 0) {
     /*
-      문턱 아래에서는 어차피 전액이 깎여 나간다. 그래서 신용카드를 써도
-      잃는 게 없고, 오히려 혜택이 좋은 카드를 쓰는 쪽이 이득이다.
-      "체크카드를 쓰세요"는 문턱을 넘은 다음에 할 말이다.
+      여기서 신용카드를 권하는 게 거꾸로 들릴 수 있다. 하지만 이 구간에서 쓴 돈은
+      어차피 한 푼도 세금을 안 줄여 준다. 그러니 잃을 게 없고, 포인트·마일리지가
+      붙는 카드를 쓰는 쪽이 그냥 이득이다. "체크카드를 쓰세요"는 이 금액을
+      넘긴 다음에 할 말이다.
     */
-    return `문턱까지 ${formatKRW(Math.round(x.toThreshold))} 남았어요. 여기까지는 어차피 공제에서 깎이는 금액이라, 혜택이 좋은 신용카드로 쓰셔도 손해가 없습니다.`;
+    return {
+      use: 'credit',
+      why: `아직 ${formatKRW(Math.round(x.toThreshold))}을 더 써야 세금이 줄기 시작해요. 그때까진 뭘 쓰든 세금이 안 줄어드니, 포인트·마일리지 많이 주는 카드가 이득입니다.`,
+      advice: `${formatKRW(Math.round(x.toThreshold))} 더 쓰면 세금이 줄기 시작합니다.`,
+    };
   }
 
   if (x.baseLimitReached) {
-    return '기본 공제 한도를 채우셨어요. 이제 일반 지출은 더 써도 세금이 줄지 않습니다. 전통시장·대중교통·도서공연만 추가 한도로 더 공제돼요.';
+    return {
+      use: 'credit',
+      why: '세금이 줄어드는 한도를 이미 다 채우셨어요. 더 써도 안 줄어드니, 이제부터는 포인트·마일리지 많이 주는 카드가 이득입니다.',
+      advice: '한도를 다 채우셨어요.',
+    };
   }
 
-  return `문턱은 넘기셨어요. 지금부터는 체크카드·현금영수증이 신용카드보다 공제율이 두 배입니다. 한도를 다 채우려면 체크카드로 ${formatKRW(Math.round(x.toBaseLimit))}쯤 더 쓰시면 돼요.`;
+  return {
+    use: 'check',
+    why: `지금 쓰는 돈은 세금을 줄여 줍니다. 체크카드·현금영수증이 신용카드보다 두 배로 줄여 줘요. ${formatKRW(Math.round(x.toBaseLimit))}쯤 더 쓰면 한도가 찹니다.`,
+    advice: `체크카드로 ${formatKRW(Math.round(x.toBaseLimit))} 더 쓰면 한도가 찹니다.`,
+  };
 }
 
 export function summarizeLedger(input: LedgerSummaryInput): LedgerSummary {
