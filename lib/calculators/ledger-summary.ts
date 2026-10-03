@@ -336,6 +336,8 @@ export type CoupleComparison = {
   current: CoupleScenario;
   /** 지금 방식이 가장 나은 방식보다 얼마나 덜 돌려받는가. 0이면 지금이 최선이다. */
   lossVsBest: number;
+  /** 데이트비가 아직 적어서 견줄 거리가 못 되는가 */
+  tooSmall: boolean;
   verdict: string;
 };
 
@@ -430,6 +432,42 @@ export function compareCoupleStrategies(input: LedgerSummaryInput): CoupleCompar
   const best = scenarios.reduce((a, b) => (b.taxSaved > a.taxSaved ? b : a));
   const lossVsBest = Math.max(0, best.taxSaved - current.taxSaved);
 
+  /*
+    세 방식이 같은 답을 내는 이유는 두 가지인데, 서로 전혀 다르다.
+     - 한도를 이미 채웠다 → 뭘 더 긁든 세금이 안 줄어든다
+     - 아직 세금이 줄기 시작하는 금액에 못 미친다 → 지금 쓰는 돈은 세금과 무관하다
+    처음엔 둘을 구분하지 않고 늘 두 번째 설명을 내보냈다. 그래서 한도를 한참
+    넘긴 분께 "문턱 안에서 긁은 신용카드는…"이라고 엉뚱한 말을 했다.
+  */
+  const people = [summarizeHolder('me', '나', mySalary, entries, rule, payroll)];
+  if (partnerSalary > 0) {
+    people.push(summarizeHolder('partner', '배우자', partnerSalary, entries, rule, payroll));
+  }
+  const limitReached = people.some((h) => h.spent > 0 && h.baseLimitReached);
+  const belowThreshold = people.every((h) => h.spent <= 0 || h.toThreshold > 0);
+  /*
+    세 번째 경우. 문턱은 넘겼고 한도도 안 찼는데 답이 같을 때가 있다.
+    신용카드로 긁은 금액이 통째로 문턱 아래에 들어앉아 있는 경우다.
+    문턱은 공제율이 낮은 신용카드분부터 깎이므로, 신용카드분이 문턱보다 작으면
+    그 돈은 전부 깎여 나가고 체크카드분은 손도 안 탄다. 그래서 신용을 체크로
+    바꿔 봐야 공제가 한 푼도 안 달라진다.
+  */
+  const creditAbsorbed = people.every((h) => {
+    if (h.spent <= 0) return true;
+    const credit = entries
+      .filter((e) => e.holder === h.holder && e.method === 'credit' && e.category !== 'excluded')
+      .reduce((sum, e) => sum + e.amount, 0);
+    return credit <= h.threshold;
+  });
+
+  /*
+    데이트비가 전체에 견줘 아주 적으면 어떤 방식을 골라도 차이가 없는 게 당연하다.
+    그걸 두고 "지금 방식이 가장 낫습니다"라고 하면 비교하지도 않은 걸 비교한 척하는
+    것이다. 아직 비교할 거리가 아니라고 말해야 맞다.
+  */
+  const countable = people.reduce((sum, h) => sum + h.spent, 0);
+  const tooSmall = coupleSpent < 100_000 || (countable > 0 && coupleSpent / countable < 0.03);
+
   return {
     coupleSpent,
     coupleOnCredit,
@@ -437,41 +475,76 @@ export function compareCoupleStrategies(input: LedgerSummaryInput): CoupleCompar
     best,
     current,
     lossVsBest,
-    verdict: verdictFor({ lossVsBest, best, current, scenarios, coupleOnCredit }),
+    tooSmall,
+    verdict: verdictFor({
+      lossVsBest,
+      best,
+      current,
+      scenarios,
+      coupleOnCredit,
+      limitReached,
+      belowThreshold,
+      creditAbsorbed,
+      tooSmall,
+    }),
   };
 }
 
+/**
+ * 비교 결과를 한 줄로.
+ *
+ * 말은 쉽게 쓴다. '최저사용금액', '공제율', '문턱'은 법에서 쓰는 말이지 사람이
+ * 쓰는 말이 아니다. 그리고 같은 결과가 나와도 그 이유가 두 가지라서, 어느 쪽인지
+ * 보고 맞는 설명을 골라야 한다.
+ */
 function verdictFor(x: {
   lossVsBest: number;
   best: CoupleScenario;
   current: CoupleScenario;
   scenarios: CoupleScenario[];
   coupleOnCredit: number;
+  limitReached: boolean;
+  belowThreshold: boolean;
+  creditAbsorbed: boolean;
+  tooSmall: boolean;
 }): string {
   if (x.coupleOnCredit === 0) {
-    return '데이트비를 신용카드로 긁고 계시지 않아서, 공제율이 높은 쪽을 이미 쓰고 계세요.';
+    return '데이트비를 신용카드로 긁고 계시지 않네요. 세금을 더 줄여 주는 쪽을 이미 쓰고 계십니다.';
   }
 
-  /*
-    지금 방식이 지는 데가 없을 때. 이게 생각보다 자주 나오는데, 최저사용금액이
-    공제율 낮은 신용카드분부터 깎이기 때문이다. 문턱 안에서 긁은 신용카드는
-    어차피 깎여 나갈 몫이라 공제를 축내지 않는다. 그래서 그만큼은 카드 혜택을
-    그냥 버는 셈이 된다. 이걸 말해 주지 않으면 "신용카드는 손해"라는 흔한
-    오해 때문에 안 써도 될 손해를 본다.
-  */
+  if (x.tooSmall) {
+    return '**아직 데이트비를 조금만 적으셔서 견줄 거리가 못 됩니다.** 한 달치쯤 적어 두시면 어느 쪽이 나은지 제대로 세어 드릴게요.';
+  }
+
   if (x.lossVsBest === 0) {
     const worse = x.scenarios.find((s) => x.current.taxSaved - s.taxSaved >= 10000);
-    const head =
-      '**지금 방식이 가장 낫습니다.** 최저사용금액은 공제율이 낮은 신용카드분부터 깎여서, 문턱 안에서 긁은 신용카드는 공제를 축내지 않아요. 그만큼은 카드 혜택을 그냥 버는 셈입니다.';
+
+    /*
+      한도를 채운 경우. 더 긁어도 세금이 안 줄어드니 카드 종류가 세금에는
+      아무 영향이 없다. 남는 건 카드 혜택뿐이다.
+    */
+    const head = x.limitReached
+      ? '**지금 방식 그대로 쓰셔도 됩니다.** 세금이 줄어드는 한도를 이미 다 채우셨어요. 그래서 데이트비를 신용카드로 긁든 체크카드로 긁든 세금은 똑같습니다. 포인트·마일리지 많이 주는 카드가 그만큼 이득이에요.'
+      : x.belowThreshold
+        ? /*
+            아직 세금이 줄기 시작하는 금액에 못 미친 경우. 지금 쓰는 돈은 세금과
+            무관하므로 신용카드를 써도 잃는 게 없다. "신용카드는 손해"라는 흔한
+            오해 때문에 안 써도 될 손해를 보지 않게 이걸 말해 줘야 한다.
+          */
+          '**지금 방식이 가장 낫습니다.** 아직 세금이 줄기 시작하는 금액에 못 미쳐서, 지금 쓰는 돈은 어차피 세금을 안 줄여 줘요. 그러니 신용카드로 긁어도 잃는 게 없고, 포인트·마일리지만큼 그냥 버는 셈입니다.'
+        : x.creditAbsorbed
+          ? /*
+              신용카드로 긁은 금액이 통째로 문턱 아래에 들어앉은 경우.
+              그 돈은 어차피 전부 깎여 나가므로 체크카드로 바꿔도 달라질 게 없다.
+            */
+            '**지금 방식이 가장 낫습니다.** 신용카드로 긁으신 금액이 세금 계산에서 먼저 빠지는 몫에 통째로 들어가 있어요. 그래서 체크카드로 바꿔도 돌려받는 세금이 한 푼도 안 늘어납니다. 포인트·마일리지만큼 그냥 버는 셈이에요.'
+          : '**지금 방식이 가장 낫습니다.** 체크카드로 바꿔도 돌려받는 세금이 늘지 않아요.';
+
     return worse
       ? `${head} 참고로 ${worse.label} 방식으로 바꾸면 오히려 ${formatKRW(Math.round(x.current.taxSaved - worse.taxSaved))} 덜 돌려받습니다.`
       : head;
   }
 
-  /*
-    1만원도 차이가 안 나면 사실상 같은 말이다. 몇 천원 차이를 두고 "손해입니다"라고
-    하면 쓰는 사람이 쓸데없이 불안해진다.
-  */
   if (x.lossVsBest < 10000) {
     return '지금 방식과 체크카드로 바꾸는 방식의 세금 차이가 거의 없어요. 카드 혜택이 좋다면 지금대로 쓰셔도 됩니다.';
   }

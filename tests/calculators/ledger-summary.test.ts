@@ -319,7 +319,7 @@ describe('데이트비를 신용카드로 몰면 이득인가', () => {
     });
     if (!out) throw new Error('비교 실패');
     expect(out.coupleOnCredit).toBe(0);
-    expect(out.verdict).toContain('공제율이 높은 쪽을 이미');
+    expect(out.verdict).toContain('세금을 더 줄여 주는 쪽을 이미');
   });
 
   it('데이트비가 없으면 아무 말도 하지 않는다', () => {
@@ -352,7 +352,7 @@ describe('데이트비를 신용카드로 몰면 이득인가', () => {
 });
 
 describe('지금 방식이 이길 때', () => {
-  it('문턱에 신용카드분이 먼저 깎여서 손해가 없으면 그렇다고 말한다', () => {
+  it('신용카드분이 통째로 먼저 빠지는 몫이면 바꿔도 소용없다고 말한다', () => {
     /*
       연봉 4,500만(문턱 1,125만). 데이트비 1,000만을 신용카드로 몰고 개인 500만은
       체크카드. 문턱이 신용카드분을 전부 먹어 치우므로 체크카드로 바꿔도 공제가
@@ -387,7 +387,7 @@ describe('지금 방식이 이길 때', () => {
     if (!out) throw new Error('비교 실패');
     expect(out.lossVsBest).toBe(0);
     expect(out.verdict).toContain('지금 방식이 가장 낫습니다');
-    expect(out.verdict).toContain('공제를 축내지 않아요');
+    expect(out.verdict).toContain('먼저 빠지는 몫에 통째로');
   });
 
   it('둘로 쪼개면 둘 다 문턱을 못 넘어 오히려 손해라는 것도 잡아낸다', () => {
@@ -412,5 +412,67 @@ describe('지금 방식이 이길 때', () => {
     const all = out.scenarios.find((s) => s.key === 'allCheck');
     // 한 사람에게 몰아야 문턱을 넘는다. 쪼개면 둘 다 못 넘는다.
     expect(split!.taxSaved).toBeLessThan(all!.taxSaved);
+  });
+});
+
+describe('왜 같은 답이 나오는지 가려 말한다', () => {
+  /*
+    세 방식이 같은 답을 내는 이유는 두 가지인데 서로 전혀 다르다.
+     - 한도를 이미 채웠다 → 뭘 더 긁든 세금이 안 줄어든다
+     - 아직 세금이 줄기 시작하는 금액에 못 미친다 → 지금 쓰는 돈이 세금과 무관하다
+    처음엔 둘을 구분하지 않고 늘 두 번째 설명을 내보냈다. 그래서 한도를 세 배나
+    넘긴 분께 "문턱 안에서 긁은 신용카드는…"이라고 엉뚱한 말을 했다.
+  */
+  const big = (n: number, purse: 'personal' | 'couple') =>
+    entry({ id: `${purse}-${n}`, amount: n, purse, method: 'credit' });
+
+  it('한도를 채웠으면 한도 때문이라고 말한다', () => {
+    const out = compareCoupleStrategies({
+      entries: [big(3000 * MAN, 'personal'), big(1500 * MAN, 'couple')],
+      mySalary: 5678 * MAN,
+      asOf: ASOF,
+    });
+    if (!out) throw new Error('비교 실패');
+    expect(out.lossVsBest).toBe(0);
+    expect(out.verdict).toContain('한도를 이미 다 채우셨어요');
+    expect(out.verdict).not.toContain('최저사용금액');
+  });
+
+  it('아직 못 미쳤으면 그 이유로 말한다', () => {
+    const out = compareCoupleStrategies({
+      entries: [big(300 * MAN, 'personal'), big(200 * MAN, 'couple')],
+      mySalary: 5678 * MAN,
+      asOf: ASOF,
+    });
+    if (!out) throw new Error('비교 실패');
+    expect(out.verdict).toContain('아직 세금이 줄기 시작하는 금액에 못 미쳐서');
+  });
+
+  it('데이트비가 쥐꼬리면 견줄 거리가 못 된다고 말한다', () => {
+    /*
+      4,300만원 중 9,790원(0.02%)을 두고 "지금 방식이 가장 낫습니다"라고 하면
+      비교하지도 않은 걸 비교한 척하는 것이다.
+    */
+    const out = compareCoupleStrategies({
+      entries: [big(4300 * MAN, 'personal'), big(9790, 'couple')],
+      mySalary: 5678 * MAN,
+      asOf: ASOF,
+    });
+    if (!out) throw new Error('비교 실패');
+    expect(out.tooSmall).toBe(true);
+    expect(out.verdict).toContain('견줄 거리가 못 됩니다');
+  });
+
+  it('법에서 쓰는 말을 화면에 내보내지 않는다', () => {
+    const hard = ['최저사용금액', '공제율', '문턱'];
+    for (const entries of [
+      [big(3000 * MAN, 'personal'), big(1500 * MAN, 'couple')],
+      [big(300 * MAN, 'personal'), big(200 * MAN, 'couple')],
+      [big(2000 * MAN, 'personal'), big(800 * MAN, 'couple')],
+    ]) {
+      const out = compareCoupleStrategies({ entries, mySalary: 5678 * MAN, asOf: ASOF });
+      if (!out) throw new Error('비교 실패');
+      for (const word of hard) expect(out.verdict).not.toContain(word);
+    }
   });
 });

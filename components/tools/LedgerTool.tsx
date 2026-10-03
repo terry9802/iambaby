@@ -473,43 +473,43 @@ function CoupleCompare({ couple }: { couple: CoupleComparison }) {
         <InlineText text={couple.verdict} />
       </p>
 
-      <ul className="flex flex-col gap-2.5">
-        {couple.scenarios.map((s) => {
-          const best = s.key === couple.best.key;
-          return (
-            <li key={s.key}>
-              <div className="flex items-baseline justify-between gap-3">
-                <p className="text-[13px] text-ink">
-                  {s.label}
-                  {s.key === 'asRecorded' && (
-                    <span className="ml-1.5 text-[11.5px] text-ink-faint">지금</span>
-                  )}
-                </p>
-                <p
-                  className={
-                    'tnum shrink-0 text-[13.5px] font-bold ' + (best ? 'text-brand' : 'text-ink')
-                  }
-                >
-                  {formatKRW(Math.round(s.taxSaved))}
-                </p>
-              </div>
-              <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-band">
-                <div
-                  className={'h-full rounded-full ' + (best ? 'bg-brand' : 'bg-line-strong')}
-                  style={{ width: `${(s.taxSaved / max) * 100}%` }}
-                />
-              </div>
-              <p className="mt-1 text-[11.5px] text-ink-faint">{s.note}</p>
-            </li>
-          );
-        })}
-      </ul>
+      {/* 견줄 거리가 못 되면 똑같은 막대 세 줄은 헷갈리기만 한다 */}
+      {!couple.tooSmall && (
+        <ul className="flex flex-col gap-2.5">
+          {couple.scenarios.map((s) => {
+            const best = s.key === couple.best.key;
+            return (
+              <li key={s.key}>
+                <div className="flex items-baseline justify-between gap-3">
+                  <p className="text-[13px] text-ink">{s.label}</p>
+                  <p
+                    className={
+                      'tnum shrink-0 text-[13.5px] font-bold ' + (best ? 'text-brand' : 'text-ink')
+                    }
+                  >
+                    {formatKRW(Math.round(s.taxSaved))}
+                  </p>
+                </div>
+                <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-band">
+                  <div
+                    className={'h-full rounded-full ' + (best ? 'bg-brand' : 'bg-line-strong')}
+                    style={{ width: `${(s.taxSaved / max) * 100}%` }}
+                  />
+                </div>
+                <p className="mt-1 text-[11.5px] text-ink-faint">{s.note}</p>
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
       <p className="rounded-[8px] bg-sunk px-3.5 py-3 text-[12.5px] leading-relaxed text-ink-soft">
-        <strong className="font-semibold text-ink">통장은 공제와 상관이 없습니다.</strong>{' '}
-        커플통장에서 카드값을 갚든 내 통장에서 갚든 공제는 똑같아요. 공제는 어느 통장에서 돈이
-        나갔는지가 아니라, 무엇으로 긁었고 누구 명의 카드였는지로만 갈립니다. 그래서 한 사람 카드로
-        몰면 그 사람 한 명에게만 공제가 붙고, 한도도 그 한 사람 몫만 씁니다.
+        <strong className="font-semibold text-ink">어느 통장에서 갚든 세금은 같습니다.</strong>{' '}
+        커플통장에서 카드값을 갚든 내 통장에서 갚든 줄어드는 세금은 똑같아요. 세금을 가르는 건 돈이
+        어느 통장에서 나갔는지가 아니라{' '}
+        <strong className="font-semibold text-ink">무엇으로 긁었고 누구 카드였는지</strong>입니다.
+        그래서 한 사람 카드로 몰면 그 사람 한 명만 세금이 줄고, 줄어드는 한도도 그 한 사람 몫만
+        씁니다.
       </p>
     </section>
   );
