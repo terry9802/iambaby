@@ -8,11 +8,29 @@ import { byDateDesc, sanitizeEntries, type Entry } from './schema';
  * 아이디로 거른다. 아이디가 같으면 같은 줄이고, 나중 것으로 덮지 않는다.
  * 덮어 버리면 내가 고친 메모가 상대가 보낸 옛 파일에 지워질 수 있다.
  */
-export function mergeEntries(mine: Entry[], incoming: Entry[], source?: string): Entry[] {
+export function mergeEntries(
+  mine: Entry[],
+  incoming: Entry[],
+  source?: string,
+  /**
+   * 들어오는 줄의 명의를 뒤집을지.
+   *
+   * 가계부 파일은 보낸 사람 기준으로 적혀 있다. 신랑이 자기 카드로 쓴 줄은
+   * 그 파일에서 '내 명의'다. 그걸 신부가 그대로 가져오면 신부 화면에서도
+   * '내 명의'가 되어, 신랑 카드로 쓴 돈이 신부 소득에서 공제되는 걸로 계산된다.
+   * 공제는 명의자 소득에서만 붙으므로 이건 답이 틀려지는 문제다.
+   * 그래서 가져올 때 보는 쪽 기준으로 돌려 놓는다.
+   */
+  flipHolder = false,
+): Entry[] {
   const known = new Set(mine.map((e) => e.id));
   const added = sanitizeEntries(incoming)
     .filter((e) => !known.has(e.id))
-    .map((e) => ({ ...e, ...(source && !e.source ? { source } : {}) }));
+    .map((e) => ({
+      ...e,
+      ...(flipHolder ? { holder: e.holder === 'me' ? ('partner' as const) : ('me' as const) } : {}),
+      ...(source && !e.source ? { source } : {}),
+    }));
   return [...mine, ...added].sort(byDateDesc);
 }
 

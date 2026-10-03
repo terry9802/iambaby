@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { downloadCsv } from '@/lib/ledger/csv';
+import { downloadXlsx } from '@/lib/ledger/xlsx';
 import { mergeEntries, mergePreview, parseLedgerFile, toLedgerFile } from '@/lib/ledger/merge';
 import type { Entry } from '@/lib/ledger/schema';
 import { Icon } from '@/components/ui/Icon';
@@ -16,19 +17,26 @@ import { Icon } from '@/components/ui/Icon';
 export function LedgerShare({
   entries,
   today,
-  myName,
+  partnerLabel,
   onMerge,
 }: {
   entries: Entry[];
   today: string;
-  myName: string;
+  /**
+   * 가져온 줄에 붙일 이름.
+   *
+   * 보낸 사람이 자기를 뭐라 부르는지는 받는 쪽에 아무 뜻이 없다. 신랑이
+   * "나"로 보낸 파일을 신부가 가져오면 신부 화면에 "나"라고 적히는 꼴이다.
+   * 그래서 이름은 받는 쪽에서 붙인다.
+   */
+  partnerLabel: string;
   onMerge: (next: Entry[]) => boolean;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState<{ tone: 'ok' | 'bad'; text: string } | null>(null);
 
   const exportJson = () => {
-    const file = toLedgerFile(entries, myName, today);
+    const file = toLedgerFile(entries, undefined, today);
     const blob = new Blob([JSON.stringify(file)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -55,7 +63,8 @@ export function LedgerShare({
       });
       return;
     }
-    const ok = onMerge(mergeEntries(entries, read.entries, read.from ?? '상대방'));
+    // 보낸 사람 기준으로 적힌 명의를 보는 쪽 기준으로 돌려 놓는다.
+    const ok = onMerge(mergeEntries(entries, read.entries, partnerLabel, true));
     setMessage(
       ok
         ? {
@@ -73,7 +82,7 @@ export function LedgerShare({
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          onClick={() => downloadCsv(entries, today)}
+          onClick={() => downloadXlsx(entries, today)}
           disabled={entries.length === 0}
           className={
             'flex items-center gap-1.5 rounded-[8px] px-3.5 py-2.5 text-[13.5px] font-semibold transition-colors ' +
@@ -84,6 +93,20 @@ export function LedgerShare({
         >
           <Icon name="download" size={16} />
           엑셀로 받기
+        </button>
+        <button
+          type="button"
+          onClick={() => downloadCsv(entries, today)}
+          disabled={entries.length === 0}
+          className={
+            'flex items-center gap-1.5 rounded-[8px] border px-3.5 py-2.5 text-[13.5px] font-semibold transition-colors ' +
+            (entries.length > 0
+              ? 'border-line bg-surface text-ink-soft hover:border-line-strong'
+              : 'cursor-not-allowed border-line bg-sunk text-ink-faint')
+          }
+        >
+          <Icon name="download" size={16} />
+          CSV로 받기
         </button>
         <button
           type="button"
@@ -133,8 +156,9 @@ export function LedgerShare({
 
       <div className="rounded-[8px] bg-sunk px-3.5 py-3 text-[12.5px] leading-relaxed text-ink-soft">
         <p>
-          <strong className="font-semibold text-ink">엑셀로 받기</strong>는 보시는 용도예요.
-          날짜·금액· 결제수단·명의·분류가 그대로 칸에 들어갑니다.
+          <strong className="font-semibold text-ink">엑셀로 받기</strong>는 시트가 셋으로 나뉘어
+          나옵니다. 전체 · 개인 생활비 · 커플 데이트비. CSV는 시트가 하나뿐이라 구글 스프레드시트
+          같은 데 올릴 때만 쓰세요.
         </p>
         <p className="mt-1.5">
           <strong className="font-semibold text-ink">둘이 같이 쓰시려면</strong> 한 분이 합치기

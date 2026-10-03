@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { summarizeLedger } from '@/lib/calculators/ledger-summary';
+import { compareCoupleStrategies, summarizeLedger } from '@/lib/calculators/ledger-summary';
 import { entriesToCsv, csvFileName } from '@/lib/ledger/csv';
 import { mergeEntries, mergePreview, parseLedgerFile, toLedgerFile } from '@/lib/ledger/merge';
 import { sanitizeEntries, type Entry } from '@/lib/ledger/schema';
@@ -139,7 +139,7 @@ describe('가계부 요약', () => {
     expect(me.advice).toContain('한도를 채우셨어요');
   });
 
-  it('커플통장과 개인 지출을 따로 센다', () => {
+  it('커플 데이트비와 개인 생활비를 따로 센다', () => {
     const out = summarizeLedger({
       entries: [
         entry({ id: 'a', amount: 100 * MAN, purse: 'couple' }),
@@ -171,7 +171,7 @@ describe('엑셀 내려받기', () => {
       }),
     ]);
     expect(csv).toContain('날짜,금액,지갑,결제수단,명의,분류,메모');
-    expect(csv).toContain('2026-03-01,12000,커플통장,체크카드,내 명의,전통시장,장보기');
+    expect(csv).toContain('2026-03-01,12000,커플 데이트비,체크카드,내 명의,전통시장,장보기');
   });
 
   it('쉼표가 든 메모를 따옴표로 감싼다', () => {
@@ -207,6 +207,26 @@ describe('둘이 합치기', () => {
     const merged = mergeEntries(mine, theirs, '배우자');
     expect(merged.find((e) => e.id === 'theirs-1')?.source).toBe('배우자');
     expect(merged.find((e) => e.id === 'mine-1')?.source).toBeUndefined();
+  });
+
+  it('가져올 때 명의를 보는 쪽 기준으로 돌려 놓는다', () => {
+    /*
+      공제는 명의자 소득에서만 붙는다. 신랑이 자기 카드로 쓴 줄은 그 파일에서
+      '내 명의'인데, 신부가 그대로 가져오면 신랑 카드로 쓴 돈이 신부 소득에서
+      공제되는 걸로 계산된다. 답이 틀어지므로 가져올 때 뒤집는다.
+    */
+    const fromGroom = [entry({ id: 'g1', amount: 5000, holder: 'me' })];
+    const merged = mergeEntries([], fromGroom, '배우자', true);
+    expect(merged[0].holder).toBe('partner');
+
+    // 신부가 다시 내보내고 신랑이 가져오면 원래 자리로 돌아온다.
+    const backToGroom = mergeEntries([], merged, '배우자', true);
+    expect(backToGroom[0].holder).toBe('me');
+  });
+
+  it('뒤집지 않으면 명의가 그대로 들어온다', () => {
+    const merged = mergeEntries([], [entry({ id: 'x', amount: 5000, holder: 'me' })], '배우자');
+    expect(merged[0].holder).toBe('me');
   });
 
   it('내보낸 파일을 그대로 다시 읽는다', () => {
@@ -245,5 +265,143 @@ describe('저장소에 들어가는 줄', () => {
     expect(row.purse).toBe('personal');
     expect(row.method).toBe('credit');
     expect(row.category).toBe('general');
+  });
+});
+
+describe('데이트비를 신용카드로 몰면 이득인가', () => {
+  /*
+    사장님 방식: 커플통장에 모아 두고 한 사람 신용카드로 데이트비를 다 긁은 뒤,
+    결제일에 커플통장에서 카드값을 갚는다. 통장은 공제와 상관이 없으므로
+    남는 질문은 "신용카드 15%냐 체크카드 30%냐" 하나다.
+  */
+  const date = (d: number) => `2026-${String(d).padStart(2, '0')}-01`;
+  const dateNights = Array.from({ length: 12 }, (_, i) =>
+    entry({
+      id: `c${i}`,
+      date: date(i + 1),
+      amount: 100 * MAN,
+      purse: 'couple',
+      method: 'credit',
+      holder: 'me',
+    }),
+  );
+
+  it('신용카드로 몰면 체크카드보다 덜 돌려받는다고 말한다', () => {
+    const out = compareCoupleStrategies({
+      entries: dateNights,
+      mySalary: 4000 * MAN,
+      partnerSalary: 3600 * MAN,
+      asOf: ASOF,
+    });
+    if (!out) throw new Error('비교 실패');
+    expect(out.coupleSpent).toBe(1200 * MAN);
+    expect(out.coupleOnCredit).toBe(1200 * MAN);
+    // 공제율이 두 배라 체크카드 쪽이 이긴다
+    expect(out.best.key).not.toBe('asRecorded');
+    expect(out.lossVsBest).toBeGreaterThan(0);
+    expect(out.verdict).toContain('덜 돌려받습니다');
+  });
+
+  it('이미 체크카드로 쓰고 계시면 그렇다고 말한다', () => {
+    const out = compareCoupleStrategies({
+      entries: dateNights.map((e) => ({ ...e, method: 'check' as const })),
+      mySalary: 4000 * MAN,
+      asOf: ASOF,
+    });
+    if (!out) throw new Error('비교 실패');
+    expect(out.coupleOnCredit).toBe(0);
+    expect(out.verdict).toContain('공제율이 높은 쪽을 이미');
+  });
+
+  it('데이트비가 없으면 아무 말도 하지 않는다', () => {
+    const out = compareCoupleStrategies({
+      entries: [entry({ amount: 100 * MAN, purse: 'personal' })],
+      mySalary: 4000 * MAN,
+      asOf: ASOF,
+    });
+    expect(out).toBeNull();
+  });
+
+  it('전통시장처럼 공제율이 따로 붙는 줄은 결제수단을 바꾸지 않는다', () => {
+    // 전통시장은 신용카드로 긁어도 40%다. 체크카드로 바꿔도 달라질 게 없다.
+    const out = compareCoupleStrategies({
+      entries: [
+        entry({
+          id: 'm',
+          amount: 1200 * MAN,
+          purse: 'couple',
+          method: 'credit',
+          category: 'market',
+        }),
+      ],
+      mySalary: 4000 * MAN,
+      asOf: ASOF,
+    });
+    if (!out) throw new Error('비교 실패');
+    expect(out.lossVsBest).toBe(0);
+  });
+});
+
+describe('지금 방식이 이길 때', () => {
+  it('문턱에 신용카드분이 먼저 깎여서 손해가 없으면 그렇다고 말한다', () => {
+    /*
+      연봉 4,500만(문턱 1,125만). 데이트비 1,000만을 신용카드로 몰고 개인 500만은
+      체크카드. 문턱이 신용카드분을 전부 먹어 치우므로 체크카드로 바꿔도 공제가
+      같다. 즉 신용카드 혜택은 공짜로 버는 셈이다. "신용카드는 손해"라는 흔한
+      오해 때문에 안 써도 될 손해를 보지 않게 이걸 말해 줘야 한다.
+    */
+    const rows = Array.from({ length: 10 }, (_, i) => [
+      entry({
+        id: `c${i}`,
+        date: `2026-${String(i + 1).padStart(2, '0')}-15`,
+        amount: 100 * MAN,
+        purse: 'couple',
+        method: 'credit',
+        holder: 'me',
+      }),
+      entry({
+        id: `p${i}`,
+        date: `2026-${String(i + 1).padStart(2, '0')}-15`,
+        amount: 50 * MAN,
+        purse: 'personal',
+        method: 'check',
+        holder: 'me',
+      }),
+    ]).flat();
+
+    const out = compareCoupleStrategies({
+      entries: rows,
+      mySalary: 4500 * MAN,
+      partnerSalary: 3800 * MAN,
+      asOf: ASOF,
+    });
+    if (!out) throw new Error('비교 실패');
+    expect(out.lossVsBest).toBe(0);
+    expect(out.verdict).toContain('지금 방식이 가장 낫습니다');
+    expect(out.verdict).toContain('공제를 축내지 않아요');
+  });
+
+  it('둘로 쪼개면 둘 다 문턱을 못 넘어 오히려 손해라는 것도 잡아낸다', () => {
+    const rows = Array.from({ length: 10 }, (_, i) =>
+      entry({
+        id: `c${i}`,
+        date: `2026-${String(i + 1).padStart(2, '0')}-15`,
+        amount: 100 * MAN,
+        purse: 'couple',
+        method: 'credit',
+        holder: 'me',
+      }),
+    );
+    const out = compareCoupleStrategies({
+      entries: rows,
+      mySalary: 3000 * MAN,
+      partnerSalary: 3000 * MAN,
+      asOf: ASOF,
+    });
+    if (!out) throw new Error('비교 실패');
+    const split = out.scenarios.find((s) => s.key === 'splitCheck');
+    const all = out.scenarios.find((s) => s.key === 'allCheck');
+    // 한 사람에게 몰아야 문턱을 넘는다. 쪼개면 둘 다 못 넘는다.
+    expect(split!.taxSaved).toBeLessThan(all!.taxSaved);
   });
 });

@@ -2,7 +2,11 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { summarizeLedger } from '@/lib/calculators/ledger-summary';
+import {
+  compareCoupleStrategies,
+  summarizeLedger,
+  type CoupleComparison,
+} from '@/lib/calculators/ledger-summary';
 import { formatKRW, formatManwon, toISODate } from '@/lib/format';
 import { LedgerProvider, useLedger } from '@/lib/ledger/context';
 import {
@@ -16,6 +20,7 @@ import { useProfile } from '@/lib/profile/context';
 import { findEvent, type Tool } from '@/lib/tools';
 import { BackButton } from '@/components/ui/BackButton';
 import { Icon } from '@/components/ui/Icon';
+import { InlineText } from '@/components/ui/InlineText';
 import { LedgerShare } from '@/components/ledger/LedgerShare';
 import { QuickAdd } from '@/components/ledger/QuickAdd';
 
@@ -73,6 +78,19 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
     [thisYear, mySalary, partnerSalary, today],
   );
 
+  const couple = useMemo(
+    () =>
+      mySalary > 0
+        ? compareCoupleStrategies({
+            entries: thisYear,
+            mySalary,
+            partnerSalary,
+            asOf: today,
+          })
+        : null,
+    [thisYear, mySalary, partnerSalary, today],
+  );
+
   const visible = showAll ? entries : entries.slice(0, 20);
 
   return (
@@ -94,6 +112,7 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
       ) : (
         <>
           {summary && summary.entryCount > 0 && <Coach summary={summary} year={year} />}
+          {couple && <CoupleCompare couple={couple} />}
 
           {mySalary <= 0 && entries.length > 0 && (
             <p className="rounded-[12px] border border-line bg-brand-soft px-4 py-3.5 text-[12.5px] leading-relaxed text-ink-soft">
@@ -141,7 +160,12 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
             )}
           </section>
 
-          <LedgerShare entries={entries} today={today} myName="나" onMerge={replaceAll} />
+          <LedgerShare
+            entries={entries}
+            today={today}
+            partnerLabel={married ? '배우자' : '상대방'}
+            onMerge={replaceAll}
+          />
 
           <section className="rounded-[12px] border border-line bg-sunk px-4 py-4">
             <h2 className="text-[13px] font-semibold text-ink">이 기록은 어디에 저장되나요</h2>
@@ -293,5 +317,80 @@ function Bar({ spent, threshold, label }: { spent: number; threshold: number; la
       </div>
       <p className="tnum mt-1 text-[11px] text-ink-faint">{label}</p>
     </div>
+  );
+}
+
+/**
+ * 커플 데이트비를 한 사람 신용카드로 몰아 쓰는 게 이득인지 보여 주는 자리.
+ *
+ * 먼저 짚어야 할 것이 있다. 커플통장에서 카드값을 갚는 건 연말정산과 상관이 없다.
+ * 공제는 '무엇으로 긁었나'와 '누구 명의인가'로만 갈린다. 이걸 모르고 통장을
+ * 나눠 두면 공제가 나뉘는 줄 아시는 분이 많아서, 숫자보다 이 말을 먼저 적는다.
+ */
+function CoupleCompare({ couple }: { couple: CoupleComparison }) {
+  const max = Math.max(...couple.scenarios.map((s) => s.taxSaved), 1);
+  return (
+    <section className="flex flex-col gap-3 rounded-[12px] border border-line bg-surface px-4 py-4">
+      <div>
+        <h2 className="text-[15px] font-bold text-ink">데이트비를 신용카드로 몰면 이득일까요</h2>
+        <p className="mt-1 text-[12.5px] leading-relaxed text-ink-soft">
+          커플 데이트비{' '}
+          <strong className="tnum font-semibold text-ink">{formatKRW(couple.coupleSpent)}</strong>
+          {couple.coupleOnCredit > 0 && (
+            <>
+              {' '}
+              중{' '}
+              <strong className="tnum font-semibold text-ink">
+                {formatKRW(couple.coupleOnCredit)}
+              </strong>
+              을 신용카드로 긁으셨어요.
+            </>
+          )}
+        </p>
+      </div>
+
+      <p className="rounded-[8px] bg-brand-soft px-3.5 py-3 text-[13px] leading-relaxed text-ink">
+        <InlineText text={couple.verdict} />
+      </p>
+
+      <ul className="flex flex-col gap-2.5">
+        {couple.scenarios.map((s) => {
+          const best = s.key === couple.best.key;
+          return (
+            <li key={s.key}>
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="text-[13px] text-ink">
+                  {s.label}
+                  {s.key === 'asRecorded' && (
+                    <span className="ml-1.5 text-[11.5px] text-ink-faint">지금</span>
+                  )}
+                </p>
+                <p
+                  className={
+                    'tnum shrink-0 text-[13.5px] font-bold ' + (best ? 'text-brand' : 'text-ink')
+                  }
+                >
+                  {formatKRW(Math.round(s.taxSaved))}
+                </p>
+              </div>
+              <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-band">
+                <div
+                  className={'h-full rounded-full ' + (best ? 'bg-brand' : 'bg-line-strong')}
+                  style={{ width: `${(s.taxSaved / max) * 100}%` }}
+                />
+              </div>
+              <p className="mt-1 text-[11.5px] text-ink-faint">{s.note}</p>
+            </li>
+          );
+        })}
+      </ul>
+
+      <p className="rounded-[8px] bg-sunk px-3.5 py-3 text-[12.5px] leading-relaxed text-ink-soft">
+        <strong className="font-semibold text-ink">통장은 공제와 상관이 없습니다.</strong>{' '}
+        커플통장에서 카드값을 갚든 내 통장에서 갚든 공제는 똑같아요. 공제는 어느 통장에서 돈이
+        나갔는지가 아니라, 무엇으로 긁었고 누구 명의 카드였는지로만 갈립니다. 그래서 한 사람 카드로
+        몰면 그 사람 한 명에게만 공제가 붙고, 한도도 그 한 사람 몫만 씁니다.
+      </p>
+    </section>
   );
 }

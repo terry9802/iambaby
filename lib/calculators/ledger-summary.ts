@@ -269,3 +269,181 @@ export function summarizeLedger(input: LedgerSummaryInput): LedgerSummary {
     personalSpent,
   };
 }
+
+/**
+ * "커플 데이트비를 한 사람 신용카드로 몰아 쓰는 게 연말정산에 도움이 되나"
+ *
+ * 사장님이 하시려는 방식은 이렇다. 커플통장에 돈을 모아 두고, 한 달 데이트비를
+ * 한 사람 신용카드로 다 긁고, 결제일에 커플통장에서 카드값을 갚는다.
+ *
+ * 먼저 짚을 것. 어느 통장에서 카드값이 빠져나가느냐는 연말정산과 아무 상관이 없다.
+ * 공제는 '무엇으로 긁었나'와 '누구 명의인가'로만 갈린다. 커플통장에서 갚았다고
+ * 둘이 나눠 공제받는 일은 없고, 긁은 카드 명의자 한 사람에게만 붙는다.
+ *
+ * 그래서 비교해야 할 것은 세 가지다.
+ *  1) 지금 적어 두신 그대로
+ *  2) 같은 데이트비를 같은 사람 체크카드·현금영수증으로 썼을 때
+ *  3) 같은 데이트비를 둘이 반씩 체크카드로 썼을 때
+ *
+ * 공제율만 보면 체크카드가 두 배라 2번이 이기는 게 보통이지만, 문턱과 한도가
+ * 걸리면 뒤집히기도 한다. 그래서 눈대중 말고 실제로 세어 본다.
+ */
+export type CoupleScenario = {
+  key: 'asRecorded' | 'allCheck' | 'splitCheck';
+  label: string;
+  note: string;
+  taxSaved: number;
+  deduction: number;
+};
+
+export type CoupleComparison = {
+  coupleSpent: number;
+  /** 커플 데이트비를 신용카드로 긁은 금액 */
+  coupleOnCredit: number;
+  scenarios: CoupleScenario[];
+  best: CoupleScenario;
+  current: CoupleScenario;
+  /** 지금 방식이 가장 나은 방식보다 얼마나 덜 돌려받는가. 0이면 지금이 최선이다. */
+  lossVsBest: number;
+  verdict: string;
+};
+
+function taxOfPlan(
+  entries: Entry[],
+  mySalary: number,
+  partnerSalary: number,
+  rule: CardDeductionRule,
+  payroll: PayrollRule,
+): { taxSaved: number; deduction: number } {
+  const me = summarizeHolder('me', '나', mySalary, entries, rule, payroll);
+  const rows = [me];
+  if (partnerSalary > 0) {
+    rows.push(summarizeHolder('partner', '배우자', partnerSalary, entries, rule, payroll));
+  }
+  return {
+    taxSaved: rows.reduce((sum, h) => sum + h.taxSaved, 0),
+    deduction: rows.reduce((sum, h) => sum + h.deduction, 0),
+  };
+}
+
+export function compareCoupleStrategies(input: LedgerSummaryInput): CoupleComparison | null {
+  const asOf = input.asOf ?? toISODate(new Date());
+  const rule = cardDeductionRule(asOf);
+  const payroll = loadRule<PayrollRule>('payroll', asOf).rule.values;
+
+  const entries = input.entries;
+  const couple = entries.filter((e) => e.purse === 'couple' && e.category !== 'excluded');
+  if (couple.length === 0) return null;
+
+  const coupleSpent = couple.reduce((sum, e) => sum + e.amount, 0);
+  const coupleOnCredit = couple
+    .filter((e) => e.method === 'credit')
+    .reduce((sum, e) => sum + e.amount, 0);
+
+  const mySalary = input.mySalary;
+  const partnerSalary = input.partnerSalary ?? 0;
+  const run = (rows: Entry[]) => taxOfPlan(rows, mySalary, partnerSalary, rule, payroll);
+
+  /* 1) 적어 두신 그대로 */
+  const asRecorded = run(entries);
+
+  /*
+    2) 데이트비를 전부 체크카드로. 명의는 그대로 둔다. 바꾸는 건 결제수단 하나뿐이라
+       "카드만 바꿨을 때 얼마가 달라지나"를 깨끗하게 본다.
+       전통시장·대중교통처럼 공제율이 따로 붙는 줄은 건드리지 않는다. 그쪽은
+       결제수단이 아니라 어디서 썼느냐로 공제율이 정해지기 때문이다.
+  */
+  const allCheckRows = entries.map((e) =>
+    e.purse === 'couple' && e.category === 'general' ? { ...e, method: 'check' as const } : e,
+  );
+  const allCheck = run(allCheckRows);
+
+  /* 3) 데이트비를 둘이 반씩 체크카드로. 배우자 소득이 없으면 볼 것도 없다. */
+  const splitRows = entries.map((e, i) =>
+    e.purse === 'couple' && e.category === 'general'
+      ? {
+          ...e,
+          method: 'check' as const,
+          holder: i % 2 === 0 ? ('me' as const) : ('partner' as const),
+        }
+      : e,
+  );
+  const splitCheck = partnerSalary > 0 ? run(splitRows) : null;
+
+  const scenarios: CoupleScenario[] = [
+    {
+      key: 'asRecorded',
+      label: '지금 적어 두신 대로',
+      note: coupleOnCredit > 0 ? '데이트비를 신용카드로 긁는 방식' : '지금 쓰시는 방식',
+      ...asRecorded,
+    },
+    {
+      key: 'allCheck',
+      label: '데이트비를 체크카드로',
+      note: '같은 사람 체크카드나 현금영수증으로 바꿨을 때',
+      ...allCheck,
+    },
+    ...(splitCheck
+      ? [
+          {
+            key: 'splitCheck' as const,
+            label: '둘이 반씩 체크카드로',
+            note: '데이트비를 번갈아 각자 체크카드로 썼을 때',
+            ...splitCheck,
+          },
+        ]
+      : []),
+  ];
+
+  const current = scenarios[0];
+  const best = scenarios.reduce((a, b) => (b.taxSaved > a.taxSaved ? b : a));
+  const lossVsBest = Math.max(0, best.taxSaved - current.taxSaved);
+
+  return {
+    coupleSpent,
+    coupleOnCredit,
+    scenarios,
+    best,
+    current,
+    lossVsBest,
+    verdict: verdictFor({ lossVsBest, best, current, scenarios, coupleOnCredit }),
+  };
+}
+
+function verdictFor(x: {
+  lossVsBest: number;
+  best: CoupleScenario;
+  current: CoupleScenario;
+  scenarios: CoupleScenario[];
+  coupleOnCredit: number;
+}): string {
+  if (x.coupleOnCredit === 0) {
+    return '데이트비를 신용카드로 긁고 계시지 않아서, 공제율이 높은 쪽을 이미 쓰고 계세요.';
+  }
+
+  /*
+    지금 방식이 지는 데가 없을 때. 이게 생각보다 자주 나오는데, 최저사용금액이
+    공제율 낮은 신용카드분부터 깎이기 때문이다. 문턱 안에서 긁은 신용카드는
+    어차피 깎여 나갈 몫이라 공제를 축내지 않는다. 그래서 그만큼은 카드 혜택을
+    그냥 버는 셈이 된다. 이걸 말해 주지 않으면 "신용카드는 손해"라는 흔한
+    오해 때문에 안 써도 될 손해를 본다.
+  */
+  if (x.lossVsBest === 0) {
+    const worse = x.scenarios.find((s) => x.current.taxSaved - s.taxSaved >= 10000);
+    const head =
+      '**지금 방식이 가장 낫습니다.** 최저사용금액은 공제율이 낮은 신용카드분부터 깎여서, 문턱 안에서 긁은 신용카드는 공제를 축내지 않아요. 그만큼은 카드 혜택을 그냥 버는 셈입니다.';
+    return worse
+      ? `${head} 참고로 ${worse.label} 방식으로 바꾸면 오히려 ${formatKRW(Math.round(x.current.taxSaved - worse.taxSaved))} 덜 돌려받습니다.`
+      : head;
+  }
+
+  /*
+    1만원도 차이가 안 나면 사실상 같은 말이다. 몇 천원 차이를 두고 "손해입니다"라고
+    하면 쓰는 사람이 쓸데없이 불안해진다.
+  */
+  if (x.lossVsBest < 10000) {
+    return '지금 방식과 체크카드로 바꾸는 방식의 세금 차이가 거의 없어요. 카드 혜택이 좋다면 지금대로 쓰셔도 됩니다.';
+  }
+
+  return `지금 방식은 ${x.best.label} 방식보다 ${formatKRW(Math.round(x.lossVsBest))} 덜 돌려받습니다. 신용카드 혜택이 이 금액보다 크면 지금대로가 이득이고, 아니면 체크카드가 낫습니다.`;
+}
