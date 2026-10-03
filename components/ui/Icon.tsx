@@ -20,9 +20,39 @@ export type IconName =
   | 'close'
   | 'back'
   | 'copy'
+  | 'plus'
+  | 'trash'
+  | 'download'
+  | 'upload'
   | 'phone';
 
 const PATHS: Record<IconName, React.ReactNode> = {
+  // 더하기 — 한 줄 더 적기
+  plus: <path d="M12 5v14M5 12h14" />,
+  // 휴지통 — 적은 줄 지우기
+  trash: (
+    <>
+      <path d="M4 7h16" />
+      <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+      <path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
+    </>
+  ),
+  // 아래로 향한 화살표 — 파일로 받기
+  download: (
+    <>
+      <path d="M12 4v11" />
+      <path d="M7.5 10.5 12 15l4.5-4.5" />
+      <path d="M4 18.5h16" />
+    </>
+  ),
+  // 위로 향한 화살표 — 파일 올리기
+  upload: (
+    <>
+      <path d="M12 16V5" />
+      <path d="M7.5 9.5 12 5l4.5 4.5" />
+      <path d="M4 18.5h16" />
+    </>
+  ),
   // 카드 두 장 — 어느 카드로 쓸지 고르는 일
   wallet: (
     <>

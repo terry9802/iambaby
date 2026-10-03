@@ -162,7 +162,7 @@ function incomeTaxOf(salary: number, deduction: number, p: PayrollRule): number 
   return Math.max(0, beforeCredit - earnedIncomeTaxCredit(beforeCredit, salary, p));
 }
 
-function taxSavedBy(
+export function taxSavedBy(
   salary: number,
   deduction: number,
   p: PayrollRule,
@@ -184,7 +184,7 @@ function marginalRateAfter(salary: number, deduction: number, p: PayrollRule): n
   return Math.max(0, (here - lower) / step);
 }
 
-function baseLimitOf(salary: number, rule: CardDeductionRule): number {
+export function baseLimitOf(salary: number, rule: CardDeductionRule): number {
   const row =
     rule.baseLimits.find((l) => l.salaryUpTo !== null && salary <= l.salaryUpTo) ??
     rule.baseLimits[rule.baseLimits.length - 1];

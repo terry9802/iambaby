@@ -390,6 +390,17 @@ export const TOOLS: Tool[] = [
     timing: '입찰표 쓰기 전에',
   },
   {
+    slug: 'ledger',
+    event: 'household',
+    type: 'optimizer',
+    title: '쓴 돈 적기',
+    question: '오늘 쓴 돈, 연말정산에 어떻게 쌓이고 있나요?',
+    lead: '쓴 돈을 적어두면 지금까지 공제가 얼마나 쌓였는지, 남은 기간엔 어떤 카드를 써야 하는지 알려드려요. 엑셀로 내려받을 수 있고, 둘이 같이 쓰실 수도 있습니다.',
+    profileFields: ['income'],
+    ruleFile: 'card-deduction',
+    timing: '쓴 날 바로',
+  },
+  {
     slug: 'card-split',
     event: 'household',
     type: 'optimizer',
