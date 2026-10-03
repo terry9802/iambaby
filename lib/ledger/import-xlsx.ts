@@ -23,6 +23,14 @@ export type ImportResult =
       skipped: number;
       /** 카드값 갚은 줄로 보여서 공제에서 뺀 건수 */
       cardBills: number;
+      /**
+       * 지갑 칸이 파일에 있었는가.
+       *
+       * 없으면 전부 '개인 생활비'로 들어간다. 그대로 두면 데이트비가 하나도
+       * 없는 걸로 세어져서 "데이트비를 신용카드로 몰면 이득일까요" 비교가
+       * 아예 안 나온다. 그래서 없었다는 사실을 화면에 알려야 한다.
+       */
+      hadPurse: boolean;
     }
   | { error: string };
 
@@ -162,6 +170,8 @@ const WANTED = {
   date: ['날짜', '일자', '사용일', 'date'],
   category: ['카테고리', '분류', '항목', 'category'],
   source: ['출금처', '결제수단', '수단', '카드', 'method'],
+  purse: ['지갑', '구분', '용도', '누구', 'purse'],
+  holder: ['명의', '카드주인', 'holder'],
 } as const;
 
 /**
@@ -277,6 +287,21 @@ export async function importLedgerXlsx(file: ArrayBuffer): Promise<ImportResult>
       );
       const memo = header.map.memo ? String(row[header.map.memo] ?? '').slice(0, 120) : '';
 
+      /*
+        지갑 칸은 쓰시던 가계부에 대개 없다. 있으면 읽고, 없으면 개인 생활비로
+        둔 뒤 화면에서 바꾸시게 한다. 없는 걸 마음대로 데이트비로 찍으면
+        공제 계산이 통째로 어긋난다.
+      */
+      const purseText = header.map.purse ? String(row[header.map.purse] ?? '') : '';
+      const purse: Entry['purse'] =
+        purseText.includes('커플') || purseText.includes('데이트') || purseText.includes('공동')
+          ? 'couple'
+          : 'personal';
+
+      const holderText = header.map.holder ? String(row[header.map.holder] ?? '') : '';
+      const holder: Entry['holder'] =
+        holderText.includes('배우자') || holderText.includes('상대') ? 'partner' : 'me';
+
       const billRow = isCardBill(memo) || isCardBill(sourceText);
       if (billRow) cardBills += 1;
 
@@ -284,9 +309,9 @@ export async function importLedgerXlsx(file: ArrayBuffer): Promise<ImportResult>
         id: newId(),
         date,
         amount: Math.round(amount),
-        purse: 'personal',
+        purse,
         method,
-        holder: 'me',
+        holder,
         spend,
         /*
           카드값 갚은 줄과 계좌이체처럼 공제가 안 되는 출금처는 분류를 이긴다.
@@ -298,7 +323,13 @@ export async function importLedgerXlsx(file: ArrayBuffer): Promise<ImportResult>
     }
 
     if (entries.length === 0) continue;
-    return { entries, sheet: names[i] ?? `시트${i + 1}`, skipped, cardBills };
+    return {
+      entries,
+      sheet: names[i] ?? `시트${i + 1}`,
+      skipped,
+      cardBills,
+      hadPurse: !!header.map.purse,
+    };
   }
 
   return {

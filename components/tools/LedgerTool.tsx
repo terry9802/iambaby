@@ -48,7 +48,7 @@ export function LedgerTool(props: { tool: Tool; fallbackToday: string }) {
 
 function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string }) {
   const { profile, hydrated } = useProfile();
-  const { entries, hydrated: ledgerReady, add, remove, replaceAll, reset } = useLedger();
+  const { entries, hydrated: ledgerReady, add, update, remove, replaceAll, reset } = useLedger();
   const [confirmReset, setConfirmReset] = useState(false);
   const [showAll, setShowAll] = useState(false);
 
@@ -166,6 +166,9 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
                       entry={e}
                       hasPartner={hasPartner}
                       married={married}
+                      onTogglePurse={() =>
+                        update(e.id, { purse: e.purse === 'couple' ? 'personal' : 'couple' })
+                      }
                       onRemove={() => remove(e.id)}
                     />
                   ))}
@@ -238,13 +241,16 @@ function Row({
   entry,
   hasPartner,
   married,
+  onTogglePurse,
   onRemove,
 }: {
   entry: Entry;
   hasPartner: boolean;
   married: boolean;
+  onTogglePurse: () => void;
   onRemove: () => void;
 }) {
+  const couple = entry.purse === 'couple';
   return (
     <li className="flex items-center gap-3 py-2.5">
       <div className="min-w-0 flex-1">
@@ -252,8 +258,26 @@ function Row({
           <span className="tnum text-[12px] text-ink-faint">{entry.date.slice(5)}</span>
           <span className="tnum text-[15px] font-bold text-ink">{formatKRW(entry.amount)}</span>
         </div>
-        <p className="mt-0.5 truncate text-[12px] text-ink-soft">
-          {`${PURSE_LABEL[entry.purse]} · `}
+        {/*
+          지갑만 누르면 바로 바뀐다. 쓰시던 엑셀에는 데이트비 구분이 없어서
+          가져오면 전부 개인 생활비로 들어온다. 그걸 고치러 줄마다 편집 화면을
+          열게 하면 열일곱 줄에 서른네 번을 누르셔야 한다. 한 번이면 된다.
+        */}
+        <p className="mt-0.5 flex flex-wrap items-center gap-x-1 text-[12px] text-ink-soft">
+          <button
+            type="button"
+            onClick={onTogglePurse}
+            aria-label={`${formatKRW(entry.amount)} — ${couple ? '개인 생활비로' : '커플 데이트비로'} 바꾸기`}
+            className={
+              'rounded-full border px-2 py-0.5 text-[11.5px] font-medium transition-colors ' +
+              (couple
+                ? 'border-brand-strong bg-brand-strong text-white'
+                : 'border-line bg-surface text-ink-soft hover:border-line-strong')
+            }
+          >
+            {PURSE_LABEL[entry.purse]}
+          </button>
+          <span>·</span>
           {METHOD_LABEL[entry.method]}
           {(hasPartner || entry.purse === 'couple') && ` · ${holderLabel(entry.holder, married)}`}
           {entry.spend && ` · ${entry.spend}`}
