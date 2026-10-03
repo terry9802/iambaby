@@ -5,7 +5,7 @@ import { formatKRW, toISODate } from '@/lib/format';
 import {
   CATEGORY_LABEL,
   EXCLUDED_HINT,
-  HOLDER_LABEL,
+  holderLabel,
   METHOD_LABEL,
   PURSE_LABEL,
   type Category,
@@ -102,11 +102,20 @@ function Chips<T extends string>({
 
 export function QuickAdd({
   today,
+  hasPartner,
   married,
   onAdd,
 }: {
   today: string;
-  /** 기혼이 아니면 명의를 물을 이유가 없다. 커플통장도 마찬가지다. */
+  /**
+   * 같이 쓰는 사람이 있는가.
+   *
+   * 혼인신고를 했는지와는 상관이 없다. 예비부부도 커플통장으로 데이트비를 쓰고,
+   * 그 돈이 누구 카드에서 나갔는지가 공제를 가른다. 처음에 이걸 '기혼'으로
+   * 묶어 뒀다가 예비부부에게 지갑 칸 자체가 안 보이는 일이 있었다.
+   */
+  hasPartner: boolean;
+  /** 혼인신고를 마쳤는가. 부르는 말만 달라진다. */
   married: boolean;
   onAdd: (rows: Omit<Entry, 'id'>[]) => boolean;
 }) {
@@ -141,9 +150,9 @@ export function QuickAdd({
       filled.map((d) => ({
         date: d.date,
         amount: Number(d.amount.replace(/[^0-9]/g, '')),
-        purse: married ? d.purse : 'personal',
+        purse: d.purse,
         method: d.method,
-        holder: married ? d.holder : 'me',
+        holder: hasPartner || d.purse === 'couple' ? d.holder : 'me',
         category: d.category,
         ...(d.memo.trim() ? { memo: d.memo.trim() } : {}),
       })),
@@ -231,14 +240,12 @@ export function QuickAdd({
                 />
               </label>
 
-              {married && (
-                <Chips<Purse>
-                  label="어느 돈으로"
-                  value={d.purse}
-                  onChange={(purse) => patch(d.key, { purse })}
-                  options={PURSES.map((v) => ({ value: v, label: PURSE_LABEL[v] }))}
-                />
-              )}
+              <Chips<Purse>
+                label="어느 돈으로"
+                value={d.purse}
+                onChange={(purse) => patch(d.key, { purse })}
+                options={PURSES.map((v) => ({ value: v, label: PURSE_LABEL[v] }))}
+              />
 
               <Chips<Method>
                 label="결제수단"
@@ -247,14 +254,19 @@ export function QuickAdd({
                 options={METHODS.map((v) => ({ value: v, label: METHOD_LABEL[v] }))}
               />
 
-              {married && (
+              {/*
+                프로필에 상대 얘기가 없어도, 이 줄을 커플 데이트비로 고르는 순간
+                둘이 쓰는 돈이라는 뜻이다. 그러면 누구 카드로 냈는지가 공제를
+                가르므로 그때 바로 물어본다. 프로필을 먼저 채우라고 미루지 않는다.
+              */}
+              {(hasPartner || d.purse === 'couple') && (
                 <Chips<Holder>
                   label="누구 명의 카드"
                   value={d.holder}
                   onChange={(holder) => patch(d.key, { holder })}
                   options={(['me', 'partner'] as Holder[]).map((v) => ({
                     value: v,
-                    label: HOLDER_LABEL[v],
+                    label: holderLabel(v, married),
                   }))}
                 />
               )}

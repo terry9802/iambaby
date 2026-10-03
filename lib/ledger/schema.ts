@@ -64,6 +64,16 @@ export const HOLDER_LABEL: Record<Holder, string> = {
   partner: '배우자 명의',
 };
 
+/**
+ * 혼인신고 전이면 '배우자'가 아직 아니다. 예비부부에게 배우자라고 적으면
+ * 화면이 자기 얘기가 아닌 것처럼 읽힌다. 엑셀처럼 한 번 떨구면 못 고치는
+ * 곳은 기본값을 그대로 쓰고, 화면에서만 부르는 말을 바꾼다.
+ */
+export function holderLabel(holder: Holder, married: boolean): string {
+  if (holder === 'me') return HOLDER_LABEL.me;
+  return married ? '배우자 명의' : '상대 명의';
+}
+
 export const CATEGORY_LABEL: Record<Category, string> = {
   general: '일반',
   market: '전통시장',

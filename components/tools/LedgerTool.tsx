@@ -11,7 +11,7 @@ import { formatKRW, formatManwon, toISODate } from '@/lib/format';
 import { LedgerProvider, useLedger } from '@/lib/ledger/context';
 import {
   CATEGORY_LABEL,
-  HOLDER_LABEL,
+  holderLabel,
   METHOD_LABEL,
   PURSE_LABEL,
   type Entry,
@@ -53,9 +53,26 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
   const [showAll, setShowAll] = useState(false);
 
   const today = hydrated ? toISODate(new Date()) : fallbackToday;
+  /*
+    같이 쓰는 사람이 있는지는 혼인신고로 따지지 않는다. 예비부부도 커플통장으로
+    데이트비를 쓰고, 그 돈이 누구 카드에서 나갔는지가 공제를 가른다.
+    프로필에 배우자(예비 배우자) 소득이나 혼인신고일이 적혀 있으면 둘이 있는
+    것으로 본다. 처음에 '기혼'으로만 묶어 뒀다가 예비부부에게 지갑 칸이
+    아예 안 보이는 일이 있었다.
+  */
   const married = hydrated && profile.maritalStatus === 'married';
+  const hasPartner =
+    hydrated &&
+    (married ||
+      !!profile.marriageDate ||
+      (profile.spouse?.annualSalary ?? 0) > 0 ||
+      (profile.spouse?.monthlyWage ?? 0) > 0);
   const mySalary = profile.income?.annualSalary ?? 0;
-  const partnerSalary = married ? (profile.spouse?.annualSalary ?? 0) : 0;
+  /*
+    혼인신고 전이어도 상대는 자기 소득에서 자기 카드로 공제받는다. 그래서
+    합산(기혼 + 배우자 저소득) 여부와 상관없이 상대 몫은 따로 세어 준다.
+  */
+  const partnerSalary = hasPartner ? (profile.spouse?.annualSalary ?? 0) : 0;
 
   /*
     올해 쓴 것만 센다. 연말정산은 한 해 단위라 작년 줄을 섞으면 답이 틀어진다.
@@ -128,7 +145,7 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
             </p>
           )}
 
-          <QuickAdd today={today} married={married} onAdd={add} />
+          <QuickAdd today={today} hasPartner={hasPartner} married={married} onAdd={add} />
 
           <section className="rounded-[12px] border border-line bg-surface px-4 py-4">
             <div className="flex items-baseline justify-between gap-3">
@@ -144,7 +161,13 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
               <>
                 <ul className="mt-2.5 flex flex-col divide-y divide-line">
                   {visible.map((e) => (
-                    <Row key={e.id} entry={e} married={married} onRemove={() => remove(e.id)} />
+                    <Row
+                      key={e.id}
+                      entry={e}
+                      hasPartner={hasPartner}
+                      married={married}
+                      onRemove={() => remove(e.id)}
+                    />
                   ))}
                 </ul>
                 {entries.length > visible.length && (
@@ -213,10 +236,12 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
 
 function Row({
   entry,
+  hasPartner,
   married,
   onRemove,
 }: {
   entry: Entry;
+  hasPartner: boolean;
   married: boolean;
   onRemove: () => void;
 }) {
@@ -228,9 +253,9 @@ function Row({
           <span className="tnum text-[15px] font-bold text-ink">{formatKRW(entry.amount)}</span>
         </div>
         <p className="mt-0.5 truncate text-[12px] text-ink-soft">
-          {married && `${PURSE_LABEL[entry.purse]} · `}
+          {`${PURSE_LABEL[entry.purse]} · `}
           {METHOD_LABEL[entry.method]}
-          {married && ` · ${HOLDER_LABEL[entry.holder]}`}
+          {(hasPartner || entry.purse === 'couple') && ` · ${holderLabel(entry.holder, married)}`}
           {entry.category !== 'general' && ` · ${CATEGORY_LABEL[entry.category]}`}
           {entry.memo && ` · ${entry.memo}`}
           {entry.source && ` · ${entry.source}`}
