@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import { downloadCsv } from '@/lib/ledger/csv';
 import { downloadXlsx } from '@/lib/ledger/xlsx';
+import { importLedgerXlsx } from '@/lib/ledger/import-xlsx';
 import { mergeEntries, mergePreview, parseLedgerFile, toLedgerFile } from '@/lib/ledger/merge';
 import type { Entry } from '@/lib/ledger/schema';
 import { Icon } from '@/components/ui/Icon';
@@ -33,6 +34,8 @@ export function LedgerShare({
   onMerge: (next: Entry[]) => boolean;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const xlsxRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ tone: 'ok' | 'bad'; text: string } | null>(null);
 
   const exportJson = () => {
@@ -73,6 +76,43 @@ export function LedgerShare({
           }
         : { tone: 'bad', text: '저장하지 못했어요. 브라우저 저장 공간을 확인해 주세요.' },
     );
+  };
+
+  /**
+   * 쓰시던 엑셀 가계부를 들여온다.
+   *
+   * 같은 파일을 두 번 올리셔도 늘어나지 않게 아이디로 거르는 합치기와 달리,
+   * 엑셀에는 아이디가 없어서 거를 수가 없다. 그래서 몇 줄이 들어오는지 먼저
+   * 알리고, 두 번 올리시면 두 배가 된다는 것도 같이 적는다.
+   */
+  const importXlsx = async (file: File) => {
+    setBusy(true);
+    setMessage(null);
+    try {
+      const read = await importLedgerXlsx(await file.arrayBuffer());
+      if ('error' in read) {
+        setMessage({ tone: 'bad', text: read.error });
+        return;
+      }
+      const ok = onMerge([...entries, ...read.entries]);
+      if (!ok) {
+        setMessage({ tone: 'bad', text: '저장하지 못했어요. 브라우저 저장 공간을 확인해 주세요.' });
+        return;
+      }
+      const notes = [`'${read.sheet}' 시트에서 ${read.entries.length}건을 가져왔어요.`];
+      if (read.cardBills > 0) {
+        notes.push(
+          `그중 ${read.cardBills}건은 카드값을 갚은 줄로 보여서 공제에서 뺐습니다. 카드로 긁을 때 이미 세어졌거든요.`,
+        );
+      }
+      if (read.skipped > 0) {
+        notes.push(`금액이나 날짜가 없는 ${read.skipped}줄은 건너뛰었어요.`);
+      }
+      notes.push('같은 파일을 또 올리시면 줄이 두 번 들어갑니다.');
+      setMessage({ tone: 'ok', text: notes.join(' ') });
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -130,6 +170,29 @@ export function LedgerShare({
           <Icon name="upload" size={16} />
           상대방 파일 가져오기
         </button>
+        <button
+          type="button"
+          onClick={() => xlsxRef.current?.click()}
+          disabled={busy}
+          className={
+            'flex items-center gap-1.5 rounded-[8px] border border-line bg-surface px-3.5 py-2.5 text-[13.5px] font-semibold hover:border-line-strong ' +
+            (busy ? 'cursor-wait text-ink-faint' : 'text-ink-soft')
+          }
+        >
+          <Icon name="upload" size={16} />
+          {busy ? '읽는 중…' : '쓰던 엑셀 가져오기'}
+        </button>
+        <input
+          ref={xlsxRef}
+          type="file"
+          accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) void importXlsx(file);
+            e.target.value = '';
+          }}
+        />
         <input
           ref={fileRef}
           type="file"
@@ -159,6 +222,10 @@ export function LedgerShare({
           <strong className="font-semibold text-ink">엑셀로 받기</strong>는 시트가 셋으로 나뉘어
           나옵니다. 전체 · 개인 생활비 · 커플 데이트비. CSV는 시트가 하나뿐이라 구글 스프레드시트
           같은 데 올릴 때만 쓰세요.
+        </p>
+        <p className="mt-1.5">
+          <strong className="font-semibold text-ink">쓰던 엑셀 가져오기</strong>는 지출 내역 · 금액
+          · 날짜 · 카테고리 · 출금처 칸이 있는 시트를 읽습니다. 칸 순서가 달라도 이름으로 찾아요.
         </p>
         <p className="mt-1.5">
           <strong className="font-semibold text-ink">둘이 같이 쓰시려면</strong> 한 분이 합치기

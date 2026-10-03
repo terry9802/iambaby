@@ -1,3 +1,5 @@
+import { SPEND_CATEGORIES, type SpendCategory } from './categories';
+
 /**
  * 가계부 한 줄.
  *
@@ -36,6 +38,12 @@ export type Category = 'general' | 'market' | 'transit' | 'culture' | 'excluded'
 
 export type Entry = {
   id: string;
+  /**
+   * 무엇에 썼는가. 사장님이 쓰시던 가계부 양식의 어휘를 그대로 쓴다.
+   * 공제 분류(category)는 보통 여기서 유추되지만, 유추가 애매한 줄은
+   * 화면에서 따로 바꿀 수 있어서 둘을 각각 들고 있는다.
+   */
+  spend?: SpendCategory;
   /** YYYY-MM-DD */
   date: string;
   amount: number;
@@ -134,6 +142,9 @@ export function sanitizeEntry(input: unknown): Entry | null {
     method,
     holder,
     category,
+    ...(SPEND_CATEGORIES.includes(raw.spend as SpendCategory)
+      ? { spend: raw.spend as SpendCategory }
+      : {}),
     ...(typeof raw.memo === 'string' && raw.memo ? { memo: raw.memo.slice(0, 120) } : {}),
     ...(typeof raw.source === 'string' && raw.source ? { source: raw.source.slice(0, 40) } : {}),
   };

@@ -3,6 +3,13 @@
 import { useCallback, useRef, useState } from 'react';
 import { formatKRW, toISODate } from '@/lib/format';
 import {
+  CATEGORY_HINT,
+  DEFAULT_SPEND_CATEGORY,
+  deductionCategoryOf,
+  SPEND_CATEGORIES,
+  type SpendCategory,
+} from '@/lib/ledger/categories';
+import {
   CATEGORY_LABEL,
   EXCLUDED_HINT,
   holderLabel,
@@ -37,7 +44,10 @@ type Draft = {
   purse: Purse;
   method: Method;
   holder: Holder;
+  spend: SpendCategory;
   category: Category;
+  /** 공제 분류를 손으로 바꾸셨는가. 바꾸셨으면 카테고리를 고쳐도 덮지 않는다. */
+  categoryTouched: boolean;
   memo: string;
 };
 
@@ -55,7 +65,9 @@ function emptyDraft(from: Partial<Draft>, today: string): Draft {
     purse: from.purse ?? 'personal',
     method: from.method ?? 'credit',
     holder: from.holder ?? 'me',
-    category: from.category ?? 'general',
+    spend: from.spend ?? DEFAULT_SPEND_CATEGORY,
+    category: from.category ?? deductionCategoryOf(from.spend ?? DEFAULT_SPEND_CATEGORY),
+    categoryTouched: from.categoryTouched ?? false,
     memo: '',
   };
 }
@@ -153,6 +165,7 @@ export function QuickAdd({
         purse: d.purse,
         method: d.method,
         holder: hasPartner || d.purse === 'couple' ? d.holder : 'me',
+        spend: d.spend,
         category: d.category,
         ...(d.memo.trim() ? { memo: d.memo.trim() } : {}),
       })),
@@ -271,15 +284,38 @@ export function QuickAdd({
                 />
               )}
 
+              <Chips<SpendCategory>
+                label="카테고리"
+                value={d.spend}
+                onChange={(spend) =>
+                  /*
+                    카테고리를 고르면 공제 분류가 따라온다. 식비면 일반, 저축이면
+                    공제 안 됨. 두 번 고르게 하지 않는다. 다만 공제 분류를 손으로
+                    바꾼 줄은 덮지 않는다. 사용자가 고친 걸 되돌리면 안 된다.
+                  */
+                  patch(d.key, {
+                    spend,
+                    ...(d.categoryTouched ? {} : { category: deductionCategoryOf(spend) }),
+                  })
+                }
+                options={SPEND_CATEGORIES.map((v) => ({ value: v, label: v }))}
+              />
+
               <Chips<Category>
-                label="분류"
+                label="공제 분류"
                 value={d.category}
-                onChange={(category) => patch(d.key, { category })}
+                onChange={(category) => patch(d.key, { category, categoryTouched: true })}
                 options={CATEGORIES.map((v) => ({ value: v, label: CATEGORY_LABEL[v] }))}
               />
             </div>
 
-            {d.category === 'excluded' && (
+            {CATEGORY_HINT[d.spend] && (
+              <p className="mt-2 rounded-[8px] bg-brand-soft px-3 py-2 text-[11.5px] leading-relaxed text-ink-soft">
+                {CATEGORY_HINT[d.spend]}
+              </p>
+            )}
+
+            {d.category === 'excluded' && !CATEGORY_HINT[d.spend] && (
               <p className="mt-2 text-[11.5px] leading-relaxed text-ink-faint">{EXCLUDED_HINT}</p>
             )}
 

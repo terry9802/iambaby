@@ -256,6 +256,7 @@ function Row({
           {`${PURSE_LABEL[entry.purse]} · `}
           {METHOD_LABEL[entry.method]}
           {(hasPartner || entry.purse === 'couple') && ` · ${holderLabel(entry.holder, married)}`}
+          {entry.spend && ` · ${entry.spend}`}
           {entry.category !== 'general' && ` · ${CATEGORY_LABEL[entry.category]}`}
           {entry.memo && ` · ${entry.memo}`}
           {entry.source && ` · ${entry.source}`}
