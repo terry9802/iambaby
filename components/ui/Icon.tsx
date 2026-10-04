@@ -24,7 +24,8 @@ export type IconName =
   | 'trash'
   | 'download'
   | 'upload'
-  | 'phone';
+  | 'phone'
+  | 'devices';
 
 const PATHS: Record<IconName, React.ReactNode> = {
   // 더하기 — 한 줄 더 적기
@@ -146,6 +147,15 @@ const PATHS: Record<IconName, React.ReactNode> = {
   ),
   phone: (
     <path d="M6.5 3.5h3l1.5 3.5-2 1.2a11 11 0 0 0 4.8 4.8l1.2-2 3.5 1.5v3a1.5 1.5 0 0 1-1.6 1.5A15.5 15.5 0 0 1 5 5.1 1.5 1.5 0 0 1 6.5 3.5Z" />
+  ),
+  // 모니터와 폰 — 한 기기에 적은 걸 다른 기기로 옮기기
+  devices: (
+    <>
+      <path d="M3 5.5A1.5 1.5 0 0 1 4.5 4h11A1.5 1.5 0 0 1 17 5.5V8" />
+      <path d="M3 5.5V15a1.5 1.5 0 0 0 1.5 1.5H10" />
+      <path d="M7 20h5" />
+      <rect x="15" y="10" width="6" height="10" rx="1.5" />
+    </>
   ),
 };
 

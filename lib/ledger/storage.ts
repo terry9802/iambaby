@@ -73,3 +73,22 @@ export function loadLedgerMeta(): { updatedAt: string | null } {
     return { updatedAt: null };
   }
 }
+
+/**
+ * 저장이 실제로 되는 기기인지 본다.
+ *
+ * localStorage가 있다고 쓸 수 있는 건 아니다. 사파리 프라이빗 모드나 저장 공간이
+ * 꽉 찬 기기는 객체는 있고 쓰기만 터진다. 적고 나서 사라지는 게 제일 나쁜 일이라,
+ * 화면에 들어올 때 한 번 써 보고 안 되면 미리 알린다.
+ */
+export function storageWorks(): boolean {
+  if (!hasStorage()) return false;
+  try {
+    const probe = '__nanaegi.probe__';
+    window.localStorage.setItem(probe, '1');
+    window.localStorage.removeItem(probe);
+    return true;
+  } catch {
+    return false;
+  }
+}
