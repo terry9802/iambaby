@@ -335,10 +335,13 @@ export function ProfileForm() {
       <section className="rounded-[12px] border border-line bg-sunk px-4 py-4">
         <h2 className="text-[13px] font-semibold text-ink">이 값들은 어디에 저장되나요</h2>
         <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink-soft">
-          회원가입도 로그인도 없습니다. 적으신 값은 지금 쓰고 계신{' '}
-          <strong>이 브라우저 안에만</strong> 저장돼요. 서버로 보내는 코드가 아예 없어서 저희도 볼
-          수 없습니다. 대신 브라우저 기록을 지우면 함께 사라지고, 다른 기기나 다른 브라우저에서는
-          다시 채우셔야 합니다.
+          적으신 값은 지금 쓰고 계신 <strong>이 브라우저 안에</strong> 저장돼요. 브라우저 기록을
+          지우면 함께 사라지고, 다른 기기에서는 다시 채우셔야 합니다.
+        </p>
+        <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink-soft">
+          &lsquo;쓴 돈 적기&rsquo;에서 <strong>아이디와 핀으로 로그인</strong>해 두시면, 이 값들도
+          가계부와 함께 저장되어 어느 기기에서든 그대로 보입니다. 그때도 여러분 핀으로 잠근 뒤
+          올라가므로 저희는 안을 볼 수 없어요.
         </p>
         {confirmReset ? (
           <div className="mt-3 flex flex-wrap gap-2">

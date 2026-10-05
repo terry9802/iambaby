@@ -55,9 +55,10 @@ function getServerSnapshot(): Snapshot {
   return EMPTY_SNAPSHOT;
 }
 
-function commit(next: Profile) {
-  const saved = saveProfile(next);
-  cache = { profile: next, updatedAt: saved ? new Date().toISOString() : getSnapshot().updatedAt };
+function commit(next: Profile, at?: string) {
+  const stamp = at ?? new Date().toISOString();
+  const saved = saveProfile(next, stamp);
+  cache = { profile: next, updatedAt: saved ? stamp : getSnapshot().updatedAt };
   emit();
 }
 
@@ -69,6 +70,11 @@ type ProfileContextValue = {
   /** 부분 갱신. 기존 값과 얕게 병합한다. */
   update: (patch: Partial<Profile>) => void;
   replace: (next: Profile) => void;
+  /**
+   * 다른 기기에서 받아 온 프로필을 그쪽 시각 그대로 앉힌다.
+   * 시각을 '지금'으로 다시 찍으면 두 기기가 서로를 덮으며 왔다 갔다 한다.
+   */
+  adopt: (next: Profile, at: string | null) => void;
   reset: () => void;
 };
 
@@ -90,6 +96,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     commit(next);
   }, []);
 
+  const adopt = useCallback((next: Profile, at: string | null) => {
+    commit(next, at ?? undefined);
+  }, []);
+
   const reset = useCallback(() => {
     clearProfile();
     cache = { profile: EMPTY_PROFILE, updatedAt: null };
@@ -103,9 +113,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       hydrated,
       update,
       replace,
+      adopt,
       reset,
     }),
-    [snapshot, hydrated, update, replace, reset],
+    [snapshot, hydrated, update, replace, adopt, reset],
   );
 
   return <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>;

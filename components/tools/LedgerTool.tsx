@@ -30,7 +30,6 @@ import { InlineText } from '@/components/ui/InlineText';
 import { AccountGate } from '@/components/ledger/AccountGate';
 import { LedgerBackups } from '@/components/ledger/LedgerBackups';
 import { SpendOverview } from '@/components/ledger/SpendOverview';
-import { DeviceHandoff } from '@/components/ledger/DeviceHandoff';
 import { LedgerShare } from '@/components/ledger/LedgerShare';
 import { QuickAdd } from '@/components/ledger/QuickAdd';
 
@@ -57,7 +56,7 @@ export function LedgerTool(props: { tool: Tool; fallbackToday: string }) {
 }
 
 function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string }) {
-  const { profile, hydrated, update: updateProfile } = useProfile();
+  const { profile, hydrated } = useProfile();
   const {
     entries,
     graves,
@@ -332,14 +331,6 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
           </section>
 
           <AccountGate entries={entries} graves={graves} applySide={applySide} />
-
-          <DeviceHandoff
-            entries={entries}
-            profile={profile}
-            today={today}
-            onMergeEntries={replaceAll}
-            onProfile={updateProfile}
-          />
 
           <LedgerShare
             entries={entries}

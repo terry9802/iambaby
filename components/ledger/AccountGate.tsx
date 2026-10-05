@@ -1,7 +1,16 @@
 'use client';
 
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { dropAccount, logIn, signUp, syncOnce, type Auth, type Fail } from '@/lib/account/client';
+import {
+  dropAccount,
+  logIn,
+  profileChanged,
+  signUp,
+  syncOnce,
+  type Auth,
+  type Fail,
+  type Vault,
+} from '@/lib/account/client';
 import { idProblem, PIN_MAX, PIN_MIN, pinProblem, weakPin } from '@/lib/account/schema';
 import {
   bumpSession,
@@ -14,6 +23,8 @@ import {
 } from '@/lib/account/session';
 import type { Grave, Entry } from '@/lib/ledger/schema';
 import type { Side } from '@/lib/ledger/sync-merge';
+import { useProfile } from '@/lib/profile/context';
+import { storageWorks } from '@/lib/ledger/storage';
 import { Icon } from '@/components/ui/Icon';
 
 /**
@@ -26,6 +37,18 @@ import { Icon } from '@/components/ui/Icon';
  * 올라가는 건 브라우저에서 잠근 덩어리뿐이다. 핀은 서버로 가지 않고, 핀을
  * 30만 번 돌려 만든 증표만 간다.
  */
+
+/*
+  저장이 되는 브라우저인지는 한 번만 보면 된다. 쓰기가 막힌 창이 열려 있는 동안
+  갑자기 풀리지는 않는다. useSyncExternalStore는 같은 값을 돌려주는 getSnapshot을
+  요구하므로 한 번 적어 두고 그걸 돌려준다.
+*/
+let storageProbe: boolean | null = null;
+const noSubscribe = () => () => {};
+function readStorageProbe(): boolean {
+  if (storageProbe === null) storageProbe = storageWorks();
+  return storageProbe;
+}
 
 /** 적자마자 올리지 않는다. 연달아 적으실 때 한 번만 올라가게 묶는다. */
 const PUSH_DELAY_MS = 2000;
@@ -56,6 +79,11 @@ export function AccountGate({
   graves: Grave[];
   applySide: (side: Side) => boolean;
 }) {
+  /*
+    프로필도 같이 싣는다. 연봉이나 결혼 여부는 기기마다 다시 적을 값이 아니고,
+    가계부만 따라오고 프로필은 안 따라오면 "저건 왜 안 돼요"가 또 나온다.
+  */
+  const { profile, updatedAt: profileAt, adopt } = useProfile();
   const session = useSyncExternalStore(
     subscribeSession,
     sessionSnapshot,
@@ -70,21 +98,31 @@ export function AccountGate({
   const [formError, setFormError] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
   const [confirmOut, setConfirmOut] = useState(false);
+  /* 서버 그림은 '된다'로 둔다. 멀쩡한 기기에서 화면이 한 번 깜빡이면 안 된다. */
+  const storageOk = useSyncExternalStore(noSubscribe, readStorageProbe, () => true);
 
   /*
     올릴 거리와 앉히는 함수를 칸에 담아 둔다. 맞추는 효과가 이것들을 지켜보면
     한 줄 적을 때마다 시계가 통째로 다시 걸린다. 담는 일은 그린 뒤에 한다.
   */
-  const sideRef = useRef<Side>({ entries, graves });
-  const applyRef = useRef(applySide);
+  const sideRef = useRef<Vault>({ entries, graves, profile, profileAt });
+  const applyRef = useRef<(v: Vault) => void>(() => {});
   useEffect(() => {
-    sideRef.current = { entries, graves };
-    applyRef.current = applySide;
+    sideRef.current = { entries, graves, profile, profileAt };
+    applyRef.current = (v: Vault) => {
+      applySide({ entries: v.entries, graves: v.graves });
+      // 프로필은 바뀌었을 때만 앉힌다. 매번 앉히면 저장이 끝없이 돈다.
+      if (profileChanged({ entries: [], graves: [], profile, profileAt }, v)) {
+        adopt(v.profile ?? {}, v.profileAt ?? null);
+      }
+    };
   });
 
   const fingerprint = [
     entries.map((e) => `${e.id}@${e.at ?? ''}`).sort().join(','),
     graves.map((g) => `${g.id}@${g.at}`).sort().join(','),
+    profileAt ?? '',
+    JSON.stringify(profile),
   ].join('|');
 
   useEffect(() => {
@@ -109,7 +147,7 @@ export function AccountGate({
         return;
       }
       // 달라진 게 있을 때만 앉힌다. 매번 앉히면 쳇바퀴가 된다.
-      if (out.changed) applyRef.current(out.side);
+      if (out.changed) applyRef.current(out.vault);
       setStatus({ kind: 'ok', at: new Date().toISOString() });
     };
 
@@ -147,7 +185,7 @@ export function AccountGate({
         */
         const out = await syncOnce(made, sideRef.current);
         if ('kind' in out) return setFormError(sayFail(out));
-        applyRef.current(out.side);
+        applyRef.current(out.vault);
         finish({ ...made, since: new Date().toISOString() });
         return;
       }
@@ -160,7 +198,7 @@ export function AccountGate({
       */
       const out = await syncOnce(opened.auth, sideRef.current);
       if ('kind' in out) return setFormError(sayFail(out));
-      applyRef.current(out.side);
+      applyRef.current(out.vault);
       finish({ ...opened.auth, since: new Date().toISOString() });
     } finally {
       setBusy(false);
@@ -194,6 +232,13 @@ export function AccountGate({
     setStatus({ kind: 'idle' });
   };
 
+  const storageWarning = !storageOk && (
+    <p className="rounded-[8px] bg-alert-soft px-3 py-2.5 text-[12.5px] leading-relaxed text-alert">
+      이 브라우저는 저장을 막고 있어요. 시크릿·프라이빗 모드면 일반 창으로 열어 주세요. 지금
+      적으시는 건 화면을 닫으면 사라집니다.
+    </p>
+  );
+
   /* ── 로그인한 뒤 ── */
   if (session) {
     return (
@@ -224,9 +269,12 @@ export function AccountGate({
           </span>
         </div>
 
+        {storageWarning}
+
         <p className="text-[12.5px] leading-relaxed text-ink-soft">
-          적으시는 대로 저절로 저장됩니다. 다른 기기에서도 같은 아이디와 핀으로 들어오시면 똑같이
-          보여요. 둘이 같이 쓰시려면 상대방도 이 아이디와 핀으로 들어오시면 됩니다.
+          적으신 가계부와 프로필이 저절로 저장됩니다. 다른 기기에서도 같은 아이디와 핀으로
+          들어오시면 똑같이 보여요. 둘이 같이 쓰시려면 상대방도 이 아이디와 핀으로 들어오시면
+          됩니다.
         </p>
 
         {status.kind === 'error' && (
@@ -293,7 +341,9 @@ export function AccountGate({
         </h2>
         <p className="mt-1 text-[12.5px] leading-relaxed text-ink-soft">
           아이디와 핀만 있으면 <strong className="font-semibold text-ink">어느 기기에서든</strong>{' '}
-          같은 가계부가 열려요. 노트북에서 적은 게 폰에도 그대로 보입니다.
+          같은 가계부가 열려요. 쓴 돈 기록은 물론{' '}
+          <strong className="font-semibold text-ink">내 프로필(연봉·결혼 여부 같은 것)</strong>도
+          같이 따라옵니다.
         </p>
       </div>
 
@@ -386,8 +436,11 @@ export function AccountGate({
         </button>
       </div>
 
+      {storageWarning}
+
       <p className="text-[11.5px] leading-relaxed text-ink-faint">
-        지금 이 기기에 적어 두신 기록이 있으면, 들어가실 때 함께 올라갑니다. 사라지지 않아요.
+        지금 이 기기에 적어 두신 기록과 프로필이 있으면, 들어가실 때 함께 올라갑니다. 사라지지
+        않아요.
       </p>
     </section>
   );

@@ -103,8 +103,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div className="mx-auto flex max-w-[680px] flex-col gap-2 px-4 py-8">
                 <Logo size={17} />
                 <p className="text-[12.5px] leading-relaxed text-ink-soft">
-                  계산기에 입력한 값은 서버로 전송되지 않고 브라우저 안에서 처리됩니다. 가계부는
-                  로그인하신 경우에만, 브라우저에서 잠근 뒤 저장됩니다.
+                  계산기에 입력한 값은 서버로 전송되지 않고 브라우저 안에서 처리됩니다. 가계부와
+                  프로필은 로그인하신 경우에만, 브라우저에서 잠근 뒤 저장됩니다.
                 </p>
                 <p className="text-[12px] leading-relaxed text-ink-faint">
                   이 사이트의 계산 결과는 참고용이며, 실제 지급액과 자격 여부는 관할 기관의 산정에

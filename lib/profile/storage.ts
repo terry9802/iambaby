@@ -32,12 +32,17 @@ export function loadProfile(): Profile {
   }
 }
 
-export function saveProfile(profile: Profile): boolean {
+/**
+ * @param at 고친 시각. 다른 기기에서 받아 온 프로필을 앉힐 때는 그쪽 시각을
+ *   그대로 들고 와야 한다. 여기서 '지금'으로 찍으면 받아 온 것이 늘 최신이
+ *   되어, 두 기기가 서로를 덮으며 끝없이 왔다 갔다 한다.
+ */
+export function saveProfile(profile: Profile, at?: string): boolean {
   if (!hasStorage()) return false;
   try {
     const payload: StoredProfile = {
       version: PROFILE_SCHEMA_VERSION,
-      updatedAt: new Date().toISOString(),
+      updatedAt: at ?? new Date().toISOString(),
       profile: sanitizeProfile(profile),
     };
     window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(payload));

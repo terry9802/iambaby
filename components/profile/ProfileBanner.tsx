@@ -42,7 +42,7 @@ export function ProfileBanner() {
         />
       </div>
       <p className="mt-2 text-[11.5px] text-ink-faint">
-        브라우저에만 저장돼요. 서버로 보내지 않습니다.
+        이 기기에 저장돼요. 가계부에 로그인해 두시면 다른 기기에서도 같이 보입니다.
       </p>
     </section>
   );
