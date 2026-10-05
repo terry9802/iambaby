@@ -28,6 +28,19 @@ export function formatManwon(value: number): string {
   return `${prefix}${sign}${man.toLocaleString('ko-KR')}만원`;
 }
 
+/**
+ * 탭이나 뱃지처럼 폭이 좁은 자리에 쓰는 짧은 금액. 1,284,000 → "128만".
+ *
+ * formatManwon과 달리 '약'도 '원'도 안 붙인다. 좁은 자리에서는 그 두 글자가
+ * 숫자를 밀어내서 정작 읽어야 할 자릿수가 잘린다. 어차피 어림값으로 읽는
+ * 자리이고, 정확한 값은 누르면 나온다.
+ */
+export function formatManShort(value: number): string {
+  const rounded = Math.round(value);
+  if (Math.abs(rounded) < 10000) return formatKRW(rounded);
+  return `${Math.round(rounded / 10000).toLocaleString('ko-KR')}만`;
+}
+
 /** "25,000,000원 (2,500만원)" — 표에는 정확값, 눈에는 요약값. */
 export function formatMoneyPair(value: number): string {
   const exact = formatKRW(value);

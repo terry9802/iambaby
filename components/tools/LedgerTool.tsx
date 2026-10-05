@@ -7,7 +7,8 @@ import {
   summarizeLedger,
   type CoupleComparison,
 } from '@/lib/calculators/ledger-summary';
-import { formatKRW, toISODate } from '@/lib/format';
+import { formatKRW, formatManShort, toISODate } from '@/lib/format';
+import { monthBuckets, monthLabel, totalsOf } from '@/lib/ledger/monthly';
 import { LedgerProvider, useLedger } from '@/lib/ledger/context';
 import {
   CATEGORY_LABEL,
@@ -22,6 +23,7 @@ import { BackButton } from '@/components/ui/BackButton';
 import { Icon } from '@/components/ui/Icon';
 import { InlineText } from '@/components/ui/InlineText';
 import { CoupleSync } from '@/components/ledger/CoupleSync';
+import { SpendOverview } from '@/components/ledger/SpendOverview';
 import { DeviceHandoff } from '@/components/ledger/DeviceHandoff';
 import { LedgerShare } from '@/components/ledger/LedgerShare';
 import { QuickAdd } from '@/components/ledger/QuickAdd';
@@ -63,6 +65,11 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
   } = useLedger();
   const [confirmReset, setConfirmReset] = useState(false);
   const [showAll, setShowAll] = useState(false);
+  /*
+    보고 있는 달. null이면 전부. 그림의 막대와 목록 위 탭이 같은 값을 쓴다.
+    따로 두면 막대는 9월인데 목록은 8월인 상태가 생긴다.
+  */
+  const [month, setMonth] = useState<string | null>(null);
 
   const today = hydrated ? toISODate(new Date()) : fallbackToday;
   /*
@@ -120,20 +127,51 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
     [thisYear, mySalary, partnerSalary, today],
   );
 
+  const months = useMemo(() => monthBuckets(entries), [entries]);
+
   /*
-    목록 옆에 보여 줄 합계. 올해 것만 세는 코칭과 달리 적어 둔 것 전부를 센다.
-    눈앞에 보이는 줄의 합이라 그래야 눈으로 더해 본 것과 맞는다.
+    기록이 없는 달도 고를 수 있게 둔다.
+
+    처음엔 '줄이 있는 달'만 받고 나머지는 전체로 되돌렸다. 그랬더니 그림에서
+    안 쓴 달을 눌렀을 때 아무 일도 안 일어난 것처럼 보였다. 지금은 그대로 두고
+    "이 달엔 적어 두신 게 없어요"라고 말한다. 그 달의 마지막 줄을 지우셨을 때도
+    같은 말이 나오므로 갇히지 않는다.
   */
-  const totals = useMemo(
-    () => ({
-      all: entries.reduce((sum, e) => sum + e.amount, 0),
-      personal: entries.filter((e) => e.purse === 'personal').reduce((sum, e) => sum + e.amount, 0),
-      couple: entries.filter((e) => e.purse === 'couple').reduce((sum, e) => sum + e.amount, 0),
-    }),
-    [entries],
+  const picked = month;
+
+  const shown = useMemo(
+    () => (picked ? entries.filter((e) => e.date.startsWith(picked)) : entries),
+    [entries, picked],
   );
 
-  const visible = showAll ? entries : entries.slice(0, 20);
+  /*
+    목록 옆에 보여 줄 합계. 올해 것만 세는 코칭과 달리 눈앞에 보이는 줄을 센다.
+    그래야 눈으로 더해 본 것과 맞는다. 달을 고르셨으면 그 달만.
+  */
+  const totals = useMemo(() => totalsOf(shown), [shown]);
+
+  const allTotals = useMemo(() => totalsOf(entries), [entries]);
+
+  /*
+    목록 날짜에 연도를 붙일지.
+
+    평소엔 '10-03'로 짧게 적는다. 그런데 기록이 두 해에 걸치면 작년 12-25와
+    올해 12-25가 화면에서 똑같이 보인다. 전체를 보고 계실 때만 연도를 붙인다.
+    달을 고르셨으면 탭에 이미 '25년 12월'이라고 적혀 있어서 또 붙일 필요가 없다.
+  */
+  const multiYear = useMemo(
+    () => new Set(entries.map((e) => e.date.slice(0, 4))).size > 1,
+    [entries],
+  );
+  const datesNeedYear = multiYear && picked === null;
+
+  const visible = showAll ? shown : shown.slice(0, 20);
+
+  /** 달을 바꾸면 '더 보기'는 접어 둔다. 20건 넘겨 펼친 상태가 다음 달까지 따라오면 어지럽다. */
+  const pickMonth = (next: string | null) => {
+    setMonth(next);
+    setShowAll(false);
+  };
 
   return (
     <div className="mx-auto flex max-w-[680px] flex-col gap-4 px-4 pb-16 pt-4">
@@ -154,6 +192,14 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
       ) : (
         <>
           {summary && summary.entryCount > 0 && <Coach summary={summary} year={year} />}
+
+          <SpendOverview
+            entries={entries}
+            today={today}
+            selected={picked}
+            onSelect={pickMonth}
+          />
+
           {couple && <CoupleCompare couple={couple} />}
 
           {mySalary <= 0 && entries.length > 0 && (
@@ -175,8 +221,33 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
           <section className="rounded-[12px] border border-line bg-surface px-4 py-4">
             <div className="flex items-baseline justify-between gap-3">
               <h2 className="text-[15px] font-bold text-ink">적어 둔 기록</h2>
-              <span className="tnum text-[12.5px] text-ink-faint">{entries.length}건</span>
+              <span className="tnum text-[12.5px] text-ink-faint">{shown.length}건</span>
             </div>
+
+            {/*
+              달로 나눠 보는 탭. 쌓이면 한 해치가 한 줄에 다 나와서, 9월만 보고
+              싶은데 1월 커피까지 같이 내려가야 했다. 탭마다 그 달 금액을 같이
+              적어 둔다 — 눌러 보기 전에 어느 달에 많이 썼는지 알아야 고를 수 있다.
+            */}
+            {months.length > 1 && (
+              <div className="-mx-1 mt-2.5 flex gap-1.5 overflow-x-auto px-1 pb-1">
+                <MonthTab
+                  label="전체"
+                  amount={allTotals.all}
+                  on={picked === null}
+                  onClick={() => pickMonth(null)}
+                />
+                {months.map((b) => (
+                  <MonthTab
+                    key={b.month}
+                    label={b.label}
+                    amount={b.all}
+                    on={picked === b.month}
+                    onClick={() => pickMonth(b.month)}
+                  />
+                ))}
+              </div>
+            )}
 
             {/*
               얼마나 썼는지 보려고 들어오는 자리인데 그동안 건수만 적혀 있었다.
@@ -184,15 +255,32 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
             */}
             {entries.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 rounded-[8px] bg-sunk px-3.5 py-2.5">
-                <Tally label="모두" amount={totals.all} strong />
+                <Tally
+                  label={picked ? `${monthLabel(picked, multiYear)} 모두` : '모두'}
+                  amount={totals.all}
+                  strong
+                />
                 <Tally label="개인 생활비" amount={totals.personal} />
                 <Tally label="커플 데이트비" amount={totals.couple} />
               </div>
             )}
 
-            {entries.length === 0 ? (
+            {shown.length === 0 ? (
               <p className="mt-2.5 rounded-[8px] bg-sunk px-3 py-3 text-[12.5px] leading-relaxed text-ink-soft">
-                아직 없어요. 위에서 한 줄 적어 보세요. 커피 한 잔부터 적으셔도 됩니다.
+                {picked ? (
+                  <>
+                    이 달엔 적어 두신 게 없어요.{' '}
+                    <button
+                      type="button"
+                      onClick={() => pickMonth(null)}
+                      className="font-semibold text-brand-strong underline underline-offset-2"
+                    >
+                      전체 보기
+                    </button>
+                  </>
+                ) : (
+                  '아직 없어요. 위에서 한 줄 적어 보세요. 커피 한 잔부터 적으셔도 됩니다.'
+                )}
               </p>
             ) : (
               <>
@@ -201,6 +289,7 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
                     <Row
                       key={e.id}
                       entry={e}
+                      withYear={datesNeedYear}
                       hasPartner={hasPartner}
                       married={married}
                       onTogglePurse={() =>
@@ -210,13 +299,13 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
                     />
                   ))}
                 </ul>
-                {entries.length > visible.length && (
+                {shown.length > visible.length && (
                   <button
                     type="button"
                     onClick={() => setShowAll(true)}
                     className="mt-3 w-full rounded-[8px] border border-line bg-surface py-2.5 text-[13px] font-medium text-ink-soft hover:border-line-strong"
                   >
-                    나머지 {entries.length - visible.length}건 더 보기
+                    나머지 {shown.length - visible.length}건 더 보기
                   </button>
                 )}
               </>
@@ -294,12 +383,15 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
 
 function Row({
   entry,
+  withYear,
   hasPartner,
   married,
   onTogglePurse,
   onRemove,
 }: {
   entry: Entry;
+  /** 두 해가 섞여 보일 때만 참. '12-25'가 어느 해인지 구분되게 한다. */
+  withYear: boolean;
   hasPartner: boolean;
   married: boolean;
   onTogglePurse: () => void;
@@ -310,7 +402,9 @@ function Row({
     <li className="flex items-center gap-3 py-2.5">
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
-          <span className="tnum text-[12px] text-ink-faint">{entry.date.slice(5)}</span>
+          <span className="tnum text-[12px] text-ink-faint">
+            {withYear ? entry.date.slice(2) : entry.date.slice(5)}
+          </span>
           <span className="tnum text-[15px] font-bold text-ink">{formatKRW(entry.amount)}</span>
         </div>
         {/*
@@ -542,6 +636,46 @@ function CoupleCompare({ couple }: { couple: CoupleComparison }) {
         씁니다.
       </p>
     </section>
+  );
+}
+
+/**
+ * 달 탭 한 칸.
+ *
+ * 이름 밑에 금액을 짧게 적는다. 정확한 값은 눌렀을 때 합계 줄에 나오므로
+ * 여기서는 '128만'처럼 어림수면 된다. 정확값을 넣으면 탭이 길어져서 한 화면에
+ * 두 달밖에 안 들어간다.
+ */
+function MonthTab({
+  label,
+  amount,
+  on,
+  onClick,
+}: {
+  label: string;
+  amount: number;
+  on: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={on}
+      className={
+        'shrink-0 rounded-[8px] border px-3 py-1.5 text-left transition-colors ' +
+        (on
+          ? 'border-brand-strong bg-brand-strong text-white'
+          : 'border-line bg-surface text-ink-soft hover:border-line-strong')
+      }
+    >
+      <span className="block text-[12.5px] font-semibold leading-tight">{label}</span>
+      <span
+        className={'tnum block text-[11px] leading-tight ' + (on ? 'opacity-90' : 'text-ink-faint')}
+      >
+        {formatManShort(amount)}
+      </span>
+    </button>
   );
 }
 

@@ -8,6 +8,7 @@ import {
   monthsBetween,
   parseDate,
   toISODate,
+  formatManShort,
 } from '@/lib/format';
 
 describe('숫자·날짜 표기', () => {
@@ -45,5 +46,18 @@ describe('숫자·날짜 표기', () => {
     expect(monthsBetween(parseDate('2026-03-01'), parseDate('2026-03-01'))).toBe(0);
     expect(monthsBetween(parseDate('2026-03-01'), parseDate('2027-09-01'))).toBe(18);
     expect(monthsBetween(parseDate('2026-03-15'), parseDate('2026-04-14'))).toBe(0);
+  });
+});
+
+describe('좁은 자리용 짧은 금액', () => {
+  it('만원 단위로 줄이고 군더더기를 안 붙인다', () => {
+    expect(formatManShort(1_284_000)).toBe('128만');
+    expect(formatManShort(43_253_140)).toBe('4,325만');
+    expect(formatManShort(128_400)).toBe('13만');
+  });
+
+  it('만원이 안 되면 그냥 원으로 적는다 — "0만"은 안 쓴 것처럼 읽힌다', () => {
+    expect(formatManShort(9_000)).toBe('9,000원');
+    expect(formatManShort(0)).toBe('0원');
   });
 });
