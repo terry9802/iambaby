@@ -14,6 +14,20 @@ import 'server-only';
 const URL_ENV = 'UPSTASH_REDIS_REST_URL';
 const TOKEN_ENV = 'UPSTASH_REDIS_REST_TOKEN';
 
+/**
+ * 서버에만 있는 열쇠 조각.
+ *
+ * 계정을 만들 때 쓰는 소금을 이 값으로 한 번 더 버무린다. 데이터베이스를 통째로
+ * 들고 가도 이 값이 없으면 핀을 찍어 맞출 수가 없다. 자료가 새는 일과 서버
+ * 환경변수가 새는 일은 서로 다른 사고라, 둘을 갈라 두는 값이 있다.
+ *
+ * 안 넣어 두면 빈 글자로 돈다. 그래도 가계부는 돌아가되, 자료만 새어도 핀을
+ * 찍어 볼 수 있는 상태가 된다. 그래서 README에 꼭 넣으시라고 적었다.
+ */
+export function pepper(): string {
+  return process.env.VAULT_PEPPER ?? '';
+}
+
 export function kvReady(): boolean {
   return !!process.env[URL_ENV] && !!process.env[TOKEN_ENV];
 }
@@ -61,6 +75,81 @@ export async function readRoom(room: string): Promise<Slot | null> {
   return parse(await call(['GET', key(room)]));
 }
 
+/*
+  ── 계정 ──────────────────────────────────────────────────
+
+  계정 칸에는 세 가지만 둔다. 증표를 구긴 값, 열쇠 조각, 만든 날.
+  아이디도 핀도 가계부 내용도 없다. 아이디는 이미 구겨진 채로 칸 이름이 되고,
+  핀은 애초에 서버로 오지 않는다.
+*/
+
+const acctKey = (account: string) => `nanaegi:acct:${account}`;
+const vaultKey = (account: string) => `nanaegi:vault:${account}`;
+
+export type Account = { auth: string; keySalt: string; createdAt: string };
+
+async function sha256Hex(text: string): Promise<string> {
+  const bytes = new TextEncoder().encode(text);
+  const out = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
+  return [...out].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/** 증표를 그대로 두지 않는다. 서버 조각을 섞어 한 번 더 구겨서 둔다. */
+export function sealVerifier(verifier: string): Promise<string> {
+  return sha256Hex(`nanaegi.auth.v1:${verifier}:${pepper()}`);
+}
+
+export async function readAccount(account: string): Promise<Account | null> {
+  const raw = await call(['GET', acctKey(account)]);
+  if (typeof raw !== 'string') return null;
+  try {
+    const p = JSON.parse(raw) as Partial<Account>;
+    if (typeof p.auth !== 'string' || typeof p.keySalt !== 'string') return null;
+    return { auth: p.auth, keySalt: p.keySalt, createdAt: p.createdAt ?? '' };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 계정을 만든다. 이미 있으면 안 만든다.
+ *
+ * 'SET ... NX'로 한 번에 처리한다. 읽어 보고 없으면 쓰는 식으로 하면, 두 기기가
+ * 동시에 가입을 눌렀을 때 나중 것이 먼저 것을 덮어써서 먼저 만든 쪽이 못 들어가게 된다.
+ */
+export async function createAccount(account: string, auth: string, keySalt: string) {
+  const value: Account = { auth, keySalt, createdAt: new Date().toISOString() };
+  const res = await call(['SET', acctKey(account), JSON.stringify(value), 'NX']);
+  return res === 'OK';
+}
+
+export async function dropAccount(account: string): Promise<void> {
+  await call(['DEL', acctKey(account)]);
+  await call(['DEL', vaultKey(account)]);
+}
+
+/**
+ * 틀린 핀을 몇 번이나 넣었는지.
+ *
+ * 바깥에서 핀을 찍어 보는 길을 닫는 자물쇠다. 성공하면 지운다. 여기서 막지
+ * 않으면 여섯 자리는 몇 시간이면 뚫린다.
+ */
+export async function failedTries(account: string): Promise<number> {
+  const n = await call(['GET', `nanaegi:fail:${account}`]);
+  return typeof n === 'string' ? Number(n) || 0 : 0;
+}
+
+export async function noteFailure(account: string): Promise<number> {
+  const key = `nanaegi:fail:${account}`;
+  const n = Number(await call(['INCR', key]));
+  await call(['EXPIRE', key, '900']);
+  return n;
+}
+
+export async function clearFailures(account: string): Promise<void> {
+  await call(['DEL', `nanaegi:fail:${account}`]);
+}
+
 /** 방을 통째로 지운다. 연결을 끊는 것과 달리 서버에 맡겨 둔 덩어리까지 없앤다. */
 export async function dropRoom(room: string): Promise<void> {
   await call(['DEL', key(room)]);
@@ -96,17 +185,33 @@ export async function writeRoom(
   expectedVersion: number,
   blob: string,
 ): Promise<WriteResult> {
+  return casWrite(key(room), expectedVersion, blob);
+}
+
+async function casWrite(
+  at: string,
+  expectedVersion: number,
+  blob: string,
+): Promise<WriteResult> {
   const out = (await call([
     'EVAL',
     CAS,
     '1',
-    key(room),
+    at,
     String(expectedVersion),
     blob,
     String(ROOM_TTL_SECONDS),
   ])) as [number, string];
   if (Number(out?.[0]) === 1) return { ok: true, version: expectedVersion + 1 };
   return { ok: false, current: parse(out?.[1]) };
+}
+
+export async function readVault(account: string): Promise<Slot | null> {
+  return parse(await call(['GET', vaultKey(account)]));
+}
+
+export function writeVault(account: string, expectedVersion: number, blob: string) {
+  return casWrite(vaultKey(account), expectedVersion, blob);
 }
 
 /**

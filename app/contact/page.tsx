@@ -90,9 +90,9 @@ export default function ContactPage() {
 
       <Section title="개인정보 관련 문의">
         <p>
-          계산기에 넣으신 값은 서버로 가지 않으므로 삭제를 요청하실 것이 없습니다. 커플 가계부를
-          켜셨다면 &lsquo;쓴 돈 적기&rsquo; 화면의 &lsquo;연결 끊기&rsquo;에서 서버에 맡긴 것까지
-          바로 지우실 수 있습니다. 브라우저에 저장된 프로필은{' '}
+          계산기에 넣으신 값은 서버로 가지 않으므로 삭제를 요청하실 것이 없습니다. 가계부
+          계정을 만드셨다면 &lsquo;쓴 돈 적기&rsquo; 화면의 &lsquo;로그아웃 → 계정을 아예
+          지우기&rsquo;로 바로 지우실 수 있습니다. 브라우저에 저장된 프로필은{' '}
           <Link href="/me" className="font-medium text-brand-strong hover:underline">
             내 프로필
           </Link>{' '}

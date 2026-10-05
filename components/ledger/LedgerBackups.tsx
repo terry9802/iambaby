@@ -79,9 +79,9 @@ export function LedgerBackups({
 
           <p className="mt-2 rounded-[8px] bg-sunk px-3 py-2.5 text-[11.5px] leading-relaxed text-ink-faint">
             이 백업도 이 브라우저 안에 있습니다. 브라우저에서 사이트 데이터를 통째로 지우면 백업도
-            같이 사라져요. 그것까지 막으시려면 가끔{' '}
-            <strong className="font-semibold text-ink-soft">엑셀로 받아</strong> 두시거나{' '}
-            <strong className="font-semibold text-ink-soft">둘이 같이 쓰기</strong>를 켜 두세요.
+            같이 사라져요. 그것까지 막으시려면{' '}
+            <strong className="font-semibold text-ink-soft">로그인해 두시거나</strong> 가끔{' '}
+            <strong className="font-semibold text-ink-soft">엑셀로 받아</strong> 두세요.
           </p>
         </>
       )}

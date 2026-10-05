@@ -172,7 +172,7 @@ export function DeviceHandoff({
 
   return (
     <section className="flex flex-col gap-3 rounded-[12px] border border-line bg-surface px-4 py-4">
-      <h2 className="text-[15px] font-bold text-ink">다른 기기에서 보기</h2>
+      <h2 className="text-[15px] font-bold text-ink">프로필 옮기기</h2>
 
       {!storageOk && (
         <p className="rounded-[8px] bg-alert-soft px-3 py-2.5 text-[12.5px] leading-relaxed text-alert">
@@ -212,10 +212,9 @@ export function DeviceHandoff({
       )}
 
       <p className="text-[12.5px] leading-relaxed text-ink-soft">
-        적으신 기록은 <strong className="font-semibold text-ink">이 기기의 이 브라우저에만</strong>{' '}
-        남습니다. 그래서 컴퓨터에 적은 게 폰에 저절로 따라오지 않아요. 지워진 게 아니라 아직 안
-        건너온 겁니다. 한 번만 옮기실 거면 아래 링크를 쓰시고, 계속 맞춰지길 원하시면 위의
-        &lsquo;둘이 같이 쓰기&rsquo;를 켜세요.
+        <strong className="font-semibold text-ink">쓴 돈 기록은 로그인만 하시면 자동입니다.</strong>{' '}
+        이 칸은 프로필(연봉·결혼 여부 같은 것)만 옮기는 자리예요. 프로필은 사람마다 다른 값이라
+        계정에 싣지 않고 기기에만 둡니다. 새 기기에서 계산기를 쓰시려면 한 번만 옮겨 두세요.
       </p>
 
       <div className="flex flex-wrap items-center gap-2">

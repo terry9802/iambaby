@@ -17,13 +17,17 @@ import {
   PURSE_LABEL,
   type Entry,
 } from '@/lib/ledger/schema';
+import {
+  serverSessionSnapshot,
+  sessionSnapshot,
+  subscribeSession,
+} from '@/lib/account/session';
 import { useProfile } from '@/lib/profile/context';
 import { findEvent, type Tool } from '@/lib/tools';
 import { BackButton } from '@/components/ui/BackButton';
 import { Icon } from '@/components/ui/Icon';
 import { InlineText } from '@/components/ui/InlineText';
-import { CoupleSync } from '@/components/ledger/CoupleSync';
-import { roomSnapshot, serverRoomSnapshot, subscribeRoom } from '@/lib/sync/room';
+import { AccountGate } from '@/components/ledger/AccountGate';
 import { LedgerBackups } from '@/components/ledger/LedgerBackups';
 import { SpendOverview } from '@/components/ledger/SpendOverview';
 import { DeviceHandoff } from '@/components/ledger/DeviceHandoff';
@@ -76,11 +80,15 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
   const [month, setMonth] = useState<string | null>(null);
 
   /*
-    둘이 같이 쓰기가 켜져 있는지. '기록 전부 지우기'가 무슨 일을 하는지가
-    여기서 갈린다. 켜져 있으면 이 기기에서 지워도 상대 기기 것이 다시 넘어오므로,
+    로그인해 두셨는지. '기록 전부 지우기'가 무슨 일을 하는지가 여기서 갈린다.
+    로그인 중이면 이 기기에서 지워도 서버에 있던 것이 다시 내려오므로,
     버튼이 아무 일도 안 한 것처럼 보인다. 그 말을 미리 해 둬야 한다.
   */
-  const room = useSyncExternalStore(subscribeRoom, roomSnapshot, serverRoomSnapshot);
+  const session = useSyncExternalStore(
+    subscribeSession,
+    sessionSnapshot,
+    serverSessionSnapshot,
+  );
 
   const today = hydrated ? toISODate(new Date()) : fallbackToday;
   /*
@@ -323,12 +331,7 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
             )}
           </section>
 
-          <CoupleSync
-            entries={entries}
-            graves={graves}
-            applySide={applySide}
-            partnerWord={married ? '배우자' : '상대방'}
-          />
+          <AccountGate entries={entries} graves={graves} applySide={applySide} />
 
           <DeviceHandoff
             entries={entries}
@@ -348,23 +351,20 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
           <section className="rounded-[12px] border border-line bg-sunk px-4 py-4">
             <h2 className="text-[13px] font-semibold text-ink">이 기록은 어디에 저장되나요</h2>
             <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink-soft">
-              적으신 금액은 지금 쓰고 계신 <strong>이 기기의 이 브라우저 안에만</strong>{' '}
-              저장돼요. 그래서 컴퓨터에 적은 게 폰에 저절로 따라오지 않습니다. 위의{' '}
-              <strong>둘이 같이 쓰기</strong>를 켜시면 자동으로 맞춰지고, 한 번만 옮기실 거면{' '}
-              <strong>다른 기기에서 보기</strong>의 링크를 쓰시면 됩니다. 같이 쓰기를 켜셔도
-              올라가는 건 잠근 덩어리라 저희는 못 봅니다. 브라우저 기록을 지우면 이 기기 것은
-              사라지니, 가끔 엑셀로 받아 두시는 걸 권해요.
+              <strong>로그인해 두시면</strong> 적으시는 대로 서버에 저장돼서, 어느 기기에서
+              들어오셔도 그대로 보입니다. 올라가는 건 핀으로 잠근 덩어리라 저희는 안을 못 봐요.
+              로그인을 안 하시면 이 브라우저 안에만 남고, 브라우저 기록을 지우면 같이 사라집니다.
+              어느 쪽이든 가끔 엑셀로 받아 두시는 걸 권해요.
             </p>
             <LedgerBackups backups={backups} onRestore={restore} />
 
             {confirmReset ? (
               <div className="mt-3 flex flex-col gap-2">
-                {room && (
+                {session && (
                   <p className="rounded-[8px] bg-alert-soft px-3 py-2.5 text-[12.5px] leading-relaxed text-alert">
-                    <strong className="font-semibold">둘이 같이 쓰기가 켜져 있어요.</strong> 이
-                    기기에서 지워도 상대 기기에 있는 기록이 곧 다시 넘어옵니다. 두 분 것을 다
-                    지우시려면 위 &lsquo;연결 끊기&rsquo;에서{' '}
-                    <strong className="font-semibold">서버에 맡긴 것까지 지우기</strong>를 먼저
+                    <strong className="font-semibold">로그인해 두셨어요.</strong> 이 기기에서
+                    지워도 서버에 저장된 기록이 곧 다시 내려옵니다. 아주 지우시려면 위{' '}
+                    <strong className="font-semibold">로그아웃 → 계정을 아예 지우기</strong>를 먼저
                     누르셔야 해요.
                   </p>
                 )}
