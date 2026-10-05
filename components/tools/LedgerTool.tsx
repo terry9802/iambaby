@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useSyncExternalStore } from 'react';
 import {
   compareCoupleStrategies,
   summarizeLedger,
@@ -23,6 +23,8 @@ import { BackButton } from '@/components/ui/BackButton';
 import { Icon } from '@/components/ui/Icon';
 import { InlineText } from '@/components/ui/InlineText';
 import { CoupleSync } from '@/components/ledger/CoupleSync';
+import { roomSnapshot, serverRoomSnapshot, subscribeRoom } from '@/lib/sync/room';
+import { LedgerBackups } from '@/components/ledger/LedgerBackups';
 import { SpendOverview } from '@/components/ledger/SpendOverview';
 import { DeviceHandoff } from '@/components/ledger/DeviceHandoff';
 import { LedgerShare } from '@/components/ledger/LedgerShare';
@@ -55,6 +57,8 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
   const {
     entries,
     graves,
+    backups,
+    restore,
     hydrated: ledgerReady,
     add,
     update,
@@ -70,6 +74,13 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
     따로 두면 막대는 9월인데 목록은 8월인 상태가 생긴다.
   */
   const [month, setMonth] = useState<string | null>(null);
+
+  /*
+    둘이 같이 쓰기가 켜져 있는지. '기록 전부 지우기'가 무슨 일을 하는지가
+    여기서 갈린다. 켜져 있으면 이 기기에서 지워도 상대 기기 것이 다시 넘어오므로,
+    버튼이 아무 일도 안 한 것처럼 보인다. 그 말을 미리 해 둬야 한다.
+  */
+  const room = useSyncExternalStore(subscribeRoom, roomSnapshot, serverRoomSnapshot);
 
   const today = hydrated ? toISODate(new Date()) : fallbackToday;
   /*
@@ -344,8 +355,24 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
               올라가는 건 잠근 덩어리라 저희는 못 봅니다. 브라우저 기록을 지우면 이 기기 것은
               사라지니, 가끔 엑셀로 받아 두시는 걸 권해요.
             </p>
+            <LedgerBackups backups={backups} onRestore={restore} />
+
             {confirmReset ? (
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="mt-3 flex flex-col gap-2">
+                {room && (
+                  <p className="rounded-[8px] bg-alert-soft px-3 py-2.5 text-[12.5px] leading-relaxed text-alert">
+                    <strong className="font-semibold">둘이 같이 쓰기가 켜져 있어요.</strong> 이
+                    기기에서 지워도 상대 기기에 있는 기록이 곧 다시 넘어옵니다. 두 분 것을 다
+                    지우시려면 위 &lsquo;연결 끊기&rsquo;에서{' '}
+                    <strong className="font-semibold">서버에 맡긴 것까지 지우기</strong>를 먼저
+                    누르셔야 해요.
+                  </p>
+                )}
+                <p className="text-[12px] leading-relaxed text-ink-soft">
+                  지우기 전 모습은 <strong className="font-semibold text-ink">되살리기</strong>에
+                  남겨 둡니다. 잘못 누르셔도 돌아올 수 있어요.
+                </p>
+                <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   className="rounded-[8px] bg-brand px-3 py-2 text-[13px] font-semibold text-white"
@@ -363,6 +390,7 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
                 >
                   그만두기
                 </button>
+                </div>
               </div>
             ) : (
               <button

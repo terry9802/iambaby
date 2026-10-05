@@ -3,19 +3,25 @@
 import { useCallback, useMemo, useSyncExternalStore, type ReactNode } from 'react';
 import { createContext, useContext } from 'react';
 import { byDateDesc, newId, LEDGER_STORAGE_KEY, type Entry, type Grave } from './schema';
-import { clearEntries, loadEntries, loadGraves, loadLedgerMeta, saveEntries } from './storage';
-import { buryIds, type Side } from './sync-merge';
+import { loadEntries, loadGraves, loadLedgerMeta, saveEntries } from './storage';
+import { buryIds, mergeSides, type Side } from './sync-merge';
+import { keepSnapshot, loadSnapshots, shrinks, type Snapshot } from './backup';
 
 /**
  * 가계부도 프로필과 같은 자리에 산다. localStorage라는 React 밖의 저장소다.
  * 그래서 effect로 끌어오지 않고 useSyncExternalStore로 구독한다.
  */
 
-type Snapshot = { entries: Entry[]; graves: Grave[]; updatedAt: string | null };
+type Shot = {
+  entries: Entry[];
+  graves: Grave[];
+  updatedAt: string | null;
+  backups: Snapshot[];
+};
 
-const EMPTY: Snapshot = { entries: [], graves: [], updatedAt: null };
+const EMPTY: Shot = { entries: [], graves: [], updatedAt: null, backups: [] };
 
-let cache: Snapshot | null = null;
+let cache: Shot | null = null;
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -38,29 +44,44 @@ function subscribe(listener: () => void) {
   };
 }
 
-function getSnapshot(): Snapshot {
+function getSnapshot(): Shot {
   if (!cache) {
     cache = {
       entries: loadEntries(),
       graves: loadGraves(),
       updatedAt: loadLedgerMeta().updatedAt,
+      backups: loadSnapshots(),
     };
   }
   return cache;
 }
 
-function getServerSnapshot(): Snapshot {
+function getServerSnapshot(): Shot {
   return EMPTY;
 }
 
 function commit(next: Entry[], graves?: Grave[]): boolean {
   const sorted = [...next].sort(byDateDesc);
+
+  /*
+    줄이 줄어드는 저장이면 그 전 모습을 떠 둔다.
+
+    사장님 기록이 두 번 사라졌는데 원인을 코드에서 못 찾았다. 합치기는 무작위로
+    두들겨 봐도 줄을 삼키지 않는다. 원인을 못 밝힌 채 "이제 괜찮다"고 할 수는
+    없으니, 무엇이 줄였든 되돌릴 수 있게 해 둔다. 저장보다 먼저 떠야 지금 것이
+    덮이기 전의 모습이 남는다.
+  */
+  let backups = getSnapshot().backups;
+  if (shrinks(getSnapshot().entries, sorted)) {
+    if (keepSnapshot(getSnapshot().entries, new Date().toISOString())) backups = loadSnapshots();
+  }
   const tombs = graves ?? getSnapshot().graves;
   const saved = saveEntries(sorted, tombs);
   cache = {
     entries: sorted,
     graves: tombs,
     updatedAt: saved ? new Date().toISOString() : getSnapshot().updatedAt,
+    backups,
   };
   emit();
   return saved;
@@ -68,6 +89,8 @@ function commit(next: Entry[], graves?: Grave[]): boolean {
 
 type LedgerContextValue = {
   entries: Entry[];
+  /** 줄이 줄어들기 직전에 떠 둔 모습들. 최근 것이 앞. */
+  backups: Snapshot[];
   /** 지운 줄의 흔적. 다른 기기에서 되살아나지 않게 하려고 들고 있는다. */
   graves: Grave[];
   hydrated: boolean;
@@ -79,6 +102,8 @@ type LedgerContextValue = {
   replaceAll: (next: Entry[]) => boolean;
   /** 다른 기기와 맞춘 결과를 통째로 앉힌다. */
   applySide: (side: Side) => boolean;
+  /** 떠 둔 모습으로 되돌린다. 지금 것도 떠 두고 바꾼다. */
+  restore: (at: string) => boolean;
   reset: () => void;
 };
 
@@ -126,20 +151,44 @@ export function LedgerProvider({ children }: { children: ReactNode }) {
 
   const applySide = useCallback((side: Side) => commit(side.entries, side.graves), []);
 
-  const reset = useCallback(() => {
-    /*
-      다 지우기는 묘비도 같이 치운다. 묘비를 남겨 두면 상대 기기의 멀쩡한 기록까지
-      따라 지워진다. 이건 '내 기기에서 손 떼기'지 '우리 가계부 지우기'가 아니다.
-    */
-    clearEntries();
-    cache = EMPTY;
-    emit();
+  /*
+    떠 둔 모습으로 되돌린다.
+
+    묘비는 그대로 둔다. 되돌리기는 '이 기기 화면을 그때로 돌리는 일'이지
+    '상대가 지운 걸 되살리는 일'이 아니다. 묘비를 지우면 상대 기기에서 제대로
+    지운 줄까지 같이 살아 돌아온다.
+  */
+  const restore = useCallback((at: string) => {
+    const shot = loadSnapshots().find((s) => s.at === at);
+    if (!shot) return false;
+    const now = getSnapshot();
+    // 되돌리기 직전 모습도 떠 둔다. 잘못 되돌리셨을 때 다시 돌아올 자리가 있어야 한다.
+    if (now.entries.length > 0) keepSnapshot(now.entries, new Date().toISOString());
+    const merged = mergeSides(
+      { entries: shot.entries, graves: [] },
+      { entries: now.entries, graves: now.graves },
+    );
+    return commit(merged.entries, merged.graves);
   }, []);
+
+  /*
+    기록 전부 지우기.
+
+    묘비는 남긴다. 처음엔 같이 치웠는데, 그러면 전에 지운 줄이 되살아난다.
+    묘비를 들고 있던 기기가 이 기기뿐이었으면, 지웠다는 사실이 세상에서 사라져서
+    상대 기기에 남아 있던 그 줄이 다음 합치기에 다시 올라온다. 무작위 시험에서
+    실제로 그렇게 됐다.
+
+    줄을 비우는 일은 commit에 맡긴다. 그래야 지우기 전 모습이 '되살리기'에
+    자동으로 떠 두어진다.
+  */
+  const reset = useCallback(() => commit([], getSnapshot().graves), []);
 
   const value = useMemo<LedgerContextValue>(
     () => ({
       entries: snapshot.entries,
       graves: snapshot.graves,
+      backups: snapshot.backups,
       updatedAt: snapshot.updatedAt,
       hydrated,
       add,
@@ -147,9 +196,10 @@ export function LedgerProvider({ children }: { children: ReactNode }) {
       remove,
       replaceAll,
       applySide,
+      restore,
       reset,
     }),
-    [snapshot, hydrated, add, update, remove, replaceAll, applySide, reset],
+    [snapshot, hydrated, add, update, remove, replaceAll, applySide, restore, reset],
   );
 
   return <LedgerContext.Provider value={value}>{children}</LedgerContext.Provider>;
