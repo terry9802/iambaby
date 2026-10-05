@@ -3,7 +3,17 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { Grave, Entry } from '@/lib/ledger/schema';
 import type { Side } from '@/lib/ledger/sync-merge';
-import { deriveKey, isValidPin, newRoom, PIN_LENGTH } from '@/lib/sync/crypto';
+import {
+  CODE_LENGTH,
+  codeOf,
+  deriveKey,
+  formatCode,
+  isValidCode,
+  isValidPin,
+  newCode,
+  PIN_LENGTH,
+  roomFromCode,
+} from '@/lib/sync/crypto';
 import { dropRoomOnServer, syncOnce } from '@/lib/sync/client';
 import {
   bumpRoom,
@@ -66,7 +76,17 @@ export function CoupleSync({
   const [pin, setPin] = useState('');
   const [pinAgain, setPinAgain] = useState('');
   const [making, setMaking] = useState(false);
+  const [joining, setJoining] = useState(false);
+  const [codeInput, setCodeInput] = useState('');
+  /*
+    이 방의 가계부 번호.
+
+    번호로 만든 방에서만 되찾을 수 있다. 링크로만 만들던 옛 방은 방 번호가 열쇠와
+    따로 만들어져서 번호를 되돌릴 길이 없고, 그때는 링크만 보여 준다.
+  */
+  const [myCode, setMyCode] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [messageOk, setMessageOk] = useState<string | null>(null);
   const [link, setLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [confirmLeave, setConfirmLeave] = useState(false);
@@ -168,7 +188,7 @@ export function CoupleSync({
       setFormError('두 번 적으신 핀이 서로 달라요.');
       return;
     }
-    const fresh = newRoom();
+    const fresh = await roomFromCode(newCode());
     const next: Room = { ...fresh, pin, joinedAt: new Date().toISOString() };
     if (!saveRoom(next)) {
       setFormError('이 브라우저는 저장을 막고 있어요. 일반 창으로 열어 주세요.');
@@ -178,7 +198,10 @@ export function CoupleSync({
     setMaking(false);
     setPin('');
     setPinAgain('');
-    setLink(inviteLink(window.location.origin, window.location.pathname, fresh.roomId, fresh.roomSecret));
+    setMyCode(fresh.roomSecret);
+    setLink(
+      inviteLink(window.location.origin, window.location.pathname, fresh.roomId, fresh.roomSecret),
+    );
   };
 
   const joinRoom = async () => {
@@ -229,6 +252,84 @@ export function CoupleSync({
    * 덩어리가 없어진다. 어느 쪽이든 각 기기에 적어 둔 기록은 안 지워진다.
    * 그 말을 화면에 적어 두지 않으면 아무도 이 버튼을 못 누른다.
    */
+  /*
+    지금 붙어 있는 방의 번호를 알아낸다. 들어오자마자 화면에 적어 둬야,
+    다른 기기에서 들어가려 할 때 번호를 찾으러 헤매지 않는다.
+  */
+  useEffect(() => {
+    let alive = true;
+    void (async () => {
+      const found = room ? await codeOf(room) : null;
+      if (alive) setMyCode(found);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [room]);
+
+  /**
+   * 번호와 핀만으로 들어간다.
+   *
+   * 초대 링크가 없어도 되는 길이다. 홈 화면에 앱처럼 얹어 쓰시면 링크를 누를
+   * 자리가 아예 없어서, 링크만으로는 새 기기가 영영 못 들어온다.
+   */
+  const joinByCode = async () => {
+    setFormError(null);
+    if (!isValidCode(codeInput)) {
+      setFormError(`가계부 번호는 글자 ${CODE_LENGTH}자리예요. 줄표는 빼고 세셔도 됩니다.`);
+      return;
+    }
+    if (!isValidPin(pin)) {
+      setFormError(`핀 ${PIN_LENGTH}자리도 같이 넣어 주세요.`);
+      return;
+    }
+    setStatus({ kind: 'syncing' });
+    const target = await roomFromCode(codeInput);
+    const key = await deriveKey(pin, target.roomSecret, target.roomId);
+    const out = await syncOnce(target.roomId, key, sideRef.current);
+
+    if (out.state === 'pin') {
+      setStatus({ kind: 'idle' });
+      setFormError('번호나 핀이 안 맞아요. 둘 다 다시 확인해 주세요.');
+      return;
+    }
+    if (out.state === 'off') {
+      setStatus({ kind: 'off' });
+      return;
+    }
+    if (out.state !== 'ok') {
+      setStatus({ kind: 'idle' });
+      setFormError(out.state === 'busy' ? '잠시 뒤에 다시 시도해 주세요.' : out.message);
+      return;
+    }
+    /*
+      번호가 틀려도 빈 방이 열린 것처럼 보인다. 아무도 안 쓴 방 번호는 서버에
+      그냥 없는 방이고, 없는 방은 잠긴 것도 없어서 열쇠가 맞는지 따질 거리가 없다.
+      그래서 들어온 게 없으면 번호를 다시 보시라고 말한다. 조용히 빈 가계부를
+      보여 주면 "또 날아갔다"로 읽힌다.
+    */
+    if (out.side.entries.length === 0 && sideRef.current.entries.length === 0) {
+      setStatus({ kind: 'idle' });
+      setFormError(
+        '그 번호로 된 가계부가 비어 있어요. 번호를 잘못 보셨을 수 있으니 한 번 더 확인해 주세요.',
+      );
+      return;
+    }
+
+    const next: Room = { ...target, pin, joinedAt: new Date().toISOString() };
+    if (!saveRoom(next)) {
+      setFormError('이 브라우저는 저장을 막고 있어요. 일반 창으로 열어 주세요.');
+      return;
+    }
+    keyRef.current = { roomId: target.roomId, key };
+    applyRef.current(out.side);
+    bumpRoom();
+    setJoining(false);
+    setCodeInput('');
+    setPin('');
+    setStatus({ kind: 'ok', at: new Date().toISOString() });
+  };
+
   const leave = async (alsoServer: boolean) => {
     const was = room;
     if (alsoServer && was) await dropRoomOnServer(was.roomId);
@@ -238,6 +339,15 @@ export function CoupleSync({
     setConfirmLeave(false);
     setLink(null);
     setStatus({ kind: 'idle' });
+  };
+
+  const copyText = async (text: string, said: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setMessageOk(said);
+    } catch {
+      setFormError('복사가 막혀 있어요. 글자를 길게 눌러 직접 복사해 주세요.');
+    }
   };
 
   const copy = async () => {
@@ -292,24 +402,92 @@ export function CoupleSync({
       )}
 
       {/* ── 아직 연결 안 함 ── */}
-      {!room && !invite && !making && (
+      {!room && !invite && !making && !joining && (
         <>
           <p className="text-[12.5px] leading-relaxed text-ink-soft">
-            한 분이 방을 만들고 핀 {PIN_LENGTH}자리를 정하시면, 그 뒤로는 두 분이 각자 적은 게
-            자동으로 합쳐집니다. 올라가는 건 <strong className="font-semibold text-ink">잠근 덩어리</strong>라
-            저희도 못 봅니다. 푸는 건 두 분 핸드폰뿐이에요.
+            한 번 만들어 두면 <strong className="font-semibold text-ink">가계부 번호</strong>와 핀{' '}
+            {PIN_LENGTH}자리로 어느 기기에서든 같은 가계부를 엽니다. 노트북에서 적은 게 폰에도
+            바로 보여요. 올라가는 건{' '}
+            <strong className="font-semibold text-ink">잠근 덩어리</strong>라 저희도 못 봅니다.
           </p>
-          <div>
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => setMaking(true)}
+              onClick={() => {
+                setMaking(true);
+                setFormError(null);
+              }}
               className="flex items-center gap-1.5 rounded-[8px] bg-brand-strong px-3.5 py-2.5 text-[13.5px] font-semibold text-white hover:bg-brand-deep"
             >
               <Icon name="lock" size={16} />
-              커플 가계부 만들기
+              새로 만들기
+            </button>
+            {/*
+              링크가 없어도 들어올 수 있는 길. 사이트를 홈 화면에 앱처럼 얹어
+              쓰시면 초대 링크를 누를 자리가 아예 없어서, 링크만으로는 새 기기가
+              영영 못 들어온다.
+            */}
+            <button
+              type="button"
+              onClick={() => {
+                setJoining(true);
+                setFormError(null);
+              }}
+              className="flex items-center gap-1.5 rounded-[8px] border border-line bg-surface px-3.5 py-2.5 text-[13.5px] font-semibold text-ink-soft hover:border-line-strong"
+            >
+              <Icon name="devices" size={16} />
+              이미 만든 가계부 열기
             </button>
           </div>
         </>
+      )}
+
+      {/* ── 번호로 들어가기 ── */}
+      {!room && joining && (
+        <div className="flex flex-col gap-3 rounded-[8px] bg-sunk px-3.5 py-3">
+          <p className="text-[12.5px] leading-relaxed text-ink-soft">
+            다른 기기에서 쓰시던 <strong className="font-semibold text-ink">가계부 번호</strong>와{' '}
+            <strong className="font-semibold text-ink">핀 {PIN_LENGTH}자리</strong>를 넣어 주세요.
+            번호는 그 기기의 &lsquo;둘이 같이 쓰기&rsquo; 칸에 적혀 있어요.
+          </p>
+          <label className="flex flex-col gap-1">
+            <span className="text-[12px] font-medium text-ink-soft">가계부 번호</span>
+            <input
+              type="text"
+              inputMode="text"
+              autoCapitalize="characters"
+              autoComplete="off"
+              spellCheck={false}
+              value={codeInput}
+              onChange={(e) => setCodeInput(formatCode(e.target.value).slice(0, 14))}
+              placeholder="ABCD-2345-EFGH"
+              className="w-full max-w-[240px] rounded-[8px] border border-line bg-surface px-3 py-2.5 text-[16px] font-semibold tracking-[0.08em] text-ink"
+            />
+          </label>
+          {pinField(pin, setPin, `핀 ${PIN_LENGTH}자리`)}
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => void joinByCode()}
+              disabled={status.kind === 'syncing'}
+              className="rounded-[8px] bg-brand-strong px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-brand-deep disabled:bg-sunk disabled:text-ink-faint"
+            >
+              {status.kind === 'syncing' ? '여는 중…' : '열기'}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setJoining(false);
+                setCodeInput('');
+                setPin('');
+                setFormError(null);
+              }}
+              className="rounded-[8px] border border-line bg-surface px-3.5 py-2 text-[13px] font-semibold text-ink-soft hover:border-line-strong"
+            >
+              그만두기
+            </button>
+          </div>
+        </div>
       )}
 
       {/* ── 방 만드는 중 ── */}
@@ -397,6 +575,30 @@ export function CoupleSync({
               같이 쓰기 서버가 아직 준비되지 않았어요. 그동안 적으신 건 이 기기에 그대로 있고,
               준비되면 저절로 올라갑니다.
             </p>
+          )}
+
+          {/*
+            번호를 늘 보이게 둔다. 다른 기기에서 들어가려 할 때 이걸 찾으러
+            헤매면, 서버를 둔 뜻이 없어진다.
+          */}
+          {myCode && (
+            <div className="rounded-[10px] bg-sunk px-3.5 py-3">
+              <p className="text-[12px] font-medium text-ink-soft">가계부 번호</p>
+              <p className="mt-0.5 text-[20px] font-bold tracking-[0.08em] text-ink">
+                {formatCode(myCode)}
+              </p>
+              <p className="mt-1 text-[11.5px] leading-relaxed text-ink-soft">
+                다른 기기에서 이 번호와 핀 {PIN_LENGTH}자리를 넣으면 같은 가계부가 열려요.
+              </p>
+              <button
+                type="button"
+                onClick={() => void copyText(formatCode(myCode), '번호를 복사했어요')}
+                className="mt-2 flex items-center gap-1.5 rounded-[8px] border border-line bg-surface px-3 py-1.5 text-[12.5px] font-semibold text-ink-soft hover:border-line-strong"
+              >
+                <Icon name="copy" size={14} />
+                번호 복사
+              </button>
+            </div>
           )}
 
           <p className="text-[12.5px] leading-relaxed text-ink-soft">
@@ -506,6 +708,12 @@ export function CoupleSync({
             </button>
           </div>
         </div>
+      )}
+
+      {messageOk && (
+        <p className="rounded-[8px] bg-good-soft px-3 py-2.5 text-[12.5px] leading-relaxed text-good">
+          {messageOk}
+        </p>
       )}
 
       {formError && (

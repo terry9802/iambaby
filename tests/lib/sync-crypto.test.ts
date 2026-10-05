@@ -1,9 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import {
+  CODE_LENGTH,
+  codeOf,
   deriveKey,
+  formatCode,
   fromBase64Url,
+  isValidCode,
   isValidPin,
+  newCode,
   newRoom,
+  normalizeCode,
+  roomFromCode,
+  roomIdFromCode,
   seal,
   toBase64Url,
   unseal,
@@ -76,5 +84,84 @@ describe('자물쇠', () => {
     expect(isValidPin('1234567')).toBe(false);
     expect(isValidPin('12345a')).toBe(false);
     expect(isValidPin('')).toBe(false);
+  });
+});
+
+describe('가계부 번호', () => {
+  it('열두 자리이고 헷갈리는 글자가 안 섞인다', () => {
+    for (let i = 0; i < 300; i += 1) {
+      const code = newCode();
+      expect(code).toHaveLength(CODE_LENGTH);
+      expect(code).not.toMatch(/[ILOU]/);
+      expect(code).toMatch(/^[0-9A-Z]+$/);
+    }
+  });
+
+  it('만들 때마다 다르다', () => {
+    const seen = new Set(Array.from({ length: 500 }, () => newCode()));
+    expect(seen.size).toBe(500);
+  });
+
+  it('소문자·줄표·띄어쓰기를 써도 같은 번호로 본다', () => {
+    const code = newCode();
+    expect(normalizeCode(formatCode(code).toLowerCase())).toBe(code);
+    expect(normalizeCode(` ${formatCode(code)} `)).toBe(code);
+    expect(normalizeCode(code.split('').join(' '))).toBe(code);
+  });
+
+  it('눈으로 구분 안 되는 글자는 바로잡는다 — 옮겨 적다 틀리는 자리다', () => {
+    expect(normalizeCode('IL0O')).toBe('1100');
+    expect(normalizeCode('ilou')).toBe('110V');
+  });
+
+  it('길이가 안 맞으면 번호가 아니다', () => {
+    expect(isValidCode(newCode())).toBe(true);
+    expect(isValidCode('ABC')).toBe(false);
+    expect(isValidCode('')).toBe(false);
+    expect(isValidCode(newCode() + 'A')).toBe(false);
+  });
+
+  it('네 글자씩 끊어 보여 준다', () => {
+    expect(formatCode('ABCD2345EFGH')).toBe('ABCD-2345-EFGH');
+  });
+
+  it('같은 번호는 늘 같은 방으로, 다른 번호는 다른 방으로 간다', async () => {
+    const a = newCode();
+    const b = newCode();
+    expect(await roomIdFromCode(a)).toBe(await roomIdFromCode(a));
+    // 적는 모양이 달라도 같은 방이어야 한다
+    expect(await roomIdFromCode(formatCode(a).toLowerCase())).toBe(await roomIdFromCode(a));
+    expect(await roomIdFromCode(a)).not.toBe(await roomIdFromCode(b));
+  });
+
+  it('방 번호로는 가계부 번호를 되돌릴 수 없다 — 서버가 털려도 못 연다', async () => {
+    const code = newCode();
+    const roomId = await roomIdFromCode(code);
+    expect(roomId).not.toContain(code);
+    expect(roomId.length).toBeLessThanOrEqual(24);
+  });
+
+  it('번호로 만든 방은 번호를 되찾을 수 있고, 링크로 만든 옛 방은 아니다', async () => {
+    const code = newCode();
+    const byCode = await roomFromCode(code);
+    expect(await codeOf(byCode)).toBe(code);
+
+    const old = newRoom();
+    expect(await codeOf(old)).toBeNull();
+  });
+
+  it('번호와 핀이 둘 다 맞아야 열린다', async () => {
+    const code = newCode();
+    const room = await roomFromCode(code);
+    const token = await seal(await deriveKey('123456', room.roomSecret, room.roomId), { x: 1 });
+
+    expect(await unseal(await deriveKey('123456', room.roomSecret, room.roomId), token)).toEqual({
+      x: 1,
+    });
+    // 핀만 틀려도
+    expect(await unseal(await deriveKey('123457', room.roomSecret, room.roomId), token)).toBeNull();
+    // 번호만 틀려도
+    const other = await roomFromCode(newCode());
+    expect(await unseal(await deriveKey('123456', other.roomSecret, room.roomId), token)).toBeNull();
   });
 });
