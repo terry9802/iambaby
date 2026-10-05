@@ -2,7 +2,9 @@ import {
   LEDGER_SCHEMA_VERSION,
   LEDGER_STORAGE_KEY,
   sanitizeEntries,
+  sanitizeGraves,
   type Entry,
+  type Grave,
   type StoredLedger,
 } from './schema';
 
@@ -32,13 +34,25 @@ export function loadEntries(): Entry[] {
   }
 }
 
-export function saveEntries(entries: Entry[]): boolean {
+export function loadGraves(): Grave[] {
+  if (!hasStorage()) return [];
+  try {
+    const raw = window.localStorage.getItem(LEDGER_STORAGE_KEY);
+    if (!raw) return [];
+    return sanitizeGraves((JSON.parse(raw) as Partial<StoredLedger>)?.graves);
+  } catch {
+    return [];
+  }
+}
+
+export function saveEntries(entries: Entry[], graves: Grave[] = []): boolean {
   if (!hasStorage()) return false;
   try {
     const payload: StoredLedger = {
       version: LEDGER_SCHEMA_VERSION,
       updatedAt: new Date().toISOString(),
       entries: sanitizeEntries(entries),
+      graves: sanitizeGraves(graves),
     };
     window.localStorage.setItem(LEDGER_STORAGE_KEY, JSON.stringify(payload));
     return true;

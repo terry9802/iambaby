@@ -213,8 +213,9 @@ export function DeviceHandoff({
 
       <p className="text-[12.5px] leading-relaxed text-ink-soft">
         적으신 기록은 <strong className="font-semibold text-ink">이 기기의 이 브라우저에만</strong>{' '}
-        남습니다. 서버로 보내지 않으니 아무도 볼 수 없는 대신, 컴퓨터에 적은 게 폰에 저절로
-        따라오지 않아요. 지워진 게 아니라 아직 안 건너온 겁니다. 아래 링크로 건너오게 하세요.
+        남습니다. 그래서 컴퓨터에 적은 게 폰에 저절로 따라오지 않아요. 지워진 게 아니라 아직 안
+        건너온 겁니다. 한 번만 옮기실 거면 아래 링크를 쓰시고, 계속 맞춰지길 원하시면 위의
+        &lsquo;둘이 같이 쓰기&rsquo;를 켜세요.
       </p>
 
       <div className="flex flex-wrap items-center gap-2">

@@ -116,7 +116,8 @@ export default function TermsPage() {
 
       <Section title="5. 입력한 값의 처리">
         <p>
-          계산기에 입력하신 값은 서버로 전송되지 않고 브라우저 안에서만 처리됩니다. 자세한 내용은{' '}
+          계산기에 입력하신 값은 서버로 전송되지 않고 브라우저 안에서만 처리됩니다. 가계부를 둘이
+          같이 쓰기로 직접 켜신 경우에만 기록이 잠긴 채로 저희 서버를 거칩니다. 자세한 내용은{' '}
           <Link href="/privacy" className="font-medium text-brand-strong hover:underline">
             개인정보처리방침
           </Link>

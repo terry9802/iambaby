@@ -15,6 +15,17 @@ Phase 1은 **출산·육아** 하나만 끝까지 다룹니다.
 프로필은 브라우저의 localStorage에만 저장되고 **서버로 전송되지 않습니다.**
 모든 계산은 브라우저 안에서 끝납니다. 이 약속을 깨는 코드(프로필을 fetch·서버액션에 싣는 코드)를 추가하지 마세요.
 
+딱 하나 예외가 '둘이 같이 쓰기'(커플 가계부)입니다. 사용자가 직접 켠 경우에만 가계부가 서버를 거칩니다.
+그때도 **브라우저에서 AES-GCM으로 잠근 뒤** 올라가고, 푸는 열쇠(핀 6자리 + 방 열쇠)는 서버로 가지 않습니다.
+서버에 남는 건 뜻 없는 방 번호와 잠긴 덩어리뿐입니다.
+
+- 잠그고 푸는 일은 `lib/sync/crypto.ts` 한 곳에서만 합니다.
+- 네트워크를 타는 건 `lib/sync/client.ts`와 `app/api/sync/[room]/`뿐입니다.
+- `lib/ledger/*`와 `lib/profile/*`에는 **여전히** fetch·서버액션을 넣지 마세요.
+  나가는 길이 한 곳이어야 어디서 새는지 찾을 자리가 하나로 유지됩니다.
+- 핀만으로 잠그면 안 됩니다. 6자리는 경우의 수가 100만뿐이라 서버 자료가 새면 전부 풀립니다.
+  반드시 방 열쇠(서버가 모르는 값)와 합쳐서 열쇠를 만드세요.
+
 ## 구조
 
 ```
@@ -65,6 +76,20 @@ pnpm typecheck
 | `NEXT_PUBLIC_GSC_VERIFICATION` | Search Console HTML 태그 인증값 |
 | `NEXT_PUBLIC_ADSENSE_CLIENT` | AdSense 퍼블리셔 ID. 넣으면 `/ads.txt`가 자동 생성됨 |
 | `NEXT_PUBLIC_ADSENSE_SLOT_HOME` / `_HUB` | 광고 단위 슬롯 ID. 비우면 그 자리에 광고가 안 나옴 |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | 커플 가계부 동기화 저장소. 비우면 '둘이 같이 쓰기'만 꺼지고 나머지는 그대로 돌아감 |
+
+### 커플 가계부 동기화 (선택)
+
+둘이 같은 가계부를 보려면 잠긴 덩어리를 잠깐 맡아 둘 자리가 필요합니다.
+
+1. [upstash.com](https://upstash.com) 가입 → Redis 데이터베이스 하나 만들기 (무료 등급으로 충분합니다)
+2. 그 DB의 **REST API** 탭에서 `UPSTASH_REDIS_REST_URL`과 `UPSTASH_REDIS_REST_TOKEN`을 복사
+3. Vercel 프로젝트의 Settings → Environment Variables에 두 값을 넣고 재배포
+
+이 토큰이 새어도 가계부 내용은 열리지 않습니다. 서버에는 잠긴 덩어리만 있고 열쇠는 사용자 기기에만
+있기 때문입니다. 그래도 토큰은 저장소를 지울 수 있는 권한이므로 공개 저장소에 올리지 마세요.
+
+값을 안 넣으면 `/api/sync/*`가 503과 안내문을 돌려주고, 화면은 '옮기기 링크'만 권합니다.
 
 ### Vercel
 

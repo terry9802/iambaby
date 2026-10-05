@@ -112,6 +112,10 @@ export default function AboutPage() {
           브라우저에만 남습니다.
         </p>
         <p>
+          가계부를 둘이 같이 쓰기로 직접 켜신 경우에만 기록이 저희 서버를 거칩니다. 그때도
+          브라우저에서 잠근 뒤 올라가므로 저희는 안을 볼 수 없고, 언제든 지우실 수 있습니다.
+        </p>
+        <p>
           자세한 내용은{' '}
           <Link href="/privacy" className="font-medium text-brand-strong hover:underline">
             개인정보처리방침

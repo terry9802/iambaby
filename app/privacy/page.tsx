@@ -5,11 +5,11 @@ import { BackButton } from '@/components/ui/BackButton';
 export const metadata: Metadata = {
   title: '개인정보처리방침',
   description:
-    '난 아직 애긴데 세상이 너무 어려워요의 개인정보처리방침. 프로필은 브라우저에만 저장되며 서버로 전송되지 않습니다.',
+    '난 아직 애긴데 세상이 너무 어려워요의 개인정보처리방침. 프로필은 브라우저에만 저장되며 서버로 전송되지 않습니다. 커플 가계부는 암호화해서만 오갑니다.',
   alternates: { canonical: '/privacy' },
 };
 
-const UPDATED = '2026년 9월 10일';
+const UPDATED = '2026년 10월 5일';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -44,6 +44,12 @@ export default function PrivacyPage() {
           이름, 연락처, 주민등록번호 같은 개인 식별 정보는 애초에 입력받지 않으며 수집하지도
           않습니다.
         </p>
+        <p>
+          딱 하나 예외가 있습니다. &lsquo;쓴 돈 적기&rsquo;에서{' '}
+          <strong className="font-semibold text-ink">둘이 같이 쓰기</strong>를 직접 켜신 경우에만
+          가계부가 저희 서버를 거쳐 상대방 기기로 갑니다. 이때도 내용은 여러분 브라우저에서 잠근 뒤
+          올라가며, 저희는 그 안을 볼 수 없습니다. 아래 3번에 자세히 적었습니다.
+        </p>
       </Section>
 
       <Section title="2. 브라우저에 저장되는 것 (localStorage)">
@@ -52,10 +58,43 @@ export default function PrivacyPage() {
           여러분의 기기 안에만 있으며 사이트 운영자도 볼 수 없습니다. 브라우저의 사이트 데이터를
           지우거나 프로필 화면에서 &lsquo;전부 지우기&rsquo;를 누르면 즉시 사라집니다.
         </p>
-        <p>다른 기기나 다른 브라우저에서는 공유되지 않습니다.</p>
+        <p>
+          다른 기기나 다른 브라우저와는 저절로 공유되지 않습니다. 옮기고 싶으시면
+          &lsquo;옮기기 링크&rsquo;로 직접 보내시거나, &lsquo;둘이 같이 쓰기&rsquo;를 켜셔야 합니다.
+        </p>
       </Section>
 
-      <Section title="3. 방문 통계 (Google Analytics)">
+      <Section title="3. 둘이 같이 쓰기 (직접 켜신 경우에만)">
+        <p>
+          &lsquo;쓴 돈 적기&rsquo;에서 커플 가계부를 만드시면, 두 분 기기가 같은 기록을 보도록
+          가계부가 저희 서버를 거쳐 오갑니다. 켜지 않으시면 아무것도 올라가지 않습니다.
+        </p>
+        <p>
+          올라가는 내용은{' '}
+          <strong className="font-semibold text-ink">
+            여러분 브라우저에서 먼저 잠근(암호화한) 덩어리
+          </strong>
+          입니다. 푸는 열쇠는 두 분이 정한 핀 6자리와, 초대 링크에 담긴 값으로 만들어집니다. 그 둘 중
+          어느 것도 저희 서버로 보내지 않습니다. 따라서 저희는 금액도, 내역도, 날짜도 볼 수 없고,
+          서버 자료가 통째로 새어 나가도 그 안을 읽을 수 없습니다.
+        </p>
+        <p>
+          저희 서버에 남는 것은 뜻 없는 방 번호 하나와 잠긴 덩어리뿐입니다. 이름, 연락처, 계정은
+          없습니다. 1년 넘게 아무도 쓰지 않는 방은 저절로 지워집니다.
+        </p>
+        <p>
+          언제든 &lsquo;쓴 돈 적기&rsquo; 화면의 &lsquo;연결 끊기&rsquo;에서{' '}
+          <strong className="font-semibold text-ink">서버에 맡긴 것까지 지우기</strong>를 누르시면
+          즉시 삭제됩니다. 어느 쪽이든 각 기기에 적어 두신 기록은 그대로 남습니다.
+        </p>
+        <p>
+          주의하실 점이 하나 있습니다. 핀을 잊으시면 저희도 풀어 드릴 수 없습니다. 열쇠를 안 갖고
+          있기 때문입니다. 기록은 각 기기에 그대로 있으니 잃는 것은 아니고, 새로 방을 만드시면
+          됩니다.
+        </p>
+      </Section>
+
+      <Section title="4. 방문 통계 (Google Analytics)">
         <p>
           어떤 계산기가 많이 쓰이는지 파악하기 위해 Google Analytics 4를 사용합니다. 이 도구는
           쿠키를 통해 방문 페이지, 체류 시간, 대략적인 지역, 기기 종류 같은 정보를 수집하며 IP
@@ -80,7 +119,7 @@ export default function PrivacyPage() {
         </p>
       </Section>
 
-      <Section title="4. 광고 (Google AdSense)">
+      <Section title="5. 광고 (Google AdSense)">
         <p>
           사이트 운영 비용을 충당하기 위해 Google AdSense 광고를 게재할 수 있습니다. Google을 포함한
           제3자 공급업체는 쿠키를 사용해 이용자의 이전 방문 기록을 바탕으로 광고를 게재합니다.
@@ -111,14 +150,19 @@ export default function PrivacyPage() {
         </p>
       </Section>
 
-      <Section title="5. 정보의 제3자 제공">
+      <Section title="6. 정보의 제3자 제공">
         <p>
           수집하는 개인정보가 없으므로 제3자에게 제공하는 개인정보도 없습니다. 위에 적은 Google
           Analytics·AdSense의 쿠키 처리는 각 서비스의 개인정보처리방침을 따릅니다.
         </p>
+        <p>
+          &lsquo;둘이 같이 쓰기&rsquo;의 잠긴 덩어리는 클라우드 저장소(Upstash)에 맡겨 둡니다.
+          맡기는 것은 잠긴 덩어리와 뜻 없는 방 번호뿐이고, 그 업체도 저희와 마찬가지로 안을 볼 수
+          없습니다.
+        </p>
       </Section>
 
-      <Section title="6. 계산 결과에 대한 면책">
+      <Section title="7. 계산 결과에 대한 면책">
         <p>
           이 사이트의 계산 결과는 참고용입니다. 실제 지급액과 자격 여부는 고용센터, 주민센터 등
           관할 기관의 산정에 따릅니다. 기준값은 법령·고시 원문을 확인해 표기하고 확인일을 화면에
@@ -126,7 +170,7 @@ export default function PrivacyPage() {
         </p>
       </Section>
 
-      <Section title="7. 문의">
+      <Section title="8. 문의">
         <p>
           개인정보 처리에 관해 궁금한 점이나 잘못된 계산을 발견하셨다면 알려주세요. 계산 정확도가 이
           사이트의 유일한 자산이라 제보를 가장 중요하게 다룹니다.
@@ -136,8 +180,9 @@ export default function PrivacyPage() {
           <Link href="/contact" className="font-medium text-brand-strong hover:underline">
             문의
           </Link>{' '}
-          페이지에 있습니다. 이 사이트는 입력값을 서버로 보내지 않으므로 삭제를 요청하실 개인정보
-          자체가 없고, 브라우저에 저장된 프로필은{' '}
+          페이지에 있습니다. 계산기에 넣으신 값은 서버로 가지 않으므로 삭제를 요청하실 것이
+          없고, &lsquo;둘이 같이 쓰기&rsquo;로 올라간 덩어리는 그 화면에서 직접 지우실 수 있습니다
+          (위 3번). 브라우저에 저장된 프로필은{' '}
           <Link href="/me" className="font-medium text-brand-strong hover:underline">
             내 프로필
           </Link>{' '}

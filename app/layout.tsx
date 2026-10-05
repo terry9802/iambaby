@@ -104,7 +104,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Logo size={17} />
                 <p className="text-[12.5px] leading-relaxed text-ink-soft">
                   입력한 값은 이 브라우저에만 저장되고 서버로 전송되지 않습니다. 계산은 전부
-                  브라우저 안에서 이뤄집니다.
+                  브라우저 안에서 이뤄집니다. 커플 가계부를 직접 켜신 경우에만, 잠근 상태로
+                  상대방 기기에 건너갑니다.
                 </p>
                 <p className="text-[12px] leading-relaxed text-ink-faint">
                   이 사이트의 계산 결과는 참고용이며, 실제 지급액과 자격 여부는 관할 기관의 산정에

@@ -21,6 +21,7 @@ import { findEvent, type Tool } from '@/lib/tools';
 import { BackButton } from '@/components/ui/BackButton';
 import { Icon } from '@/components/ui/Icon';
 import { InlineText } from '@/components/ui/InlineText';
+import { CoupleSync } from '@/components/ledger/CoupleSync';
 import { DeviceHandoff } from '@/components/ledger/DeviceHandoff';
 import { LedgerShare } from '@/components/ledger/LedgerShare';
 import { QuickAdd } from '@/components/ledger/QuickAdd';
@@ -49,7 +50,17 @@ export function LedgerTool(props: { tool: Tool; fallbackToday: string }) {
 
 function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string }) {
   const { profile, hydrated, update: updateProfile } = useProfile();
-  const { entries, hydrated: ledgerReady, add, update, remove, replaceAll, reset } = useLedger();
+  const {
+    entries,
+    graves,
+    hydrated: ledgerReady,
+    add,
+    update,
+    remove,
+    replaceAll,
+    applySide,
+    reset,
+  } = useLedger();
   const [confirmReset, setConfirmReset] = useState(false);
   const [showAll, setShowAll] = useState(false);
 
@@ -212,6 +223,13 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
             )}
           </section>
 
+          <CoupleSync
+            entries={entries}
+            graves={graves}
+            applySide={applySide}
+            partnerWord={married ? '배우자' : '상대방'}
+          />
+
           <DeviceHandoff
             entries={entries}
             profile={profile}
@@ -231,10 +249,11 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
             <h2 className="text-[13px] font-semibold text-ink">이 기록은 어디에 저장되나요</h2>
             <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink-soft">
               적으신 금액은 지금 쓰고 계신 <strong>이 기기의 이 브라우저 안에만</strong>{' '}
-              저장돼요. 서버로 보내는 코드가 아예 없어서 저희도 볼 수 없습니다. 그래서 컴퓨터에
-              적은 게 폰에 저절로 따라오지 않아요. 위의 <strong>다른 기기에서 보기</strong>로
-              옮기시면 됩니다. 브라우저 기록을 지우면 함께 사라지니, 가끔 엑셀로 받아 두시는 걸
-              권해요.
+              저장돼요. 그래서 컴퓨터에 적은 게 폰에 저절로 따라오지 않습니다. 위의{' '}
+              <strong>둘이 같이 쓰기</strong>를 켜시면 자동으로 맞춰지고, 한 번만 옮기실 거면{' '}
+              <strong>다른 기기에서 보기</strong>의 링크를 쓰시면 됩니다. 같이 쓰기를 켜셔도
+              올라가는 건 잠근 덩어리라 저희는 못 봅니다. 브라우저 기록을 지우면 이 기기 것은
+              사라지니, 가끔 엑셀로 받아 두시는 걸 권해요.
             </p>
             {confirmReset ? (
               <div className="mt-3 flex flex-wrap gap-2">

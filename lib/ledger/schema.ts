@@ -3,8 +3,10 @@ import { SPEND_CATEGORIES, type SpendCategory } from './categories';
 /**
  * 가계부 한 줄.
  *
- * 이 데이터는 프로필과 같은 약속 아래 있다. 서버로 보내지 않고 브라우저에만 남는다.
- * 여기에 fetch/axios/서버액션을 붙이지 말 것.
+ * 이 데이터는 브라우저에만 남는다. 사장님이 '둘이 같이 쓰기'를 직접 켜신 경우에만 밖으로
+ * 나가는데, 그때도 lib/sync가 잠근 뒤에 보낸다. 그러니 lib/ledger 쪽 파일에는 여전히
+ * fetch/axios/서버액션을 붙이지 말 것. 나가는 길은 lib/sync 한 곳뿐이어야, 어디서 새는지
+ * 찾을 자리가 하나로 유지된다.
  *
  * 칸을 이렇게 나눈 이유는 연말정산 때문이다. 공제는 세 가지로 갈린다.
  *  - 누구 명의 카드인가 (공제는 명의자 소득에서만 받는다)
@@ -54,7 +56,25 @@ export type Entry = {
   memo?: string;
   /** 합칠 때 누가 적은 줄인지 알아보려고 둔다. 내가 적은 줄은 비어 있다. */
   source?: string;
+  /**
+   * 마지막으로 손댄 시각 (ISO).
+   *
+   * 둘이 같은 줄을 각자 고쳤을 때 어느 쪽이 이기는지 가리려고 둔다. 이게 없으면
+   * 폰에서 '개인 생활비'를 '커플 데이트비'로 바꿔도 컴퓨터에 있던 옛 줄이
+   * 되돌려 놓는다. 옛 기록에는 없을 수 있어서 선택값이고, 없으면 제일 오래된
+   * 것으로 친다.
+   */
+  at?: string;
 };
+
+/**
+ * 지운 줄의 묘비.
+ *
+ * 합치기는 더하기만 한다. 그래서 폰에서 지운 줄이 컴퓨터 쪽 묶음에 남아 있으면
+ * 다음 번에 되살아난다. 지웠다는 사실도 같이 건너가야 지운 게 지워진 채로 있다.
+ * 묘비는 아이디와 지운 시각만 들고 있어서 금액이나 메모가 남지 않는다.
+ */
+export type Grave = { id: string; at: string };
 
 export const PURSE_LABEL: Record<Purse, string> = {
   personal: '개인 생활비',
@@ -104,6 +124,7 @@ export type StoredLedger = {
   version: number;
   updatedAt: string;
   entries: Entry[];
+  graves?: Grave[];
 };
 
 const PURSES: Purse[] = ['personal', 'couple'];
@@ -147,7 +168,24 @@ export function sanitizeEntry(input: unknown): Entry | null {
       : {}),
     ...(typeof raw.memo === 'string' && raw.memo ? { memo: raw.memo.slice(0, 120) } : {}),
     ...(typeof raw.source === 'string' && raw.source ? { source: raw.source.slice(0, 40) } : {}),
+    ...(typeof raw.at === 'string' && raw.at ? { at: raw.at.slice(0, 40) } : {}),
   };
+}
+
+export function sanitizeGraves(input: unknown): Grave[] {
+  if (!Array.isArray(input)) return [];
+  const seen = new Map<string, Grave>();
+  for (const row of input) {
+    if (!row || typeof row !== 'object') continue;
+    const raw = row as Record<string, unknown>;
+    if (typeof raw.id !== 'string' || !raw.id) continue;
+    if (typeof raw.at !== 'string' || !raw.at) continue;
+    const grave = { id: raw.id.slice(0, 60), at: raw.at.slice(0, 40) };
+    // 같은 줄을 양쪽에서 지웠으면 나중에 지운 시각을 남긴다.
+    const had = seen.get(grave.id);
+    if (!had || had.at < grave.at) seen.set(grave.id, grave);
+  }
+  return [...seen.values()];
 }
 
 export function sanitizeEntries(input: unknown): Entry[] {
