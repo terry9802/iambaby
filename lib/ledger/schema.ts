@@ -16,7 +16,7 @@ import { SPEND_CATEGORIES, type SpendCategory } from './categories';
  */
 
 /**
- * 내 생활비인가, 둘이 모아 쓰는 데이트비인가.
+ * 내 지출인가, 그룹이 같이 쓰는 지출인가.
  *
  * 커플통장에서 카드값을 갚든 내 통장에서 갚든 연말정산은 달라지지 않는다.
  * 공제는 '무엇으로 긁었나'와 '누구 명의인가'로만 갈리고, 그 돈이 어느 통장에서
@@ -24,7 +24,7 @@ import { SPEND_CATEGORIES, type SpendCategory } from './categories';
  * 돈을 갈라서 보고 싶기 때문이고, 데이트비를 한 사람 카드로 몰았을 때 손익이
  * 어떻게 되는지 그 덩어리만 따로 세어 보려는 것이다.
  */
-export type Purse = 'personal' | 'couple';
+export type Purse = 'personal' | 'group';
 
 /** 무엇으로 결제했는가. 공제율이 여기서 갈린다. */
 export type Method = 'credit' | 'check' | 'cash';
@@ -57,6 +57,13 @@ export type Entry = {
   /** 합칠 때 누가 적은 줄인지 알아보려고 둔다. 내가 적은 줄은 비어 있다. */
   source?: string;
   /**
+   * 그룹 가계부에서 이 줄을 적은 사람의 아이디.
+   *
+   * 그룹은 여럿이 같이 적으므로 누가 적었는지 보여야 한다. 내 개인 가계부에만
+   * 있는 줄은 비어 있다. 아이디는 사람이 고른 글자라 그대로 보여 줘도 된다.
+   */
+  by?: string;
+  /**
    * 마지막으로 손댄 시각 (ISO).
    *
    * 둘이 같은 줄을 각자 고쳤을 때 어느 쪽이 이기는지 가리려고 둔다. 이게 없으면
@@ -77,8 +84,8 @@ export type Entry = {
 export type Grave = { id: string; at: string };
 
 export const PURSE_LABEL: Record<Purse, string> = {
-  personal: '개인 생활비',
-  couple: '커플 데이트비',
+  personal: '개인 지출',
+  group: '그룹 지출',
 };
 
 export const METHOD_LABEL: Record<Method, string> = {
@@ -127,7 +134,7 @@ export type StoredLedger = {
   graves?: Grave[];
 };
 
-const PURSES: Purse[] = ['personal', 'couple'];
+const PURSES: Purse[] = ['personal', 'group'];
 const METHODS: Method[] = ['credit', 'check', 'cash'];
 const HOLDERS: Holder[] = ['me', 'partner'];
 const CATEGORIES: Category[] = ['general', 'market', 'transit', 'culture', 'excluded'];
@@ -148,7 +155,12 @@ export function sanitizeEntry(input: unknown): Entry | null {
   const amount = typeof raw.amount === 'number' && Number.isFinite(raw.amount) ? raw.amount : null;
   if (amount === null || amount <= 0) return null;
 
-  const purse = PURSES.includes(raw.purse as Purse) ? (raw.purse as Purse) : 'personal';
+  /*
+    'couple'은 옛 이름이다. 커플만 쓰는 게 아니라 여럿이 쓰는 그룹으로 넓히면서
+    'group'으로 바꿨다. 이미 적어 두신 줄이 사라지면 안 되므로 옛 이름을 받아 준다.
+  */
+  const rawPurse = raw.purse === 'couple' ? 'group' : raw.purse;
+  const purse = PURSES.includes(rawPurse as Purse) ? (rawPurse as Purse) : 'personal';
   const method = METHODS.includes(raw.method as Method) ? (raw.method as Method) : 'credit';
   const holder = HOLDERS.includes(raw.holder as Holder) ? (raw.holder as Holder) : 'me';
   const category = CATEGORIES.includes(raw.category as Category)
@@ -169,6 +181,7 @@ export function sanitizeEntry(input: unknown): Entry | null {
     ...(typeof raw.memo === 'string' && raw.memo ? { memo: raw.memo.slice(0, 120) } : {}),
     ...(typeof raw.source === 'string' && raw.source ? { source: raw.source.slice(0, 40) } : {}),
     ...(typeof raw.at === 'string' && raw.at ? { at: raw.at.slice(0, 40) } : {}),
+    ...(typeof raw.by === 'string' && raw.by ? { by: raw.by.slice(0, 20) } : {}),
   };
 }
 

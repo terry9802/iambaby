@@ -35,7 +35,7 @@ const HEADERS = [
 const SHEETS = [
   { name: '전체', filter: () => true },
   { name: '개인 생활비', filter: (e: Entry) => e.purse === 'personal' },
-  { name: '커플 데이트비', filter: (e: Entry) => e.purse === 'couple' },
+  { name: '그룹 지출', filter: (e: Entry) => e.purse === 'group' },
 ] as const;
 
 /* 서식 번호. styles.xml에 적어 둔 순서와 맞춰야 한다. */

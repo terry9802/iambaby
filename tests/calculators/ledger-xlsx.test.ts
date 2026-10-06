@@ -39,7 +39,7 @@ const ROWS: Entry[] = [
     memo: '편의점',
     spend: '식비',
     method: 'check',
-    purse: 'couple',
+    purse: 'group',
     holder: 'partner',
   }),
   entry({

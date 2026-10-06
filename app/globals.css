@@ -51,6 +51,20 @@
   --color-split-credit-b: #0f63a8;
   --color-split-check-b: #2f9ce4;
 
+  /*
+    도넛 조각 색. 여섯 개까지만 둔다.
+
+    색맹 검사(dataviz validate_palette.js --pairs all)를 통과하는 조합이
+    여기까지다. 일곱 번째를 넣으면 초록과 주황이 적록색약에서 ΔE 3.2로 붙어
+    버린다. 조각이 더 필요하면 색을 늘릴 게 아니라 '기타'로 묶어야 한다.
+  */
+  --color-slice-1: #2a78d6;
+  --color-slice-2: #1baf7a;
+  --color-slice-3: #eda100;
+  --color-slice-4: #e87ba4;
+  --color-slice-5: #008300;
+  --color-slice-6: #4a3aa7;
+
   --color-good: #17714f;
   --color-good-soft: #e3f2eb;
 

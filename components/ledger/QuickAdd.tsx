@@ -51,7 +51,7 @@ type Draft = {
   memo: string;
 };
 
-const PURSES: Purse[] = ['personal', 'couple'];
+const PURSES: Purse[] = ['personal', 'group'];
 const METHODS: Method[] = ['credit', 'check', 'cash'];
 const CATEGORIES: Category[] = ['general', 'market', 'transit', 'culture', 'excluded'];
 
@@ -164,7 +164,7 @@ export function QuickAdd({
         amount: Number(d.amount.replace(/[^0-9]/g, '')),
         purse: d.purse,
         method: d.method,
-        holder: hasPartner || d.purse === 'couple' ? d.holder : 'me',
+        holder: hasPartner || d.purse === 'group' ? d.holder : 'me',
         spend: d.spend,
         category: d.category,
         ...(d.memo.trim() ? { memo: d.memo.trim() } : {}),
@@ -272,7 +272,7 @@ export function QuickAdd({
                 둘이 쓰는 돈이라는 뜻이다. 그러면 누구 카드로 냈는지가 공제를
                 가르므로 그때 바로 물어본다. 프로필을 먼저 채우라고 미루지 않는다.
               */}
-              {(hasPartner || d.purse === 'couple') && (
+              {(hasPartner || d.purse === 'group') && (
                 <Chips<Holder>
                   label="누구 명의 카드"
                   value={d.holder}

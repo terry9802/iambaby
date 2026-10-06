@@ -22,7 +22,7 @@ function e(date: string, amount: number, purse: Entry['purse'] = 'personal'): En
 
 describe('달마다 얼마 썼나', () => {
   it('지갑별로 나눠 센다', () => {
-    const rows = [e('2026-09-01', 10000, 'couple'), e('2026-09-02', 5000, 'personal')];
+    const rows = [e('2026-09-01', 10000, 'group'), e('2026-09-02', 5000, 'personal')];
     expect(totalsOf(rows)).toEqual({ all: 15000, personal: 5000, couple: 10000, count: 2 });
   });
 

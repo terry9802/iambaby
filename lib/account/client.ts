@@ -4,6 +4,10 @@ import { sanitizeProfile, type Profile } from '@/lib/profile/schema';
 import { accountIdOf, keyOf, seal, unseal, verifierOf } from './crypto';
 import { laterProfile, sameProfile, type Stamped } from './profile-merge';
 import { normalizeId } from './schema';
+import { isFail, post, type Fail } from './transport';
+
+export type { Fail } from './transport';
+export { sayFail } from './transport';
 
 /**
  * 브라우저가 서버와 주고받는 일.
@@ -13,56 +17,6 @@ import { normalizeId } from './schema';
  */
 
 export type Auth = { id: string; pin: string; account: string; keySalt: string };
-
-export type Fail =
-  | { kind: 'wrong' }
-  | { kind: 'taken' }
-  | { kind: 'locked'; message: string }
-  | { kind: 'off' }
-  | { kind: 'error'; message: string };
-
-type Reply = {
-  ok?: boolean;
-  error?: string;
-  keySalt?: string;
-  version?: number;
-  blob?: string | null;
-  conflict?: boolean;
-  taken?: boolean;
-  wrong?: boolean;
-  locked?: boolean;
-};
-
-async function post(body: Record<string, unknown>): Promise<Reply | Fail> {
-  let res: Response;
-  try {
-    res = await fetch('/api/vault', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-      cache: 'no-store',
-    });
-  } catch {
-    return { kind: 'error', message: '지금은 연결이 안 돼요.' };
-  }
-  let json: Reply = {};
-  try {
-    json = (await res.json()) as Reply;
-  } catch {
-    // 아래에서 상태 코드로 가른다
-  }
-  if (res.status === 503) return { kind: 'off' };
-  if (res.ok) return json;
-  if (json.locked) return { kind: 'locked', message: json.error ?? '잠시 잠겼어요.' };
-  if (json.taken) return { kind: 'taken' };
-  if (json.wrong) return { kind: 'wrong' };
-  if (res.status === 409) return json; // 덮어쓰기 충돌은 실패가 아니다
-  return { kind: 'error', message: json.error ?? '지금은 연결이 안 돼요.' };
-}
-
-function isFail(x: Reply | Fail): x is Fail {
-  return 'kind' in x;
-}
 
 /** 가입. 이미 있는 아이디면 taken. */
 export async function signUp(id: string, pin: string): Promise<Auth | Fail> {

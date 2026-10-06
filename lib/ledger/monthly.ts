@@ -32,7 +32,7 @@ export function totalsOf(entries: Entry[]): Totals {
   let couple = 0;
   for (const e of entries) {
     all += e.amount;
-    if (e.purse === 'couple') couple += e.amount;
+    if (e.purse === 'group') couple += e.amount;
     else personal += e.amount;
   }
   return { all, personal, couple, count: entries.length };

@@ -148,10 +148,10 @@ describe('가계부 요약', () => {
     expect(me.nowWhy).toContain('한도를 이미 다 채우셨어요');
   });
 
-  it('커플 데이트비와 개인 생활비를 따로 센다', () => {
+  it('그룹 지출와 개인 생활비를 따로 센다', () => {
     const out = summarizeLedger({
       entries: [
-        entry({ id: 'a', amount: 100 * MAN, purse: 'couple' }),
+        entry({ id: 'a', amount: 100 * MAN, purse: 'group' }),
         entry({ id: 'b', amount: 40 * MAN, purse: 'personal' }),
       ],
       mySalary: 4000 * MAN,
@@ -173,14 +173,14 @@ describe('엑셀 내려받기', () => {
     const csv = entriesToCsv([
       entry({
         amount: 12000,
-        purse: 'couple',
+        purse: 'group',
         method: 'check',
         category: 'market',
         memo: '장보기',
       }),
     ]);
     expect(csv).toContain('날짜,금액,지갑,결제수단,명의,분류,메모');
-    expect(csv).toContain('2026-03-01,12000,커플 데이트비,체크카드,내 명의,전통시장,장보기');
+    expect(csv).toContain('2026-03-01,12000,그룹 지출,체크카드,내 명의,전통시장,장보기');
   });
 
   it('쉼표가 든 메모를 따옴표로 감싼다', () => {
@@ -289,7 +289,7 @@ describe('데이트비를 신용카드로 몰면 이득인가', () => {
       id: `c${i}`,
       date: date(i + 1),
       amount: 100 * MAN,
-      purse: 'couple',
+      purse: 'group',
       method: 'credit',
       holder: 'me',
     }),
@@ -338,7 +338,7 @@ describe('데이트비를 신용카드로 몰면 이득인가', () => {
         entry({
           id: 'm',
           amount: 1200 * MAN,
-          purse: 'couple',
+          purse: 'group',
           method: 'credit',
           category: 'market',
         }),
@@ -364,7 +364,7 @@ describe('지금 방식이 이길 때', () => {
         id: `c${i}`,
         date: `2026-${String(i + 1).padStart(2, '0')}-15`,
         amount: 100 * MAN,
-        purse: 'couple',
+        purse: 'group',
         method: 'credit',
         holder: 'me',
       }),
@@ -396,7 +396,7 @@ describe('지금 방식이 이길 때', () => {
         id: `c${i}`,
         date: `2026-${String(i + 1).padStart(2, '0')}-15`,
         amount: 100 * MAN,
-        purse: 'couple',
+        purse: 'group',
         method: 'credit',
         holder: 'me',
       }),
@@ -423,12 +423,12 @@ describe('왜 같은 답이 나오는지 가려 말한다', () => {
     처음엔 둘을 구분하지 않고 늘 두 번째 설명을 내보냈다. 그래서 한도를 세 배나
     넘긴 분께 "문턱 안에서 긁은 신용카드는…"이라고 엉뚱한 말을 했다.
   */
-  const big = (n: number, purse: 'personal' | 'couple') =>
+  const big = (n: number, purse: 'personal' | 'group') =>
     entry({ id: `${purse}-${n}`, amount: n, purse, method: 'credit' });
 
   it('한도를 채웠으면 한도 때문이라고 말한다', () => {
     const out = compareCoupleStrategies({
-      entries: [big(3000 * MAN, 'personal'), big(1500 * MAN, 'couple')],
+      entries: [big(3000 * MAN, 'personal'), big(1500 * MAN, 'group')],
       mySalary: 5678 * MAN,
       asOf: ASOF,
     });
@@ -440,7 +440,7 @@ describe('왜 같은 답이 나오는지 가려 말한다', () => {
 
   it('아직 못 미쳤으면 그 이유로 말한다', () => {
     const out = compareCoupleStrategies({
-      entries: [big(300 * MAN, 'personal'), big(200 * MAN, 'couple')],
+      entries: [big(300 * MAN, 'personal'), big(200 * MAN, 'group')],
       mySalary: 5678 * MAN,
       asOf: ASOF,
     });
@@ -454,7 +454,7 @@ describe('왜 같은 답이 나오는지 가려 말한다', () => {
       비교하지도 않은 걸 비교한 척하는 것이다.
     */
     const out = compareCoupleStrategies({
-      entries: [big(4300 * MAN, 'personal'), big(9790, 'couple')],
+      entries: [big(4300 * MAN, 'personal'), big(9790, 'group')],
       mySalary: 5678 * MAN,
       asOf: ASOF,
     });
@@ -466,9 +466,9 @@ describe('왜 같은 답이 나오는지 가려 말한다', () => {
   it('법에서 쓰는 말을 화면에 내보내지 않는다', () => {
     const hard = ['최저사용금액', '공제율', '문턱'];
     for (const entries of [
-      [big(3000 * MAN, 'personal'), big(1500 * MAN, 'couple')],
-      [big(300 * MAN, 'personal'), big(200 * MAN, 'couple')],
-      [big(2000 * MAN, 'personal'), big(800 * MAN, 'couple')],
+      [big(3000 * MAN, 'personal'), big(1500 * MAN, 'group')],
+      [big(300 * MAN, 'personal'), big(200 * MAN, 'group')],
+      [big(2000 * MAN, 'personal'), big(800 * MAN, 'group')],
     ]) {
       const out = compareCoupleStrategies({ entries, mySalary: 5678 * MAN, asOf: ASOF });
       if (!out) throw new Error('비교 실패');

@@ -281,7 +281,7 @@ export function summarizeLedger(input: LedgerSummaryInput): LedgerSummary {
   }
 
   const coupleSpent = entries
-    .filter((e) => e.purse === 'couple')
+    .filter((e) => e.purse === 'group')
     .reduce((sum, e) => sum + e.amount, 0);
   const personalSpent = entries
     .filter((e) => e.purse === 'personal')
@@ -365,7 +365,7 @@ export function compareCoupleStrategies(input: LedgerSummaryInput): CoupleCompar
   const payroll = loadRule<PayrollRule>('payroll', asOf).rule.values;
 
   const entries = input.entries;
-  const couple = entries.filter((e) => e.purse === 'couple' && e.category !== 'excluded');
+  const couple = entries.filter((e) => e.purse === 'group' && e.category !== 'excluded');
   if (couple.length === 0) return null;
 
   const coupleSpent = couple.reduce((sum, e) => sum + e.amount, 0);
@@ -387,13 +387,13 @@ export function compareCoupleStrategies(input: LedgerSummaryInput): CoupleCompar
        결제수단이 아니라 어디서 썼느냐로 공제율이 정해지기 때문이다.
   */
   const allCheckRows = entries.map((e) =>
-    e.purse === 'couple' && e.category === 'general' ? { ...e, method: 'check' as const } : e,
+    e.purse === 'group' && e.category === 'general' ? { ...e, method: 'check' as const } : e,
   );
   const allCheck = run(allCheckRows);
 
   /* 3) 데이트비를 둘이 반씩 체크카드로. 배우자 소득이 없으면 볼 것도 없다. */
   const splitRows = entries.map((e, i) =>
-    e.purse === 'couple' && e.category === 'general'
+    e.purse === 'group' && e.category === 'general'
       ? {
           ...e,
           method: 'check' as const,

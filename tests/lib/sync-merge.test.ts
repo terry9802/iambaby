@@ -24,10 +24,10 @@ describe('기기끼리 맞추기', () => {
 
   it('같은 줄을 양쪽에서 고쳤으면 나중에 고친 쪽이 이긴다', () => {
     const old = e({ id: 'a', purse: 'personal', at: '2026-03-01T00:00:00Z' });
-    const neu = e({ id: 'a', purse: 'couple', at: '2026-03-02T00:00:00Z' });
-    expect(mergeSides(side([old]), side([neu])).entries[0]?.purse).toBe('couple');
+    const neu = e({ id: 'a', purse: 'group', at: '2026-03-02T00:00:00Z' });
+    expect(mergeSides(side([old]), side([neu])).entries[0]?.purse).toBe('group');
     // 순서를 바꿔도 같은 답이어야 한다
-    expect(mergeSides(side([neu]), side([old])).entries[0]?.purse).toBe('couple');
+    expect(mergeSides(side([neu]), side([old])).entries[0]?.purse).toBe('group');
   });
 
   it('시각이 없는 옛 줄은 시각이 적힌 줄에 양보한다', () => {

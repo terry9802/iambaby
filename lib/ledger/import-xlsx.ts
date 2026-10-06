@@ -295,7 +295,7 @@ export async function importLedgerXlsx(file: ArrayBuffer): Promise<ImportResult>
       const purseText = header.map.purse ? String(row[header.map.purse] ?? '') : '';
       const purse: Entry['purse'] =
         purseText.includes('커플') || purseText.includes('데이트') || purseText.includes('공동')
-          ? 'couple'
+          ? 'group'
           : 'personal';
 
       const holderText = header.map.holder ? String(row[header.map.holder] ?? '') : '';

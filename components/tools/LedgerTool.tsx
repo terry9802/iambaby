@@ -22,12 +22,19 @@ import {
   sessionSnapshot,
   subscribeSession,
 } from '@/lib/account/session';
+import {
+  groupLogSnapshot,
+  serverGroupLogSnapshot,
+  subscribeGroupLog,
+} from '@/lib/group/store';
 import { useProfile } from '@/lib/profile/context';
 import { findEvent, type Tool } from '@/lib/tools';
 import { BackButton } from '@/components/ui/BackButton';
 import { Icon } from '@/components/ui/Icon';
 import { InlineText } from '@/components/ui/InlineText';
 import { AccountGate } from '@/components/ledger/AccountGate';
+import { GroupPanel } from '@/components/ledger/GroupPanel';
+import { SpendBreakdown } from '@/components/ledger/SpendBreakdown';
 import { LedgerBackups } from '@/components/ledger/LedgerBackups';
 import { SpendOverview } from '@/components/ledger/SpendOverview';
 import { LedgerShare } from '@/components/ledger/LedgerShare';
@@ -87,6 +94,12 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
     subscribeSession,
     sessionSnapshot,
     serverSessionSnapshot,
+  );
+  /* 그룹 가계부에 쌓인 줄. 멤버들이 적은 것이 다 들어 있다. */
+  const groupLog = useSyncExternalStore(
+    subscribeGroupLog,
+    groupLogSnapshot,
+    serverGroupLogSnapshot,
   );
 
   const today = hydrated ? toISODate(new Date()) : fallbackToday;
@@ -311,7 +324,7 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
                       hasPartner={hasPartner}
                       married={married}
                       onTogglePurse={() =>
-                        update(e.id, { purse: e.purse === 'couple' ? 'personal' : 'couple' })
+                        update(e.id, { purse: e.purse === 'group' ? 'personal' : 'group' })
                       }
                       onRemove={() => remove(e.id)}
                     />
@@ -331,6 +344,19 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
           </section>
 
           <AccountGate entries={entries} graves={graves} applySide={applySide} />
+
+          {/*
+            그룹은 로그인한 뒤에만 보여 준다. 누가 적었는지 표시하려면 내 아이디가
+            있어야 하고, 로그인 전에는 그 아이디가 없다.
+          */}
+          {session && <GroupPanel myId={session.id} entries={entries} graves={graves} />}
+
+          <SpendBreakdown
+            mine={entries}
+            groupRows={groupLog.entries}
+            hasGroup={groupLog.entries.length > 0 || groupLog.members.length > 0}
+            groupName={groupLog.name}
+          />
 
           <LedgerShare
             entries={entries}
@@ -416,7 +442,7 @@ function Row({
   onTogglePurse: () => void;
   onRemove: () => void;
 }) {
-  const couple = entry.purse === 'couple';
+  const couple = entry.purse === 'group';
   return (
     <li className="flex items-center gap-3 py-2.5">
       <div className="min-w-0 flex-1">
@@ -447,7 +473,7 @@ function Row({
           </button>
           <span>·</span>
           {METHOD_LABEL[entry.method]}
-          {(hasPartner || entry.purse === 'couple') && ` · ${holderLabel(entry.holder, married)}`}
+          {(hasPartner || entry.purse === 'group') && ` · ${holderLabel(entry.holder, married)}`}
           {entry.spend && ` · ${entry.spend}`}
           {entry.category !== 'general' && ` · ${CATEGORY_LABEL[entry.category]}`}
           {entry.memo && ` · ${entry.memo}`}
