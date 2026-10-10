@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { formatKRW } from '@/lib/format';
+import { Money } from '@/components/ui/Money';
 import type { summarizeLedger } from '@/lib/calculators/ledger-summary';
 import type { Totals } from '@/lib/ledger/monthly';
 
@@ -27,26 +28,35 @@ export function TopSummary({
   year: string;
   hasSalary: boolean;
 }) {
+  /*
+    두 숫자를 같은 크기로 맞춘다. 나란히 앉아 있는데 한쪽만 크면 그쪽이 더
+    중요한 숫자처럼 읽힌다. 둘 중 긴 쪽에 맞춰 둘 다 줄인다.
+  */
+  const taxSaved = summary ? Math.round(summary.totalTaxSaved) : 0;
+  const pair = [totals.all, taxSaved];
+
   /* 많이 쓰는 사람을 앞에 둔다. 적게 쓰는 사람 얘기가 먼저 나오면 헷갈린다. */
   const people = summary ? [...summary.holders].sort((a, b) => b.spent - a.spent) : [];
 
   return (
     <section className="flex flex-col gap-4 rounded-[12px] border border-line-strong bg-surface px-5 py-5 shadow-[0_1px_2px_rgba(20,22,26,0.04)]">
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <p className="text-[12px] font-medium text-ink-soft">전체 사용 금액</p>
-          <p className="tnum mt-0.5 text-[24px] font-bold leading-tight tracking-[-0.02em] text-ink">
-            {formatKRW(totals.all)}
-          </p>
+        <div className="min-w-0">
+          <p className="whitespace-nowrap text-[12px] font-medium text-ink-soft">전체 사용 금액</p>
+          <div className="mt-0.5">
+            <Money value={totals.all} size="hero" fitTo={pair} />
+          </div>
           <p className="tnum mt-0.5 text-[11.5px] text-ink-faint">{totals.count}건</p>
         </div>
-        <div>
-          <p className="text-[12px] font-medium text-ink-soft">{year}년 돌려받을 세금</p>
+        <div className="min-w-0">
+          <p className="whitespace-nowrap text-[12px] font-medium text-ink-soft">
+            {year}년 돌려받을 세금
+          </p>
           {summary && hasSalary ? (
             <>
-              <p className="tnum mt-0.5 text-[24px] font-bold leading-tight tracking-[-0.02em] text-brand">
-                {formatKRW(Math.round(summary.totalTaxSaved))}
-              </p>
+              <div className="mt-0.5">
+                <Money value={taxSaved} size="hero" tone="brand" fitTo={pair} />
+              </div>
               <p className="tnum mt-0.5 text-[11.5px] text-ink-faint">
                 올해 {summary.entryCount}건으로 셈
               </p>

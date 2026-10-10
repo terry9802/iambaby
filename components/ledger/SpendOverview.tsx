@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { formatKRW } from '@/lib/format';
+import { Money } from '@/components/ui/Money';
 import {
   averagePerActiveMonth,
   monthBuckets,
@@ -43,7 +44,6 @@ export function SpendOverview({
   onSelect: (month: string | null) => void;
 }) {
   const series = useMemo(() => monthSeries(entries, today, SPAN), [entries, today]);
-  const all = useMemo(() => totalsOf(entries), [entries]);
   const year = today.slice(0, 4);
   const thisMonth = today.slice(0, 7);
 
@@ -56,6 +56,12 @@ export function SpendOverview({
   const now = series.find((b) => b.month === thisMonth);
   const prevIndex = series.findIndex((b) => b.month === thisMonth) - 1;
   const prev = prevIndex >= 0 ? series[prevIndex] : undefined;
+
+  /*
+    두 칸의 숫자를 같은 크기로 맞춘다. 올해 합계는 자릿수가 많고 이번 달은
+    적어서, 따로 두면 왼쪽만 작아져 '이번 달이 더 큰 돈' 처럼 읽힌다.
+  */
+  const tilePair = [yearTotal, now?.all ?? 0];
 
   /*
     고른 달의 속내.
@@ -97,14 +103,18 @@ export function SpendOverview({
         큰 금액은 맨 위 요약 카드로 올라갔다. 같은 숫자를 두 번 크게 적으면
         어느 쪽을 봐야 하는지 헷갈린다. 여기는 '고른 범위에서 언제 얼마 썼나'만 본다.
       */}
-      <div className="grid grid-cols-3 gap-2.5">
-        <Tile label="고른 범위" value={all.all} note={`${all.count}건`} />
-        <Tile label={`${year}년`} value={yearTotal} note="올해 쓴 돈" />
+      {/*
+        칸을 둘만 둔다. 셋을 좁은 폰에 밀어 넣으면 칸마다 70px밖에 안 남아서
+        '261,190원'이 꺾인다. '고른 범위' 합계는 바로 아래 도넛 가운데에 이미 있다.
+      */}
+      <div className="grid grid-cols-2 gap-2.5">
+        <Tile label={`${year}년`} value={yearTotal} note="올해 쓴 돈" fitTo={tilePair} />
         <Tile
           label="이번 달"
           value={now?.all ?? 0}
           note={monthNote(now, prev)}
           tone={deltaTone(now, prev)}
+          fitTo={tilePair}
         />
       </div>
 
@@ -186,7 +196,7 @@ export function SpendOverview({
               <>
                 <strong className="font-semibold text-ink">{picked.label}</strong>에{' '}
                 <strong className="tnum font-semibold text-ink">{formatKRW(picked.all)}</strong>{' '}
-                쓰셨어요. 개인 <span className="tnum">{formatKRW(picked.personal)}</span> · 커플{' '}
+                쓰셨어요. 개인 <span className="tnum">{formatKRW(picked.personal)}</span> · 그룹{' '}
                 <span className="tnum">{formatKRW(picked.couple)}</span> · {picked.count}건. 아래
                 목록도 이 달만 보여 줍니다.
               </>
@@ -208,18 +218,20 @@ function Tile({
   value,
   note,
   tone,
+  fitTo,
 }: {
   label: string;
   value: number;
   note: string;
   tone?: 'up' | 'down';
+  fitTo?: number[];
 }) {
   return (
-    <div className="rounded-[10px] border border-line px-3.5 py-3">
-      <p className="text-[12px] font-medium text-ink-soft">{label}</p>
-      <p className="tnum mt-0.5 text-[17px] font-bold leading-tight tracking-[-0.01em] text-ink">
-        {formatKRW(value)}
-      </p>
+    <div className="min-w-0 rounded-[10px] border border-line px-3.5 py-3">
+      <p className="whitespace-nowrap text-[12px] font-medium text-ink-soft">{label}</p>
+      <div className="mt-0.5">
+        <Money value={value} fitTo={fitTo} />
+      </div>
       <p
         className={
           'mt-0.5 text-[11.5px] leading-snug ' +

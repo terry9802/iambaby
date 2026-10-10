@@ -24,7 +24,7 @@ export function ScopeTabs({
     <div
       role="group"
       aria-label={label}
-      className="flex shrink-0 rounded-[8px] border border-line bg-sunk p-0.5"
+      className="flex w-full rounded-[8px] border border-line bg-sunk p-0.5"
     >
       {SCOPES.map((s) => (
         <button
@@ -33,7 +33,7 @@ export function ScopeTabs({
           onClick={() => onScope(s)}
           aria-pressed={scope === s}
           className={
-            'rounded-[6px] px-3 py-1.5 text-[12.5px] font-semibold transition-colors ' +
+            'flex-1 whitespace-nowrap rounded-[6px] px-3 py-2 text-[13px] font-semibold transition-colors ' +
             (scope === s
               ? 'bg-surface text-ink shadow-[0_1px_2px_rgba(20,22,26,0.08)]'
               : 'text-ink-soft hover:text-ink')

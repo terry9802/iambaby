@@ -287,7 +287,11 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
             도넛·막대·목록이 다 이 하나를 본다. 여러 군데 두면 어느 걸 눌렀는지
             헷갈리고, 서로 어긋난 상태도 생긴다.
           */}
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-[12px] border border-line bg-surface px-4 py-3">
+          <div className="flex flex-col gap-2 rounded-[12px] border border-line bg-surface px-4 py-3.5">
+            {/*
+              제목이 먼저, 탭이 아래. 한 줄에 나란히 두면 둘이 한 덩어리로 보이고,
+              좁은 폰에서는 탭이 눌려서 글자가 붙는다.
+            */}
             <p className="text-[13px] font-semibold text-ink">
               아래를 {withRo(SCOPE_LABEL[scope])} 보는 중
             </p>
