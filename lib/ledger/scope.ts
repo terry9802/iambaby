@@ -17,6 +17,21 @@ export const SCOPE_LABEL: Record<Scope, string> = {
 export const SCOPES: Scope[] = ['all', 'personal', 'group'];
 
 /**
+ * '로'와 '으로'를 가린다.
+ *
+ * 끝 글자에 받침이 있으면 '으로'다. '개인로', '그룹로'는 한국어가 아니다.
+ * 이름이 바뀔 때마다 사람이 다시 고르게 두면 또 틀리므로 글자를 보고 정한다.
+ */
+export function withRo(word: string): string {
+  const last = word.charCodeAt(word.length - 1);
+  // 한글 음절 영역이 아니면 그냥 '로'
+  if (last < 0xac00 || last > 0xd7a3) return `${word}로`;
+  const jong = (last - 0xac00) % 28;
+  // 받침이 없거나 ㄹ이면 '로', 나머지는 '으로'
+  return jong === 0 || jong === 8 ? `${word}로` : `${word}으로`;
+}
+
+/**
  * 고른 범위에 드는 줄만 고른다.
  *
  * @param mine 내가 적은 줄 전부 (개인 + 내가 적은 그룹 지출)

@@ -47,3 +47,22 @@ describe('볼 범위', () => {
     expect(SCOPES).toEqual(['all', 'personal', 'group']);
   });
 });
+
+describe('조사', () => {
+  it('받침이 없으면 로, 있으면 으로', async () => {
+    const { withRo } = await import('@/lib/ledger/scope');
+    expect(withRo('전체')).toBe('전체로');
+    expect(withRo('개인')).toBe('개인으로');
+    expect(withRo('그룹')).toBe('그룹으로');
+  });
+
+  it('받침 ㄹ은 로', async () => {
+    const { withRo } = await import('@/lib/ledger/scope');
+    expect(withRo('서울')).toBe('서울로');
+  });
+
+  it('한글이 아니면 그냥 로', async () => {
+    const { withRo } = await import('@/lib/ledger/scope');
+    expect(withRo('ALL')).toBe('ALL로');
+  });
+});

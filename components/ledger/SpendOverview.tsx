@@ -87,28 +87,18 @@ export function SpendOverview({
   return (
     <section className="flex flex-col gap-4 rounded-[12px] border border-line bg-surface px-5 py-5">
       <div>
-        <h2 className="text-[15px] font-bold text-ink">얼마나 썼나</h2>
+        <h2 className="text-[15px] font-bold text-ink">언제 썼나</h2>
         <p className="mt-0.5 text-[11.5px] leading-relaxed text-ink-faint">
-          적어 두신 모든 줄의 합이에요. 세금 계산에 들어가는 금액과는 다릅니다.
+          위에서 고르신 범위의 줄만 셉니다. 세금 계산에 들어가는 금액과는 달라요.
         </p>
       </div>
 
-      {/* 맨 앞에 전체. 이 화면에 들어오는 첫 질문이 "다 해서 얼마야"다. */}
-      <div className="rounded-[10px] bg-sunk px-4 py-3.5">
-        <p className="text-[12.5px] font-medium text-ink-soft">전체 사용 금액</p>
-        <div className="mt-0.5 flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
-          <p className="tnum text-[28px] font-bold leading-tight tracking-[-0.02em] text-ink">
-            {formatKRW(all.all)}
-          </p>
-          <p className="tnum text-[12.5px] text-ink-faint">{all.count}건</p>
-        </div>
-        <p className="mt-1.5 text-[12px] leading-relaxed text-ink-soft">
-          개인 지출 <strong className="tnum font-semibold">{formatKRW(all.personal)}</strong> · 그룹
-          지출 <strong className="tnum font-semibold">{formatKRW(all.couple)}</strong>
-        </p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-2.5">
+      {/*
+        큰 금액은 맨 위 요약 카드로 올라갔다. 같은 숫자를 두 번 크게 적으면
+        어느 쪽을 봐야 하는지 헷갈린다. 여기는 '고른 범위에서 언제 얼마 썼나'만 본다.
+      */}
+      <div className="grid grid-cols-3 gap-2.5">
+        <Tile label="고른 범위" value={all.all} note={`${all.count}건`} />
         <Tile label={`${year}년`} value={yearTotal} note="올해 쓴 돈" />
         <Tile
           label="이번 달"

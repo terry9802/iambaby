@@ -271,10 +271,12 @@ export function AccountGate({
 
         {storageWarning}
 
+        {/*
+          잘 돌아갈 때는 짧게 적는다. 이 카드가 길면 아래 탭이 첫 화면 밖으로
+          밀린다. 자세한 설명은 로그아웃을 누르셨을 때나 문제가 생겼을 때만 꺼낸다.
+        */}
         <p className="text-[12.5px] leading-relaxed text-ink-soft">
-          적으신 가계부와 프로필이 저절로 저장됩니다. 다른 기기에서도 같은 아이디와 핀으로
-          들어오시면 똑같이 보여요. 둘이 같이 쓰시려면 상대방도 이 아이디와 핀으로 들어오시면
-          됩니다.
+          가계부와 프로필이 저절로 저장돼요. 어느 기기에서든 같은 아이디·핀으로 보입니다.
         </p>
 
         {status.kind === 'error' && (
@@ -318,15 +320,13 @@ export function AccountGate({
             </button>
           </div>
         ) : (
-          <div>
-            <button
-              type="button"
-              onClick={() => setConfirmOut(true)}
-              className="rounded-[8px] border border-line bg-surface px-3.5 py-2 text-[13px] font-semibold text-ink-soft hover:border-line-strong"
-            >
-              로그아웃
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setConfirmOut(true)}
+            className="w-fit text-[12.5px] font-semibold text-ink-faint underline underline-offset-2 hover:text-ink-soft"
+          >
+            로그아웃
+          </button>
         )}
       </section>
     );

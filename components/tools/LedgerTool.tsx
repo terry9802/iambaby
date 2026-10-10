@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useMemo, useState, useSyncExternalStore } from 'react';
 import {
   compareCoupleStrategies,
@@ -9,7 +8,7 @@ import {
 } from '@/lib/calculators/ledger-summary';
 import { formatKRW, formatManShort, toISODate } from '@/lib/format';
 import { monthBuckets, monthLabel, totalsOf } from '@/lib/ledger/monthly';
-import { rowsInScope, SCOPE_LABEL, type Scope } from '@/lib/ledger/scope';
+import { rowsInScope, SCOPE_LABEL, withRo, type Scope } from '@/lib/ledger/scope';
 import { LedgerProvider, useLedger } from '@/lib/ledger/context';
 import {
   CATEGORY_LABEL,
@@ -36,6 +35,7 @@ import { InlineText } from '@/components/ui/InlineText';
 import { AccountGate } from '@/components/ledger/AccountGate';
 import { GroupPanel } from '@/components/ledger/GroupPanel';
 import { ScopeTabs } from '@/components/ledger/ScopeTabs';
+import { TopSummary } from '@/components/ledger/TopSummary';
 import { SpendBreakdown } from '@/components/ledger/SpendBreakdown';
 import { LedgerBackups } from '@/components/ledger/LedgerBackups';
 import { SpendOverview } from '@/components/ledger/SpendOverview';
@@ -168,6 +168,12 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
 
   const hasGroup = groupLog.entries.length > 0 || groupLog.members.length > 0;
 
+  /* 맨 위 요약은 탭을 타지 않는다. 늘 전부를 센다. */
+  const everything = useMemo(
+    () => totalsOf(rowsInScope('all', entries, groupLog.entries)),
+    [entries, groupLog.entries],
+  );
+
   /* 고른 범위에 드는 줄. 여기서부터 아래 화면이 전부 이걸 센다. */
   const inScope = useMemo(
     () => rowsInScope(scope, entries, groupLog.entries),
@@ -255,7 +261,31 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
         <div className="h-48 rounded-[12px] border border-line bg-surface" aria-hidden />
       ) : (
         <>
-          {summary && summary.entryCount > 0 && <Coach summary={summary} year={year} />}
+          {/*
+            로그인 상태를 맨 위에 둔다. 로그인 전에는 여기서부터 시작해야 하고,
+            로그인한 뒤에는 '저장됐어요'가 이 화면에서 제일 먼저 확인할 것이다.
+          */}
+          <AccountGate entries={entries} graves={graves} applySide={applySide} />
+
+          {/* 금액과 세금. 탭을 타지 않고 늘 전체를 센다. */}
+          <TopSummary
+            totals={everything}
+            summary={summary && summary.entryCount > 0 ? summary : null}
+            year={year}
+            hasSalary={mySalary > 0}
+          />
+
+          {/*
+            여기서부터 아래가 탭에 따라 갈린다. 버튼을 맨 위에 하나만 두고,
+            도넛·막대·목록이 다 이 하나를 본다. 여러 군데 두면 어느 걸 눌렀는지
+            헷갈리고, 서로 어긋난 상태도 생긴다.
+          */}
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-[12px] border border-line bg-surface px-4 py-3">
+            <p className="text-[13px] font-semibold text-ink">
+              아래를 {withRo(SCOPE_LABEL[scope])} 보는 중
+            </p>
+            <ScopeTabs scope={scope} onScope={pickScope} />
+          </div>
 
           <SpendOverview
             entries={inScope}
@@ -264,21 +294,12 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
             onSelect={pickMonth}
           />
 
-          {couple && <CoupleCompare couple={couple} />}
-
-          {mySalary <= 0 && entries.length > 0 && (
-            <p className="rounded-[12px] border border-line bg-brand-soft px-4 py-3.5 text-[12.5px] leading-relaxed text-ink-soft">
-              <strong className="font-semibold text-ink">연봉을 적어주시면</strong> 지금까지 쓰신
-              금액으로 연말정산이 어떻게 되고 있는지 세어 드려요.{' '}
-              <Link
-                href="/me"
-                className="font-semibold text-brand-strong underline underline-offset-2"
-              >
-                내 프로필
-              </Link>
-              에서 한 번만 적어두시면 됩니다.
-            </p>
-          )}
+          <SpendBreakdown
+            rows={inScope}
+            scope={scope}
+            hasGroup={hasGroup}
+            groupName={groupLog.name}
+          />
 
           <QuickAdd today={today} hasPartner={hasPartner} married={married} onAdd={add} />
 
@@ -290,8 +311,6 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
                   {shown.length}건
                 </span>
               </h2>
-              {/* 그림과 같은 버튼. 어느 쪽을 누르셔도 둘 다 움직인다. */}
-              <ScopeTabs scope={scope} onScope={pickScope} label="목록 볼 범위" />
             </div>
 
             {/*
@@ -398,21 +417,19 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
             )}
           </section>
 
-          <AccountGate entries={entries} graves={graves} applySide={applySide} />
-
           {/*
             그룹은 로그인한 뒤에만 보여 준다. 누가 적었는지 표시하려면 내 아이디가
             있어야 하고, 로그인 전에는 그 아이디가 없다.
           */}
           {session && <GroupPanel myId={session.id} entries={entries} graves={graves} />}
 
-          <SpendBreakdown
-            rows={inScope}
-            scope={scope}
-            onScope={pickScope}
-            hasGroup={hasGroup}
-            groupName={groupLog.name}
-          />
+          {/*
+            세금 속내는 아래에 둔다. 매일 보는 숫자가 아니라 가끔 확인하는
+            것이고, 맨 위를 길게 만들면 탭까지 내려가는 길이 멀어진다.
+          */}
+          {summary && summary.entryCount > 0 && <TaxDetail summary={summary} />}
+
+          {couple && <CoupleCompare couple={couple} />}
 
           <LedgerShare
             entries={entries}
@@ -560,44 +577,25 @@ function Row({
 }
 
 /**
- * 코칭 카드.
+ * 세금 속내.
  *
- * 쓰는 분이 알아야 할 건 세 가지고, 그 순서대로 둔다.
- *  1) 지금 어떤 카드를 꺼내야 하나   ← 제일 중요하다. 그래서 맨 위에 제일 크게.
- *  2) 내가 얼마 썼고, 얼마부터 혜택이 시작되나
- *  3) 지금까지 얼마나 돌려받게 되나
+ * 지금 꺼낼 카드와 돌려받을 세금은 맨 위 요약 카드로 올라갔다. 매일 보는
+ * 숫자라 거기 있어야 하고, 맨 위가 길면 탭까지 내려가는 길이 멀어진다.
+ * 여기는 가끔 확인하는 것만 남긴다 — 얼마부터 줄기 시작하는지, 세금과
+ * 상관없는 돈이 얼마나 섞여 있는지.
  *
  * 말은 쉽게 쓴다. '문턱', '공제', '최저사용금액'은 법에서 쓰는 말이지 사람이
  * 쓰는 말이 아니다. 처음엔 그 말을 그대로 썼다가 사장님께 어렵다고 들었다.
  */
-function Coach({
-  summary,
-  year,
-}: {
-  summary: NonNullable<ReturnType<typeof summarizeLedger>>;
-  year: string;
-}) {
+function TaxDetail({ summary }: { summary: NonNullable<ReturnType<typeof summarizeLedger>> }) {
   /* 많이 쓰는 사람을 앞에 둔다. 적게 쓰는 사람 얘기가 먼저 나오면 헷갈린다. */
   const people = [...summary.holders].sort((a, b) => b.spent - a.spent);
 
   return (
-    <section className="flex flex-col gap-4 rounded-[12px] border border-line-strong bg-surface px-5 py-5 shadow-[0_1px_2px_rgba(20,22,26,0.04)]">
-      <div className="flex flex-col gap-2.5">
-        <p className="text-[13px] font-medium text-ink-soft">지금 쓰면 좋은 카드</p>
-        {people.map((h) => (
-          <div key={h.holder} className="rounded-[10px] bg-brand-soft px-4 py-3.5">
-            {summary.holders.length > 1 && (
-              <p className="text-[12px] font-semibold text-ink-soft">{h.label}</p>
-            )}
-            <p className="text-[22px] font-bold leading-tight tracking-[-0.02em] text-brand">
-              {h.nowUse === 'credit' ? '신용카드' : '체크카드 · 현금영수증'}
-            </p>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-ink">{h.nowWhy}</p>
-          </div>
-        ))}
-      </div>
+    <section className="flex flex-col gap-4 rounded-[12px] border border-line bg-surface px-5 py-5">
+      <h2 className="text-[15px] font-bold text-ink">세금 자세히</h2>
 
-      <div className="flex flex-col gap-3 border-t border-line pt-3.5">
+      <div className="flex flex-col gap-3">
         <p className="text-[13px] font-medium text-ink-soft">얼마부터 세금이 줄어드나</p>
         {people.map((h) => (
           <div key={h.holder}>
@@ -638,25 +636,13 @@ function Coach({
         ))}
       </div>
 
-      <div className="flex items-baseline justify-between gap-3 border-t border-line pt-3.5">
-        <div>
-          <p className="text-[13px] font-medium text-ink-soft">지금까지 돌려받을 세금</p>
-          <p className="mt-0.5 text-[11.5px] leading-relaxed text-ink-faint">
-            {year}년에 적어 두신 {summary.entryCount}건만으로 셉니다
-          </p>
-        </div>
-        <p className="tnum shrink-0 text-[22px] font-bold tracking-[-0.02em] text-brand">
-          {formatKRW(Math.round(summary.totalTaxSaved))}
-        </p>
-      </div>
-
       {summary.totalExcluded > 0 && (
         <p className="rounded-[8px] bg-sunk px-3.5 py-3 text-[12.5px] leading-relaxed text-ink-soft">
           <strong className="font-semibold text-ink">
             세금이랑 상관없는 돈이 {formatKRW(summary.totalExcluded)} 있어요.
           </strong>{' '}
           계좌이체·월세·통신비·저축처럼 카드로 긁지 않았거나 법에서 빼 둔 것들입니다. 이 돈은 아무리
-          써도 연말정산에는 도움이 안 돼요. 그래서 위 금액에서 빼고 셌습니다.
+          써도 연말정산에는 도움이 안 돼요. 그래서 맨 위 세금에서 빼고 셌습니다.
         </p>
       )}
     </section>

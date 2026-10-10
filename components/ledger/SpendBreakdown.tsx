@@ -4,8 +4,7 @@ import { useMemo } from 'react';
 import { formatKRW } from '@/lib/format';
 import { breakdown, type Slice } from '@/lib/ledger/breakdown';
 import type { Entry } from '@/lib/ledger/schema';
-import type { Scope } from '@/lib/ledger/scope';
-import { ScopeTabs } from './ScopeTabs';
+import { SCOPE_LABEL, type Scope } from '@/lib/ledger/scope';
 
 /**
  * 무엇에 얼마 썼는지 도넛으로.
@@ -37,14 +36,12 @@ const THICK = 22;
 export function SpendBreakdown({
   rows,
   scope,
-  onScope,
   hasGroup,
   groupName,
 }: {
   /** 이미 고른 범위로 걸러진 줄 */
   rows: Entry[];
   scope: Scope;
-  onScope: (next: Scope) => void;
   hasGroup: boolean;
   groupName?: string;
 }) {
@@ -55,7 +52,13 @@ export function SpendBreakdown({
     <section className="flex flex-col gap-4 rounded-[12px] border border-line bg-surface px-5 py-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-[15px] font-bold text-ink">무엇에 썼나</h2>
-        <ScopeTabs scope={scope} onScope={onScope} />
+        {/*
+          버튼은 맨 위에 하나만 둔다. 여기 또 두면 같은 값을 가리키는 버튼이
+          둘이라, 어느 걸 눌렀는지 헷갈리고 화면도 번잡해진다.
+        */}
+        <p className="rounded-full bg-sunk px-2.5 py-1 text-[12px] font-semibold text-ink-soft">
+          {SCOPE_LABEL[scope]}
+        </p>
       </div>
 
       {scope === 'group' && hasGroup && (
