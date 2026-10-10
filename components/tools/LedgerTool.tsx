@@ -33,6 +33,7 @@ import { BackButton } from '@/components/ui/BackButton';
 import { Icon } from '@/components/ui/Icon';
 import { InlineText } from '@/components/ui/InlineText';
 import { AccountGate } from '@/components/ledger/AccountGate';
+import { GroupInvite } from '@/components/ledger/GroupInvite';
 import { GroupPanel } from '@/components/ledger/GroupPanel';
 import { ScopeTabs } from '@/components/ledger/ScopeTabs';
 import { TopSummary } from '@/components/ledger/TopSummary';
@@ -261,6 +262,12 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
         <div className="h-48 rounded-[12px] border border-line bg-surface" aria-hidden />
       ) : (
         <>
+          {/*
+            초대 링크를 누르고 들어오셨으면 이것이 맨 위다. 받는 분은 링크를
+            누른 것 말고는 아무것도 모르므로, 핀 넣는 칸이 제일 먼저 보여야 한다.
+          */}
+          <GroupInvite myId={session?.id ?? null} />
+
           {/*
             로그인 상태를 맨 위에 둔다. 로그인 전에는 여기서부터 시작해야 하고,
             로그인한 뒤에는 '저장됐어요'가 이 화면에서 제일 먼저 확인할 것이다.

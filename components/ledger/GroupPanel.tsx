@@ -31,6 +31,7 @@ import {
   subscribeGroupLog,
   subscribeSeen,
 } from '@/lib/group/store';
+import { inviteLink } from '@/lib/group/invite';
 import type { Entry, Grave } from '@/lib/ledger/schema';
 import { Icon } from '@/components/ui/Icon';
 
@@ -177,11 +178,25 @@ export function GroupPanel({
     setStatus({ kind: 'idle' });
   };
 
-  const copyInvite = async () => {
+  /*
+    초대 글에는 링크와 핀을 같이 담는다. 받는 분이 링크를 누르면 핀 넣는 칸이
+    바로 뜨므로, 찾아 들어갈 일이 없다.
+
+    더 안전하게 하려면 핀을 빼고 따로 전하시는 게 맞다. 링크 하나가 새도 안
+    열리기 때문이다. 그래서 핀만 빼고 복사하는 버튼도 같이 둔다.
+  */
+  const copyInvite = async (withPin: boolean) => {
     if (!group) return;
-    const text = `[${group.name ?? group.id}] 그룹 가계부에 초대합니다\n그룹 아이디: ${group.id}\n그룹 핀: ${group.pin}\n\niamstillbaby.com 에서 쓴 돈 적기 → 그룹 가계부 → 그룹 참여하기`;
+    const link = inviteLink(window.location.origin, window.location.pathname, group.id);
+    const lines = [
+      `[${group.name ?? group.id}] 그룹 가계부에 초대합니다`,
+      '',
+      '아래 링크를 누르면 핀 넣는 칸이 바로 떠요.',
+      link,
+    ];
+    if (withPin) lines.push('', `그룹 핀: ${group.pin}`);
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(lines.join('\n'));
       setCopied(true);
     } catch {
       setFormError('복사가 막혀 있어요. 아래 글자를 길게 눌러 직접 복사해 주세요.');
@@ -397,29 +412,43 @@ export function GroupPanel({
       {showShare && (
         <div className="flex flex-col gap-2 rounded-[8px] bg-sunk px-3.5 py-3">
           <p className="text-[12.5px] leading-relaxed text-ink-soft">
-            이 둘을 같이 쓰실 분께 알려 주세요. 그분이 &lsquo;그룹 참여하기&rsquo;에서 넣으시면
-            바로 같이 쓰게 됩니다.
+            초대 글을 복사해서 카톡으로 보내세요. 받는 분이{' '}
+            <strong className="font-semibold text-ink">링크를 누르면 핀 넣는 칸이 바로 뜹니다.</strong>{' '}
+            따로 찾아 들어가실 필요가 없어요.
           </p>
-          <dl className="flex flex-col gap-1 rounded-[8px] border border-line bg-surface px-3 py-2.5">
-            <div className="flex items-baseline gap-2">
-              <dt className="w-[72px] shrink-0 text-[12px] text-ink-faint">그룹 아이디</dt>
-              <dd className="text-[15px] font-bold text-ink">{group.id}</dd>
+          <dl className="flex flex-col gap-1.5 rounded-[8px] border border-line bg-surface px-3 py-2.5">
+            <div className="flex flex-col gap-0.5">
+              <dt className="text-[12px] text-ink-faint">초대 링크</dt>
+              <dd className="break-all text-[12px] leading-relaxed text-ink-soft">
+                {inviteLink(window.location.origin, window.location.pathname, group.id)}
+              </dd>
             </div>
-            <div className="flex items-baseline gap-2">
-              <dt className="w-[72px] shrink-0 text-[12px] text-ink-faint">그룹 핀</dt>
+            <div className="flex items-baseline gap-2 border-t border-line pt-1.5">
+              <dt className="w-[52px] shrink-0 text-[12px] text-ink-faint">그룹 핀</dt>
               <dd className="tnum text-[15px] font-bold tracking-[0.15em] text-ink">{group.pin}</dd>
             </div>
           </dl>
-          <button
-            type="button"
-            onClick={() => void copyInvite()}
-            className="flex w-fit items-center gap-1.5 rounded-[8px] border border-line bg-surface px-3 py-1.5 text-[12.5px] font-semibold text-ink-soft hover:border-line-strong"
-          >
-            <Icon name="copy" size={14} />
-            {copied ? '복사했어요' : '초대 글 복사'}
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => void copyInvite(true)}
+              className="flex items-center gap-1.5 rounded-[8px] bg-brand-strong px-3 py-1.5 text-[12.5px] font-semibold text-white hover:bg-brand-deep"
+            >
+              <Icon name="copy" size={14} />
+              {copied ? '복사했어요' : '초대 글 복사 (링크 + 핀)'}
+            </button>
+            <button
+              type="button"
+              onClick={() => void copyInvite(false)}
+              className="flex items-center gap-1.5 rounded-[8px] border border-line bg-surface px-3 py-1.5 text-[12.5px] font-semibold text-ink-soft hover:border-line-strong"
+            >
+              링크만 복사
+            </button>
+          </div>
           <p className="text-[11.5px] leading-relaxed text-ink-faint">
-            이 핀은 그룹 가계부만 엽니다. 사장님 개인 가계부는 이것으로 안 열려요.
+            더 안전하게 하시려면 <strong className="font-semibold text-ink-soft">링크만 복사</strong>해
+            보내시고 핀은 말로 알려 주세요. 링크 하나만으로는 안 열립니다. 이 핀으로는 그룹
+            가계부만 열리고, 사장님 개인 가계부는 안 열려요.
           </p>
         </div>
       )}
