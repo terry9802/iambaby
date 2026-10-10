@@ -1,9 +1,11 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { formatKRW } from '@/lib/format';
 import { breakdown, type Slice } from '@/lib/ledger/breakdown';
 import type { Entry } from '@/lib/ledger/schema';
+import type { Scope } from '@/lib/ledger/scope';
+import { ScopeTabs } from './ScopeTabs';
 
 /**
  * 무엇에 얼마 썼는지 도넛으로.
@@ -27,78 +29,36 @@ const SLICE_COLORS = [
   'var(--color-slice-6)',
 ];
 
-export type Scope = 'all' | 'personal' | 'group';
-
-const SCOPE_LABEL: Record<Scope, string> = {
-  all: '전체',
-  personal: '개인',
-  group: '그룹',
-};
-
 /** 조각 사이를 띄우는 흰 틈. 조각끼리 붙어 있으면 경계가 안 보인다. */
 const GAP_PX = 3;
 const RADIUS = 56;
 const THICK = 22;
 
 export function SpendBreakdown({
-  mine,
-  groupRows,
+  rows,
+  scope,
+  onScope,
   hasGroup,
   groupName,
 }: {
-  /** 내가 적은 줄 전부 (개인 + 내가 적은 그룹 지출) */
-  mine: Entry[];
-  /** 그룹 가계부에 쌓인 줄. 멤버들이 적은 것이 다 들어 있다. */
-  groupRows: Entry[];
+  /** 이미 고른 범위로 걸러진 줄 */
+  rows: Entry[];
+  scope: Scope;
+  onScope: (next: Scope) => void;
   hasGroup: boolean;
   groupName?: string;
 }) {
-  const [scope, setScope] = useState<Scope>('all');
-
-  const rows = useMemo(() => {
-    if (scope === 'personal') return mine.filter((e) => e.purse === 'personal');
-    if (scope === 'group') return groupRows;
-    /*
-      전체는 둘을 합치되 아이디로 겹치는 줄을 지운다. 내가 그룹 지출로 적은 줄은
-      내 가계부와 그룹 가계부에 둘 다 있어서, 그냥 더하면 두 번 세어진다.
-    */
-    const seen = new Set(mine.map((e) => e.id));
-    return [...mine, ...groupRows.filter((e) => !seen.has(e.id))];
-  }, [scope, mine, groupRows]);
-
   const slices = useMemo(() => breakdown(rows), [rows]);
   const total = useMemo(() => rows.reduce((n, e) => n + e.amount, 0), [rows]);
-
-  const scopes: Scope[] = hasGroup ? ['all', 'personal', 'group'] : ['all', 'personal'];
 
   return (
     <section className="flex flex-col gap-4 rounded-[12px] border border-line bg-surface px-5 py-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-[15px] font-bold text-ink">무엇에 썼나</h2>
-        {/* 분절 버튼. 지금 보고 있는 칸이 어디인지 색으로 바로 읽히게 둔다. */}
-        <div
-          role="group"
-          aria-label="볼 범위"
-          className="flex rounded-[8px] border border-line bg-sunk p-0.5"
-        >
-          {scopes.map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => setScope(s)}
-              aria-pressed={scope === s}
-              className={
-                'rounded-[6px] px-3 py-1.5 text-[12.5px] font-semibold transition-colors ' +
-                (scope === s ? 'bg-surface text-ink shadow-[0_1px_2px_rgba(20,22,26,0.08)]' : 'text-ink-soft')
-              }
-            >
-              {SCOPE_LABEL[s]}
-            </button>
-          ))}
-        </div>
+        <ScopeTabs scope={scope} onScope={onScope} />
       </div>
 
-      {scope === 'group' && (
+      {scope === 'group' && hasGroup && (
         <p className="text-[12px] leading-relaxed text-ink-faint">
           {groupName ?? '그룹'} 가계부에 멤버들이 적은 줄을 전부 셉니다.
         </p>
@@ -106,9 +66,11 @@ export function SpendBreakdown({
 
       {slices.length === 0 ? (
         <p className="rounded-[8px] bg-sunk px-3.5 py-3 text-[12.5px] leading-relaxed text-ink-soft">
-          {scope === 'group'
-            ? '그룹 가계부에 아직 적힌 게 없어요. 쓴 돈을 적으실 때 지갑을 그룹 지출로 고르시면 여기 쌓입니다.'
-            : '아직 적어 두신 게 없어요.'}
+          {scope !== 'group'
+            ? '아직 적어 두신 게 없어요.'
+            : hasGroup
+              ? '그룹 가계부에 아직 적힌 게 없어요. 쓴 돈을 적으실 때 지갑을 그룹 지출로 고르시면 여기 쌓입니다.'
+              : '아직 그룹이 없어요. 위 \u2018그룹 가계부\u2019에서 만들거나 참여하시면, 여럿이 적은 돈이 여기 모입니다.'}
         </p>
       ) : (
         <div className="flex flex-wrap items-center gap-x-6 gap-y-4">

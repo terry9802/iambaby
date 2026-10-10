@@ -79,7 +79,7 @@ export type LedgerSummary = {
   totalExcluded: number;
   totalDeduction: number;
   totalTaxSaved: number;
-  /** 커플통장에서 나간 돈 */
+  /** 공동통장에서 나간 돈 */
   coupleSpent: number;
   personalSpent: number;
 };
@@ -302,19 +302,19 @@ export function summarizeLedger(input: LedgerSummaryInput): LedgerSummary {
 }
 
 /**
- * "커플 데이트비를 한 사람 신용카드로 몰아 쓰는 게 연말정산에 도움이 되나"
+ * "그룹 지출를 한 사람 신용카드로 몰아 쓰는 게 연말정산에 도움이 되나"
  *
- * 사장님이 하시려는 방식은 이렇다. 커플통장에 돈을 모아 두고, 한 달 데이트비를
- * 한 사람 신용카드로 다 긁고, 결제일에 커플통장에서 카드값을 갚는다.
+ * 사장님이 하시려는 방식은 이렇다. 공동통장에 돈을 모아 두고, 한 달 그룹 지출를
+ * 한 사람 신용카드로 다 긁고, 결제일에 공동통장에서 카드값을 갚는다.
  *
  * 먼저 짚을 것. 어느 통장에서 카드값이 빠져나가느냐는 연말정산과 아무 상관이 없다.
- * 공제는 '무엇으로 긁었나'와 '누구 명의인가'로만 갈린다. 커플통장에서 갚았다고
+ * 공제는 '무엇으로 긁었나'와 '누구 명의인가'로만 갈린다. 공동통장에서 갚았다고
  * 둘이 나눠 공제받는 일은 없고, 긁은 카드 명의자 한 사람에게만 붙는다.
  *
  * 그래서 비교해야 할 것은 세 가지다.
  *  1) 지금 적어 두신 그대로
- *  2) 같은 데이트비를 같은 사람 체크카드·현금영수증으로 썼을 때
- *  3) 같은 데이트비를 둘이 반씩 체크카드로 썼을 때
+ *  2) 같은 그룹 지출를 같은 사람 체크카드·현금영수증으로 썼을 때
+ *  3) 같은 그룹 지출를 둘이 반씩 체크카드로 썼을 때
  *
  * 공제율만 보면 체크카드가 두 배라 2번이 이기는 게 보통이지만, 문턱과 한도가
  * 걸리면 뒤집히기도 한다. 그래서 눈대중 말고 실제로 세어 본다.
@@ -329,14 +329,14 @@ export type CoupleScenario = {
 
 export type CoupleComparison = {
   coupleSpent: number;
-  /** 커플 데이트비를 신용카드로 긁은 금액 */
+  /** 그룹 지출를 신용카드로 긁은 금액 */
   coupleOnCredit: number;
   scenarios: CoupleScenario[];
   best: CoupleScenario;
   current: CoupleScenario;
   /** 지금 방식이 가장 나은 방식보다 얼마나 덜 돌려받는가. 0이면 지금이 최선이다. */
   lossVsBest: number;
-  /** 데이트비가 아직 적어서 견줄 거리가 못 되는가 */
+  /** 그룹 지출가 아직 적어서 견줄 거리가 못 되는가 */
   tooSmall: boolean;
   verdict: string;
 };
@@ -381,7 +381,7 @@ export function compareCoupleStrategies(input: LedgerSummaryInput): CoupleCompar
   const asRecorded = run(entries);
 
   /*
-    2) 데이트비를 전부 체크카드로. 명의는 그대로 둔다. 바꾸는 건 결제수단 하나뿐이라
+    2) 그룹 지출를 전부 체크카드로. 명의는 그대로 둔다. 바꾸는 건 결제수단 하나뿐이라
        "카드만 바꿨을 때 얼마가 달라지나"를 깨끗하게 본다.
        전통시장·대중교통처럼 공제율이 따로 붙는 줄은 건드리지 않는다. 그쪽은
        결제수단이 아니라 어디서 썼느냐로 공제율이 정해지기 때문이다.
@@ -391,7 +391,7 @@ export function compareCoupleStrategies(input: LedgerSummaryInput): CoupleCompar
   );
   const allCheck = run(allCheckRows);
 
-  /* 3) 데이트비를 둘이 반씩 체크카드로. 배우자 소득이 없으면 볼 것도 없다. */
+  /* 3) 그룹 지출를 둘이 반씩 체크카드로. 배우자 소득이 없으면 볼 것도 없다. */
   const splitRows = entries.map((e, i) =>
     e.purse === 'group' && e.category === 'general'
       ? {
@@ -407,12 +407,12 @@ export function compareCoupleStrategies(input: LedgerSummaryInput): CoupleCompar
     {
       key: 'asRecorded',
       label: '지금 적어 두신 대로',
-      note: coupleOnCredit > 0 ? '데이트비를 신용카드로 긁는 방식' : '지금 쓰시는 방식',
+      note: coupleOnCredit > 0 ? '그룹 지출를 신용카드로 긁는 방식' : '지금 쓰시는 방식',
       ...asRecorded,
     },
     {
       key: 'allCheck',
-      label: '데이트비를 체크카드로',
+      label: '그룹 지출를 체크카드로',
       note: '같은 사람 체크카드나 현금영수증으로 바꿨을 때',
       ...allCheck,
     },
@@ -421,7 +421,7 @@ export function compareCoupleStrategies(input: LedgerSummaryInput): CoupleCompar
           {
             key: 'splitCheck' as const,
             label: '둘이 반씩 체크카드로',
-            note: '데이트비를 번갈아 각자 체크카드로 썼을 때',
+            note: '그룹 지출를 번갈아 각자 체크카드로 썼을 때',
             ...splitCheck,
           },
         ]
@@ -461,7 +461,7 @@ export function compareCoupleStrategies(input: LedgerSummaryInput): CoupleCompar
   });
 
   /*
-    데이트비가 전체에 견줘 아주 적으면 어떤 방식을 골라도 차이가 없는 게 당연하다.
+    그룹 지출가 전체에 견줘 아주 적으면 어떤 방식을 골라도 차이가 없는 게 당연하다.
     그걸 두고 "지금 방식이 가장 낫습니다"라고 하면 비교하지도 않은 걸 비교한 척하는
     것이다. 아직 비교할 거리가 아니라고 말해야 맞다.
   */
@@ -509,11 +509,11 @@ function verdictFor(x: {
   tooSmall: boolean;
 }): string {
   if (x.coupleOnCredit === 0) {
-    return '데이트비를 신용카드로 긁고 계시지 않네요. 세금을 더 줄여 주는 쪽을 이미 쓰고 계십니다.';
+    return '그룹 지출를 신용카드로 긁고 계시지 않네요. 세금을 더 줄여 주는 쪽을 이미 쓰고 계십니다.';
   }
 
   if (x.tooSmall) {
-    return '**아직 데이트비를 조금만 적으셔서 견줄 거리가 못 됩니다.** 한 달치쯤 적어 두시면 어느 쪽이 나은지 제대로 세어 드릴게요.';
+    return '**아직 그룹 지출를 조금만 적으셔서 견줄 거리가 못 됩니다.** 한 달치쯤 적어 두시면 어느 쪽이 나은지 제대로 세어 드릴게요.';
   }
 
   if (x.lossVsBest === 0) {
@@ -524,7 +524,7 @@ function verdictFor(x: {
       아무 영향이 없다. 남는 건 카드 혜택뿐이다.
     */
     const head = x.limitReached
-      ? '**지금 방식 그대로 쓰셔도 됩니다.** 세금이 줄어드는 한도를 이미 다 채우셨어요. 그래서 데이트비를 신용카드로 긁든 체크카드로 긁든 세금은 똑같습니다. 포인트·마일리지 많이 주는 카드가 그만큼 이득이에요.'
+      ? '**지금 방식 그대로 쓰셔도 됩니다.** 세금이 줄어드는 한도를 이미 다 채우셨어요. 그래서 그룹 지출를 신용카드로 긁든 체크카드로 긁든 세금은 똑같습니다. 포인트·마일리지 많이 주는 카드가 그만큼 이득이에요.'
       : x.belowThreshold
         ? /*
             아직 세금이 줄기 시작하는 금액에 못 미친 경우. 지금 쓰는 돈은 세금과

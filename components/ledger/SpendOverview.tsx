@@ -103,8 +103,8 @@ export function SpendOverview({
           <p className="tnum text-[12.5px] text-ink-faint">{all.count}건</p>
         </div>
         <p className="mt-1.5 text-[12px] leading-relaxed text-ink-soft">
-          개인 생활비 <strong className="tnum font-semibold">{formatKRW(all.personal)}</strong> · 커플
-          데이트비 <strong className="tnum font-semibold">{formatKRW(all.couple)}</strong>
+          개인 지출 <strong className="tnum font-semibold">{formatKRW(all.personal)}</strong> · 그룹
+          지출 <strong className="tnum font-semibold">{formatKRW(all.couple)}</strong>
         </p>
       </div>
 

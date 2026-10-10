@@ -34,7 +34,7 @@ const HEADERS = [
 
 const SHEETS = [
   { name: '전체', filter: () => true },
-  { name: '개인 생활비', filter: (e: Entry) => e.purse === 'personal' },
+  { name: '개인 지출', filter: (e: Entry) => e.purse === 'personal' },
   { name: '그룹 지출', filter: (e: Entry) => e.purse === 'group' },
 ] as const;
 

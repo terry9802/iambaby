@@ -9,6 +9,7 @@ import {
 } from '@/lib/calculators/ledger-summary';
 import { formatKRW, formatManShort, toISODate } from '@/lib/format';
 import { monthBuckets, monthLabel, totalsOf } from '@/lib/ledger/monthly';
+import { rowsInScope, SCOPE_LABEL, type Scope } from '@/lib/ledger/scope';
 import { LedgerProvider, useLedger } from '@/lib/ledger/context';
 import {
   CATEGORY_LABEL,
@@ -34,6 +35,7 @@ import { Icon } from '@/components/ui/Icon';
 import { InlineText } from '@/components/ui/InlineText';
 import { AccountGate } from '@/components/ledger/AccountGate';
 import { GroupPanel } from '@/components/ledger/GroupPanel';
+import { ScopeTabs } from '@/components/ledger/ScopeTabs';
 import { SpendBreakdown } from '@/components/ledger/SpendBreakdown';
 import { LedgerBackups } from '@/components/ledger/LedgerBackups';
 import { SpendOverview } from '@/components/ledger/SpendOverview';
@@ -84,6 +86,12 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
     따로 두면 막대는 9월인데 목록은 8월인 상태가 생긴다.
   */
   const [month, setMonth] = useState<string | null>(null);
+  /*
+    어디까지 볼지. 도넛·달별 막대·적어 둔 기록이 모두 이 값을 본다.
+    따로 두면 그림은 '그룹'인데 목록은 '전체'인 상태가 생겨서 숫자가 안 맞는
+    것처럼 보인다.
+  */
+  const [scope, setScope] = useState<Scope>('all');
 
   /*
     로그인해 두셨는지. '기록 전부 지우기'가 무슨 일을 하는지가 여기서 갈린다.
@@ -158,7 +166,15 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
     [thisYear, mySalary, partnerSalary, today],
   );
 
-  const months = useMemo(() => monthBuckets(entries), [entries]);
+  const hasGroup = groupLog.entries.length > 0 || groupLog.members.length > 0;
+
+  /* 고른 범위에 드는 줄. 여기서부터 아래 화면이 전부 이걸 센다. */
+  const inScope = useMemo(
+    () => rowsInScope(scope, entries, groupLog.entries),
+    [scope, entries, groupLog.entries],
+  );
+
+  const months = useMemo(() => monthBuckets(inScope), [inScope]);
 
   /*
     기록이 없는 달도 고를 수 있게 둔다.
@@ -171,8 +187,8 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
   const picked = month;
 
   const shown = useMemo(
-    () => (picked ? entries.filter((e) => e.date.startsWith(picked)) : entries),
-    [entries, picked],
+    () => (picked ? inScope.filter((e) => e.date.startsWith(picked)) : inScope),
+    [inScope, picked],
   );
 
   /*
@@ -181,7 +197,14 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
   */
   const totals = useMemo(() => totalsOf(shown), [shown]);
 
-  const allTotals = useMemo(() => totalsOf(entries), [entries]);
+  const allTotals = useMemo(() => totalsOf(inScope), [inScope]);
+
+  /*
+    내가 적은 줄인지. 그룹 가계부에는 남이 적은 줄도 섞여 있다. 남의 줄은 지갑을
+    바꿀 수 없다 — 내 가계부에 없는 줄이라 바꿔도 아무 일이 안 일어난다.
+    지우기는 된다. 지웠다는 표시가 그룹으로 건너가서 모두에게서 지워진다.
+  */
+  const myIds = useMemo(() => new Set(entries.map((e) => e.id)), [entries]);
 
   /*
     목록 날짜에 연도를 붙일지.
@@ -191,8 +214,8 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
     달을 고르셨으면 탭에 이미 '25년 12월'이라고 적혀 있어서 또 붙일 필요가 없다.
   */
   const multiYear = useMemo(
-    () => new Set(entries.map((e) => e.date.slice(0, 4))).size > 1,
-    [entries],
+    () => new Set(inScope.map((e) => e.date.slice(0, 4))).size > 1,
+    [inScope],
   );
   const datesNeedYear = multiYear && picked === null;
 
@@ -201,6 +224,16 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
   /** 달을 바꾸면 '더 보기'는 접어 둔다. 20건 넘겨 펼친 상태가 다음 달까지 따라오면 어지럽다. */
   const pickMonth = (next: string | null) => {
     setMonth(next);
+    setShowAll(false);
+  };
+
+  /*
+    범위를 바꾸면 달 고르기도 푼다. 그룹에는 9월 줄이 없는데 9월이 골라져 있으면
+    빈 화면이 뜨고, 사장님 눈에는 기록이 사라진 것으로 보인다.
+  */
+  const pickScope = (next: Scope) => {
+    setScope(next);
+    setMonth(null);
     setShowAll(false);
   };
 
@@ -225,7 +258,7 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
           {summary && summary.entryCount > 0 && <Coach summary={summary} year={year} />}
 
           <SpendOverview
-            entries={entries}
+            entries={inScope}
             today={today}
             selected={picked}
             onSelect={pickMonth}
@@ -250,9 +283,15 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
           <QuickAdd today={today} hasPartner={hasPartner} married={married} onAdd={add} />
 
           <section className="rounded-[12px] border border-line bg-surface px-4 py-4">
-            <div className="flex items-baseline justify-between gap-3">
-              <h2 className="text-[15px] font-bold text-ink">적어 둔 기록</h2>
-              <span className="tnum text-[12.5px] text-ink-faint">{shown.length}건</span>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-[15px] font-bold text-ink">
+                적어 둔 기록{' '}
+                <span className="tnum text-[12.5px] font-normal text-ink-faint">
+                  {shown.length}건
+                </span>
+              </h2>
+              {/* 그림과 같은 버튼. 어느 쪽을 누르셔도 둘 다 움직인다. */}
+              <ScopeTabs scope={scope} onScope={pickScope} label="목록 볼 범위" />
             </div>
 
             {/*
@@ -260,6 +299,13 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
               싶은데 1월 커피까지 같이 내려가야 했다. 탭마다 그 달 금액을 같이
               적어 둔다 — 눌러 보기 전에 어느 달에 많이 썼는지 알아야 고를 수 있다.
             */}
+            {scope === 'group' && !hasGroup && (
+              <p className="mt-2 rounded-[8px] bg-sunk px-3.5 py-3 text-[12.5px] leading-relaxed text-ink-soft">
+                아직 그룹이 없어요. 위 &lsquo;그룹 가계부&rsquo;에서 만들거나 참여하시면, 여럿이
+                적은 돈이 여기 모입니다.
+              </p>
+            )}
+
             {months.length > 1 && (
               <div className="-mx-1 mt-2.5 flex gap-1.5 overflow-x-auto px-1 pb-1">
                 <MonthTab
@@ -287,32 +333,40 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
             {entries.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 rounded-[8px] bg-sunk px-3.5 py-2.5">
                 <Tally
-                  label={picked ? `${monthLabel(picked, multiYear)} 모두` : '모두'}
+                  label={
+                    picked
+                      ? `${monthLabel(picked, multiYear)} ${SCOPE_LABEL[scope]}`
+                      : SCOPE_LABEL[scope]
+                  }
                   amount={totals.all}
                   strong
                 />
-                <Tally label="개인 생활비" amount={totals.personal} />
-                <Tally label="커플 데이트비" amount={totals.couple} />
+                <Tally label="개인 지출" amount={totals.personal} />
+                <Tally label="그룹 지출" amount={totals.couple} />
               </div>
             )}
 
             {shown.length === 0 ? (
-              <p className="mt-2.5 rounded-[8px] bg-sunk px-3 py-3 text-[12.5px] leading-relaxed text-ink-soft">
-                {picked ? (
-                  <>
-                    이 달엔 적어 두신 게 없어요.{' '}
-                    <button
-                      type="button"
-                      onClick={() => pickMonth(null)}
-                      className="font-semibold text-brand-strong underline underline-offset-2"
-                    >
-                      전체 보기
-                    </button>
-                  </>
-                ) : (
-                  '아직 없어요. 위에서 한 줄 적어 보세요. 커피 한 잔부터 적으셔도 됩니다.'
-                )}
-              </p>
+              scope === 'group' && !hasGroup ? null : (
+                <p className="mt-2.5 rounded-[8px] bg-sunk px-3 py-3 text-[12.5px] leading-relaxed text-ink-soft">
+                  {picked ? (
+                    <>
+                      이 달엔 적어 두신 게 없어요.{' '}
+                      <button
+                        type="button"
+                        onClick={() => pickMonth(null)}
+                        className="font-semibold text-brand-strong underline underline-offset-2"
+                      >
+                        전체 보기
+                      </button>
+                    </>
+                  ) : scope === 'group' ? (
+                    '그룹 가계부에 아직 적힌 게 없어요. 쓴 돈을 적으실 때 지갑을 그룹 지출로 고르시면 여기 쌓입니다.'
+                  ) : (
+                    '아직 없어요. 위에서 한 줄 적어 보세요. 커피 한 잔부터 적으셔도 됩니다.'
+                  )}
+                </p>
+              )
             ) : (
               <>
                 <ul className="mt-2.5 flex flex-col divide-y divide-line">
@@ -320,6 +374,7 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
                     <Row
                       key={e.id}
                       entry={e}
+                      mine={myIds.has(e.id)}
                       withYear={datesNeedYear}
                       hasPartner={hasPartner}
                       married={married}
@@ -352,9 +407,10 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
           {session && <GroupPanel myId={session.id} entries={entries} graves={graves} />}
 
           <SpendBreakdown
-            mine={entries}
-            groupRows={groupLog.entries}
-            hasGroup={groupLog.entries.length > 0 || groupLog.members.length > 0}
+            rows={inScope}
+            scope={scope}
+            onScope={pickScope}
+            hasGroup={hasGroup}
             groupName={groupLog.name}
           />
 
@@ -428,6 +484,7 @@ function LedgerBody({ tool, fallbackToday }: { tool: Tool; fallbackToday: string
 
 function Row({
   entry,
+  mine,
   withYear,
   hasPartner,
   married,
@@ -435,6 +492,8 @@ function Row({
   onRemove,
 }: {
   entry: Entry;
+  /** 내가 적은 줄인가. 남이 적은 그룹 줄은 지갑을 못 바꾼다. */
+  mine: boolean;
   /** 두 해가 섞여 보일 때만 참. '12-25'가 어느 해인지 구분되게 한다. */
   withYear: boolean;
   hasPartner: boolean;
@@ -454,26 +513,34 @@ function Row({
         </div>
         {/*
           지갑만 누르면 바로 바뀐다. 쓰시던 엑셀에는 데이트비 구분이 없어서
-          가져오면 전부 개인 생활비로 들어온다. 그걸 고치러 줄마다 편집 화면을
+          가져오면 전부 개인 지출로 들어온다. 그걸 고치러 줄마다 편집 화면을
           열게 하면 열일곱 줄에 서른네 번을 누르셔야 한다. 한 번이면 된다.
         */}
         <p className="mt-0.5 flex flex-wrap items-center gap-x-1 text-[12px] text-ink-soft">
-          <button
-            type="button"
-            onClick={onTogglePurse}
-            aria-label={`${formatKRW(entry.amount)} — ${couple ? '개인 생활비로' : '커플 데이트비로'} 바꾸기`}
-            className={
-              'rounded-full border px-2 py-0.5 text-[11.5px] font-medium transition-colors ' +
-              (couple
-                ? 'border-brand-strong bg-brand-strong text-white'
-                : 'border-line bg-surface text-ink-soft hover:border-line-strong')
-            }
-          >
-            {PURSE_LABEL[entry.purse]}
-          </button>
+          {mine ? (
+            <button
+              type="button"
+              onClick={onTogglePurse}
+              aria-label={`${formatKRW(entry.amount)} — ${couple ? '개인 지출로' : '그룹 지출로'} 바꾸기`}
+              className={
+                'rounded-full border px-2 py-0.5 text-[11.5px] font-medium transition-colors ' +
+                (couple
+                  ? 'border-brand-strong bg-brand-strong text-white'
+                  : 'border-line bg-surface text-ink-soft hover:border-line-strong')
+              }
+            >
+              {PURSE_LABEL[entry.purse]}
+            </button>
+          ) : (
+            /* 남이 적은 줄. 눌러도 안 바뀌므로 버튼처럼 보이게 두지 않는다. */
+            <span className="rounded-full border border-brand-strong bg-brand-strong px-2 py-0.5 text-[11.5px] font-medium text-white">
+              {PURSE_LABEL[entry.purse]}
+            </span>
+          )}
           <span>·</span>
           {METHOD_LABEL[entry.method]}
           {(hasPartner || entry.purse === 'group') && ` · ${holderLabel(entry.holder, married)}`}
+          {!mine && entry.by && ` · ${entry.by}님`}
           {entry.spend && ` · ${entry.spend}`}
           {entry.category !== 'general' && ` · ${CATEGORY_LABEL[entry.category]}`}
           {entry.memo && ` · ${entry.memo}`}
@@ -610,7 +677,7 @@ function Bar({ spent, threshold }: { spent: number; threshold: number }) {
 }
 
 /**
- * 커플 데이트비를 한 사람 신용카드로 몰아 쓰는 게 이득인지 보여 주는 자리.
+ * 그룹 지출을 한 사람 신용카드로 몰아 쓰는 게 이득인지 보여 주는 자리.
  *
  * 먼저 짚어야 할 것이 있다. 커플통장에서 카드값을 갚는 건 연말정산과 상관이 없다.
  * 공제는 '무엇으로 긁었나'와 '누구 명의인가'로만 갈린다. 이걸 모르고 통장을
@@ -621,9 +688,9 @@ function CoupleCompare({ couple }: { couple: CoupleComparison }) {
   return (
     <section className="flex flex-col gap-3 rounded-[12px] border border-line bg-surface px-4 py-4">
       <div>
-        <h2 className="text-[15px] font-bold text-ink">데이트비를 신용카드로 몰면 이득일까요</h2>
+        <h2 className="text-[15px] font-bold text-ink">그룹 지출을 한 사람 신용카드로 몰면 이득일까요</h2>
         <p className="mt-1 text-[12.5px] leading-relaxed text-ink-soft">
-          커플 데이트비{' '}
+          그룹 지출{' '}
           <strong className="tnum font-semibold text-ink">{formatKRW(couple.coupleSpent)}</strong>
           {couple.coupleOnCredit > 0 && (
             <>

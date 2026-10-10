@@ -26,7 +26,7 @@ export type ImportResult =
       /**
        * 지갑 칸이 파일에 있었는가.
        *
-       * 없으면 전부 '개인 생활비'로 들어간다. 그대로 두면 데이트비가 하나도
+       * 없으면 전부 '개인 지출'로 들어간다. 그대로 두면 그룹 지출이 하나도
        * 없는 걸로 세어져서 "데이트비를 신용카드로 몰면 이득일까요" 비교가
        * 아예 안 나온다. 그래서 없었다는 사실을 화면에 알려야 한다.
        */
@@ -288,13 +288,16 @@ export async function importLedgerXlsx(file: ArrayBuffer): Promise<ImportResult>
       const memo = header.map.memo ? String(row[header.map.memo] ?? '').slice(0, 120) : '';
 
       /*
-        지갑 칸은 쓰시던 가계부에 대개 없다. 있으면 읽고, 없으면 개인 생활비로
+        지갑 칸은 쓰시던 가계부에 대개 없다. 있으면 읽고, 없으면 개인 지출로
         둔 뒤 화면에서 바꾸시게 한다. 없는 걸 마음대로 데이트비로 찍으면
         공제 계산이 통째로 어긋난다.
       */
       const purseText = header.map.purse ? String(row[header.map.purse] ?? '') : '';
       const purse: Entry['purse'] =
-        purseText.includes('커플') || purseText.includes('데이트') || purseText.includes('공동')
+        purseText.includes('그룹') ||
+        purseText.includes('커플') ||
+        purseText.includes('데이트') ||
+        purseText.includes('공동')
           ? 'group'
           : 'personal';
 
